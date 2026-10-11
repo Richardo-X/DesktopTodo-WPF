@@ -82,13 +82,17 @@ public class ClusterLayoutTests
     [Fact]
     public void ClampScale_RespectsWorkAreaWidthLimit()
     {
-        // 窄屏 1000 宽：三窗全开总宽（含 2 条缝隙）= 470+4+310+4+310 = 1098 → s ≤ 1000/1098
-        var clamped = ClusterLayout.ClampScale(1.2, new WinRect(0, 0, 1000, 1040), true, true);
+        // 高屏（高度限制不生效）：三窗全开总宽（含 2 条缝隙）= 1098 → s ≤ 1000/1098
+        var clamped = ClusterLayout.ClampScale(1.2, new WinRect(0, 0, 1000, 2080), true, true);
         Assert.Equal(1000 / 1098.0, clamped, 10);
 
-        // 只开主窗时宽度上限更宽松
-        var mainOnly = ClusterLayout.ClampScale(1.2, new WinRect(0, 0, 1000, 1040), false, false);
-        Assert.Equal(1000 / 470.0, mainOnly, 10);
+        // 1080p 全开：高度限制（0.8125）比宽度限制（0.9107）更紧
+        var on1080p = ClusterLayout.ClampScale(1.2, new WinRect(0, 0, 1920, 1040), true, true);
+        Assert.Equal(520d / 640d, on1080p, 10);
+
+        // 只开主窗时宽度上限更宽松（1.2 在允许区间内，原样返回）
+        var mainOnly = ClusterLayout.ClampScale(1.2, new WinRect(0, 0, 1000, 2080), false, false);
+        Assert.Equal(1.2, mainOnly, 10);
     }
 
     [Fact]

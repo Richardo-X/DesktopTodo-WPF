@@ -140,7 +140,25 @@ public class TuckStateMachineTests
 
         m.SetLocked(true);
 
-        Assert.Equal([TuckCommand.Untuck, TuckCommand.EndHold], m.DrainCommands());
+        // 无托盘会话：只发弹回
+        Assert.Equal([TuckCommand.Untuck], m.DrainCommands());
+
+        // 有托盘会话：弹回 + 结束会话
+        m.SetLocked(false);
+        m.DrainCommands();
+        m.NotifyUntuckCompleted();
+        m.SetSnapped(true);
+        m.NotifyPointerLeft(T0);
+        m.Tick(T0.AddMilliseconds(500));
+        Assert.Equal([TuckCommand.Tuck], m.DrainCommands());
+        m.NotifyTuckCompleted();
+        m.TrayRestoreRequested(T0);
+        Assert.Equal([TuckCommand.Untuck, TuckCommand.StartHold], m.DrainCommands());
+        m.NotifyUntuckCompleted();
+
+        // 弹出已完成（未缩进）：锁定只结束会话
+        m.SetLocked(true);
+        Assert.Equal([TuckCommand.EndHold], m.DrainCommands());
     }
 
     // ---------- 脱离吸附 ----------
