@@ -1,0 +1,122 @@
+{
+  "v": 1,
+  "todos": [
+    {
+      "id": "c4324ec2-fee3-45f1-add1-4e7a8aeabaa8",
+      "content": "1",
+      "createdAt": "2026-09-24T17:15:01.832Z",
+      "completedAt": null,
+      "overdue": false
+    },
+    {
+      "id": "ddf0bc6e-258b-426b-b8e6-cf758a313818",
+      "content": "1",
+      "createdAt": "2026-09-24T17:18:32.924Z",
+      "completedAt": null,
+      "overdue": false
+    }
+  ],
+  "completed": [
+    {
+      "id": "fafea422-f482-405c-a928-58d86f75bf81",
+      "content": "1",
+      "createdAt": "2026-09-24T17:15:01.675Z",
+      "completedAt": "2026-09-25T08:32:10.714Z",
+      "overdue": false
+    },
+    {
+      "id": "d708c19a-8fd4-4a79-bb1d-0aff0a6ca82c",
+      "content": "1",
+      "createdAt": "2026-09-24T17:14:58.000Z",
+      "completedAt": "2026-09-25T08:37:55.056Z",
+      "overdue": false
+    },
+    {
+      "id": "1f6c70eb-b279-41a2-a0cc-265ce7c72836",
+      "content": "1",
+      "createdAt": "2026-09-25T03:24:16.662Z",
+      "completedAt": "2026-09-25T08:38:06.758Z",
+      "overdue": false
+    },
+    {
+      "id": "6f52d842-4954-4339-ab8a-14b100b88c41",
+      "content": "1",
+      "createdAt": "2026-09-25T03:24:16.837Z",
+      "completedAt": "2026-09-25T08:38:08.819Z",
+      "overdue": false
+    },
+    {
+      "id": "b559db66-93db-480b-a08e-6ac92e86b3a8",
+      "content": "1",
+      "createdAt": "2026-09-25T08:30:22.603Z",
+      "completedAt": "2026-09-25T08:38:12.371Z",
+      "overdue": false
+    },
+    {
+      "id": "8e401fbb-3c2c-44e3-a1a7-f39b9f16141f",
+      "content": "1",
+      "createdAt": "2026-09-24T17:18:30.308Z",
+      "completedAt": "2026-09-25T08:57:00.793Z",
+      "overdue": false
+    },
+    {
+      "id": "77aae163-34d2-406b-8331-eab4f952e736",
+      "content": "1",
+      "createdAt": "2026-09-23T09:57:27.000Z",
+      "completedAt": "2026-09-25T08:58:38.640Z",
+      "overdue": true
+    },
+    {
+      "id": "226172a1-5623-4b40-a68f-6f30d2d75f72",
+      "content": "1",
+      "createdAt": "2026-09-24T17:14:58.538Z",
+      "completedAt": "2026-09-25T08:58:41.545Z",
+      "overdue": false
+    },
+    {
+      "id": "5c61db25-1cde-4796-bcac-a316f3cca8de",
+      "content": "1",
+      "createdAt": "2026-09-24T17:15:00.924Z",
+      "completedAt": "2026-09-25T08:58:43.961Z",
+      "overdue": false
+    },
+    {
+      "id": "d1c4688c-6607-44d5-b403-974a7eb2afe9",
+      "content": "1",
+      "createdAt": "2026-09-24T17:14:58.000Z",
+      "completedAt": "2026-09-25T08:59:00.529Z",
+      "overdue": false
+    }
+  ],
+  "archive": {},
+  "templates": [
+    {
+      "id": "a36aee3d-b687-4362-ac7a-1aa332f0212e",
+      "content": "1",
+      "createdAt": "2026-09-24T17:14:57.578Z"
+    }
+  ],
+  "settings": {
+    "maxItems": 10,
+    "hour12": false,
+    "autoStart": true,
+    "doneSort": "asc"
+  },
+  "uiState": {
+    "pos": {
+      "x": 745,
+      "y": 408
+    },
+    "clusterScale": 1.125,
+    "childScales": {
+      "todo": 1.6,
+      "settings": 0.978
+    },
+    "quickVisible": true,
+    "doneVisible": true,
+    "theme": "day",
+    "topMost": false,
+    "tuckLock": false,
+    "lastSettleDate": "2026-09-25"
+  }
+}
