@@ -132,7 +132,7 @@ public class DesignTokenTests
     [Fact]
     public void ShadowComparison_ProvidesBlueAndPureBlackVariants()
     {
-        // 验收反馈（批次 02）：确认框投影需提供三档对比样张——双层蓝黑（L1 定稿）/ 单层蓝黑 / 单层纯黑对照。
+        // 验收反馈（批次 02）：确认框投影需提供三档对比样张——双层蓝黑 / 单层蓝黑 / 单层纯黑对照。
         var common = XamlTokenReader.LoadKeyed("src", "TodoWpf", "Themes", "Tokens.Common.xaml");
 
         Assert.True(common.ContainsKey("Effect.DialogShadowMain"), "缺单层蓝黑主投影");
@@ -140,6 +140,23 @@ public class DesignTokenTests
         Assert.True(common.ContainsKey("Effect.DialogShadowBlack"), "缺单层纯黑对照投影");
         Assert.Equal("#000000", Hex(common["Color.ShadowBlack"]));
     }
+
+    [Fact]
+    public void DialogDefaultShadow_IsSingleLayerBlue()
+    {
+        // 验收裁定（2026-10-12，用户真机）：双层投影颜色偏深，默认先用单层蓝黑；
+        // 双层保留为备选样张（外观预览可切换）。
+        var doc = RepoRoot.LoadXaml("src", "TodoWpf", "Preview", "MainPreviewWindow.xaml");
+
+        var outer = doc.Descendants().First(e => (string?)e.Attribute(xName) == "ShadowLayerOuter");
+        Assert.True(outer.Attribute("Effect") is null, "默认应为单层投影：外层不应挂软投影");
+
+        var inner = doc.Descendants().First(e => (string?)e.Attribute(xName) == "ShadowLayerInner");
+        Assert.Equal("{StaticResource Effect.DialogShadowMain}",
+            inner.Attribute("Effect")?.Value ?? "");
+    }
+
+    private static readonly XName xName = XNamespace.Get("http://schemas.microsoft.com/winfx/2006/xaml") + "Name";
 
     // ---------- 尺寸与圆角阶梯 ----------
 
