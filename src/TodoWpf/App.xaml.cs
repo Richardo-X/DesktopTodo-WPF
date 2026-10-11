@@ -1,26 +1,28 @@
+using System.Threading;
 using System.Windows;
-using System.Windows.Media;
-using TodoWpf.Preview;
+using TodoWpf.Core.Persistence;
+using TodoWpf.Core.Startup;
+using TodoWpf.Windows;
 
 namespace TodoWpf;
 
 /// <summary>
-/// 应用装配（批次 02 预览形态）：按序合并设计令牌与控件样式，拉起外观预览双窗。
-/// 批次 03 起替换为三窗壳与窗口行为。
+/// 应用装配（批次 03）：单实例 → 数据引导（迁移+补结算）→ 主题字典 → 组件簇协调器 + 托盘。
 /// </summary>
 public partial class App : Application
 {
-    private const double MainPreviewWidth = 470;
-    private const double AcrylicProbeWidth = 400;
+    private const string MutexName = @"Local\DesktopTodo-WPF-SingleInstance";
+    private const string WakeEventName = @"Local\DesktopTodo-WPF-Wake";
 
     private static readonly string[] Weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
     private static ResourceDictionary? _dayTokens;
     private static ResourceDictionary? _nightTokens;
-    private static bool _isNight;
 
     /// <summary>时钟显示（设置页 12/24 制，默认 24 小时制；批次 04 接设置）。</summary>
     public static string TimeFormat => "HH:mm";
+
+    public static bool IsNight { get; private set; }
 
     public static string FormatCnDate(DateTime local) =>
         $"{local.Year}年{local.Month}月{local.Day}日 星期{Weekdays[(int)local.DayOfWeek]}";
@@ -29,7 +31,76 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        var merged = Resources.MergedDictionaries;
+        // 单实例：已开启时再启动只调出现有窗口
+        using var mutex = new Mutex(true, MutexName, out var createdNew);
+        if (!createdNew)
+        {
+            _ = EventWaitHandle.OpenExisting(WakeEventName);
+            EventWaitHandle.OpenExisting(WakeEventName).Set();
+            Shutdown();
+            return;
+        }
+
+        var wake = new EventWaitHandle(false, EventResetMode.AutoReset, WakeEventName);
+        var wakeThread = new Thread(() =>
+        {
+            while (wake.WaitOne())
+            {
+                Dispatcher.BeginInvoke(() => MainCluster?.ShowClusterFromTray());
+            }
+        })
+        {
+            IsBackground = true,
+        };
+        wakeThread.Start();
+
+        MergeThemeDictionaries();
+
+        _ = StartClusterAsync();
+    }
+
+    private static async Task StartClusterAsync()
+    {
+        var io = new SystemFileIo();
+        var result = await AppBootstrap.OpenAsync(
+            io,
+            DataPaths.NewDataFile(),
+            DataPaths.LegacyDataFile(),
+            DateTimeOffset.Now,
+            debounceMs: 100);
+
+        var repository = new JsonFileRepository(DataPaths.NewDataFile(), io, debounceMs: 100);
+        var controller = new ClusterController(result.Data, repository);
+        MainCluster = controller;
+        controller.Start();
+
+        Tray = new TrayIcon(controller);
+    }
+
+    /// <summary>当前组件簇（单实例唤醒用）。</summary>
+    public static ClusterController? MainCluster { get; private set; }
+
+    public static TrayIcon? Tray { get; private set; }
+
+    /// <summary>日/夜主题切换：交换两套令牌字典的合并顺序（后合并者胜）。</summary>
+    public static void ApplyTheme(bool night)
+    {
+        if (_dayTokens is null || _nightTokens is null)
+        {
+            return;
+        }
+
+        var merged = Current.Resources.MergedDictionaries;
+        merged.Remove(_dayTokens);
+        merged.Remove(_nightTokens);
+        merged.Add(night ? _dayTokens : _nightTokens);
+        merged.Add(night ? _nightTokens : _dayTokens);
+        IsNight = night;
+    }
+
+    private static void MergeThemeDictionaries()
+    {
+        var merged = Current.Resources.MergedDictionaries;
         merged.Add(Load("Themes/Tokens.Common.xaml"));
         _nightTokens = Load("Themes/Tokens.Night.xaml");
         _dayTokens = Load("Themes/Tokens.Day.xaml");
@@ -42,41 +113,10 @@ public partial class App : Application
         merged.Add(Load("Themes/Icons.xaml"));
         merged.Add(Load("Themes/Controls.xaml"));
 
-        var workArea = SystemParameters.WorkArea;
-        var mainLeft = Math.Max(workArea.Left, workArea.Right - MainPreviewWidth - 60);
-
-        var main = new MainPreviewWindow
+        if (_dayTokens["Color.Accent"].ToString()?.EndsWith("0A63B8", StringComparison.OrdinalIgnoreCase) == true)
         {
-            WindowStartupLocation = WindowStartupLocation.Manual,
-            Left = mainLeft,
-            Top = workArea.Top + 80,
-        };
-        var acrylic = new AcrylicProbeWindow
-        {
-            WindowStartupLocation = WindowStartupLocation.Manual,
-            Left = Math.Max(workArea.Left, mainLeft - AcrylicProbeWidth - 20),
-            Top = main.Top + 60,
-        };
-
-        acrylic.Show();
-        main.Show();
-    }
-
-    /// <summary>日/夜主题切换：交换两套令牌字典的合并顺序（后合并者胜）。</summary>
-    public static void ApplyTheme(bool night)
-    {
-        if (_dayTokens is null || _nightTokens is null)
-        {
-            return;
+            IsNight = false;
         }
-
-        var app = (App)Current;
-        var merged = app.Resources.MergedDictionaries;
-        merged.Remove(_dayTokens);
-        merged.Remove(_nightTokens);
-        merged.Add(night ? _dayTokens : _nightTokens);
-        merged.Add(night ? _nightTokens : _dayTokens);
-        _isNight = night;
     }
 
     private static ResourceDictionary Load(string relative) =>

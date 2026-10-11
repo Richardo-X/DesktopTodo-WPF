@@ -43,4 +43,8 @@
     <SolidColorBrush x:Key="Brush.Mask" Color="#750A1428"/>
     <SolidColorBrush x:Key="Brush.BlockedVeil" Color="#33141419"/>
 
+    <!-- 缩进白条（原型 #tuckBar：白 α.28，悬停亮 α.5，日夜同值） -->
+    <SolidColorBrush x:Key="Brush.TuckBar" Color="#47FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.TuckBarHover" Color="#80FFFFFF"/>
+
 </ResourceDictionary>

@@ -6,10 +6,20 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TodoWpf.Core\TodoWpf.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WinForms（托盘）与 WPF 混用时的类型歧义消解 -->
+    <Using Include="Application = System.Windows.Application" />
+    <Using Include="Point = System.Windows.Point" />
+    <Using Include="MouseEventArgs = System.Windows.Input.MouseEventArgs" />
+    <Using Include="Button = System.Windows.Controls.Button" />
+    <Using Include="Brush = System.Windows.Media.Brush" />
   </ItemGroup>
 
 </Project>

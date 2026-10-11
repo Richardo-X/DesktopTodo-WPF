@@ -1,0 +1,30 @@
+<Window x:Class="TodoWpf.Windows.ConfirmDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="确认"
+        Width="420" SizeToContent="Height"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False" WindowStartupLocation="CenterScreen"
+        UseLayoutRounding="True" TextOptions.TextRenderingMode="ClearType"
+        FontFamily="{StaticResource Font.Text}"
+        Effect="{StaticResource Effect.DialogShadowMain}">
+
+    <!-- 确认框（需求 §2.2：托盘退出唯一关闭途径的确认框；宽度 420/圆角 10/单层蓝黑投影） -->
+
+    <Border Background="{DynamicResource Brush.CardSolid}"
+            BorderBrush="{DynamicResource Brush.CardBorder}" BorderThickness="1"
+            CornerRadius="{StaticResource Radius.Dialog}" Padding="20,22">
+        <StackPanel>
+            <TextBlock x:Name="TitleText" Text="确认" FontSize="14.5" FontWeight="SemiBold"
+                       Foreground="{DynamicResource Brush.Text}" Margin="0,0,0,8"/>
+            <TextBlock x:Name="BodyText" Text="" FontSize="{StaticResource Size.BodyFont}" LineHeight="21"
+                       Foreground="{DynamicResource Brush.Muted}" TextWrapping="Wrap" Margin="0,0,0,17"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="CancelBtn" Style="{StaticResource SmallButton}" Content="取消"
+                        Width="64" Margin="0,0,9,0" Click="Cancel_Click"/>
+                <Button x:Name="OkBtn" Style="{StaticResource PrimaryButton}" Content="确定"
+                        Width="64" Click="Ok_Click"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>
