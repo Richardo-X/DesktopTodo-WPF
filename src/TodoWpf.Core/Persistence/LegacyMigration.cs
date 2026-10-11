@@ -22,6 +22,22 @@ public sealed record MigrationResult(MigrationStatus Status, string? Error);
 /// </summary>
 public static class LegacyMigration
 {
+    /// <summary>
+    /// 迁移预演（只读，不改动任何文件；供验收探针与实际执行共享同一判定）。
+    /// 返回 <see cref="MigrationStatus.Migrated"/> 表示"首次启动将执行迁移"。
+    /// </summary>
+    public static async Task<MigrationStatus> PreviewAsync(IFileIo io, string legacyPath, string targetPath)
+    {
+        if (await io.ExistsAsync(targetPath))
+        {
+            return MigrationStatus.SkippedTargetExists;
+        }
+
+        return await io.ExistsAsync(legacyPath)
+            ? MigrationStatus.Migrated
+            : MigrationStatus.SkippedNoLegacy;
+    }
+
     public static async Task<MigrationResult> MigrateIfNeededAsync(
         IFileIo io,
         string legacyPath,

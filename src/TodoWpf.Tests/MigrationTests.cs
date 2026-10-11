@@ -75,4 +75,30 @@ public class MigrationTests
         Assert.NotNull(result.Error);
         Assert.False(io.Has(TargetPath));
     }
+
+    [Fact]
+    public async Task Preview_MatchesRealDecision_AndIsReadOnly()
+    {
+        var io = new MemoryFileIo();
+
+        Assert.Equal(
+            MigrationStatus.SkippedNoLegacy,
+            await LegacyMigration.PreviewAsync(io, LegacyPath, TargetPath));
+
+        io.Put(LegacyPath, """{"v":1}""");
+
+        Assert.Equal(
+            MigrationStatus.Migrated,
+            await LegacyMigration.PreviewAsync(io, LegacyPath, TargetPath));
+
+        io.Put(TargetPath, """{"v":1}""");
+
+        Assert.Equal(
+            MigrationStatus.SkippedTargetExists,
+            await LegacyMigration.PreviewAsync(io, LegacyPath, TargetPath));
+
+        Assert.Equal(0, io.WriteCount);
+        Assert.Equal(0, io.MoveCount);
+        Assert.Equal(0, io.CreateDirectoryCount);
+    }
 }
