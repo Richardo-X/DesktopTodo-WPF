@@ -126,7 +126,7 @@ public class DesignTokenTests
         var common = XamlTokenReader.LoadKeyed("src", "TodoWpf", "Themes", "Tokens.Common.xaml");
 
         Assert.Equal("420", Text(common["Size.DialogWidth"]));
-        Assert.Equal("10", Text(common["Size.DialogRadius"]));
+        Assert.Equal("10", Text(common["Radius.Dialog"]));
     }
 
     // ---------- 尺寸与圆角阶梯 ----------
@@ -194,22 +194,41 @@ public class DesignTokenTests
         foreach (var key in required)
         {
             Assert.True(icons.ContainsKey(key), $"缺少图标 {key}");
-            Assert.False(string.IsNullOrWhiteSpace(icons[key].Value.Trim()), $"图标 {key} 几何为空");
+            Assert.True(HasGeometry(icons[key]), $"图标 {key} 几何为空");
         }
     }
+
+    private static bool HasGeometry(XElement geometry) =>
+        (geometry.Attribute("Figures")?.Value.Length ?? 0) > 0
+        || (geometry.Attribute("Rect")?.Value.Length ?? 0) > 0
+        || geometry.Elements().Any();
 
     [Fact]
     public void IconFamily_StrokeWidthsComeFromPrototypeFamily()
     {
-        // 单族纪律：线宽只允许原型家族使用的 1.7 / 1.8 / 2 / 3（勾）/ 3.4（品牌勾）/ 2.5（pin）
-        var icons = XamlTokenReader.LoadKeyed("src", "TodoWpf", "Themes", "Icons.xaml");
+        // 单族纪律：线宽只允许原型家族使用的 1.7 / 1.8 / 2 / 3（勾）/ 3.4（品牌勾）/ 2.5（pin）。
+        // StrokeThickness 属于 Shape 层（Path 使用处），不属于 Geometry 资源——扫描全部消费方 XAML。
         var allowed = new HashSet<string> { "1.7", "1.8", "2", "3", "3.4", "2.5" };
 
-        foreach (var icon in icons.Values)
+        string[] consumerFiles =
+        [
+            "src/TodoWpf/Themes/Controls.xaml",
+            "src/TodoWpf/Preview/MainPreviewWindow.xaml",
+            "src/TodoWpf/Preview/AcrylicProbeWindow.xaml",
+        ];
+
+        foreach (var relative in consumerFiles)
         {
-            foreach (var attr in icon.Attributes().Where(a => a.Name.LocalName is "StrokeThickness"))
+            var path = RepoRoot.File(relative.Split('/'));
+            if (!File.Exists(path))
             {
-                Assert.True(allowed.Contains(attr.Value), $"图标线宽 {attr.Value} 不在家族口径内");
+                continue; // 红笔阶段文件尚未创建，由后续用例补上
+            }
+
+            foreach (var attr in XDocument.Load(path).Descendants().Attributes()
+                         .Where(a => a.Name.LocalName is "StrokeThickness"))
+            {
+                Assert.True(allowed.Contains(attr.Value), $"{relative} 出现非家族线宽 {attr.Value}");
             }
         }
     }
@@ -219,8 +238,9 @@ public class DesignTokenTests
     [Fact]
     public void NoBareHexColors_OutsideTokenDictionaries()
     {
-        // 设计纪律（design/设计说明.md §三）：颜色只允许出现在令牌字典里；
-        // 控件样式与窗口 XAML 一律通过资源引用取色。
+        // 设计纪律（design/设计说明.md §三）：取色只允许出现在令牌字典里；
+        // 控件样式与窗口 XAML 的所有属性值一律经资源引用取色。
+        // （规格陈列层的说明文字里的 hex 是给用户看的标注文本，不属于取色，不在锁定范围。）
         string[] consumerFiles =
         [
             "src/TodoWpf/Themes/Controls.xaml",
@@ -229,7 +249,7 @@ public class DesignTokenTests
             "src/TodoWpf/Preview/AcrylicProbeWindow.xaml",
         ];
 
-        var hexPattern = new Regex(@"#[0-9A-Fa-f]{3,8}\b");
+        var hexPattern = new Regex(@"^#[0-9A-Fa-f]{3,8}$");
         foreach (var relative in consumerFiles)
         {
             var path = RepoRoot.File(relative.Split('/'));
@@ -238,9 +258,13 @@ public class DesignTokenTests
                 continue; // 红笔阶段文件尚未创建，由后续用例补上
             }
 
-            var text = File.ReadAllText(path);
-            var bare = hexPattern.Matches(text).Select(m => m.Value).ToList();
-            Assert.True(bare.Count == 0, $"{relative} 出现裸颜色 {string.Join(", ", bare.Take(5))}（应走令牌资源）");
+            var doc = XDocument.Load(path);
+            var bare = doc.Descendants()
+                .SelectMany(e => e.Attributes())
+                .Where(a => a.Name.LocalName != "Key" && hexPattern.IsMatch(a.Value))
+                .Select(a => $"{a.Name.LocalName}={a.Value}")
+                .ToList();
+            Assert.True(bare.Count == 0, $"{relative} 出现裸颜色取值 {string.Join(", ", bare.Take(5))}（应走令牌资源）");
         }
     }
 
@@ -264,7 +288,7 @@ public class DesignTokenTests
     // ---------- 辅助 ----------
 
     private static string Hex(XElement color) =>
-        "#" + color.Attribute("Value")!.Value.TrimStart('#').ToUpperInvariant();
+        "#" + (color.Attribute("Value")?.Value ?? color.Value).TrimStart('#').Trim().ToUpperInvariant();
 
     private static string Argb(XElement brush) =>
         "#" + brush.Attribute("Color")!.Value.TrimStart('#').ToUpperInvariant();

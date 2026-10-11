@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # ZCode 客户端会话状态（本机）
 .zcode/
+
+# 批次02 外观预览发布产物
+preview/

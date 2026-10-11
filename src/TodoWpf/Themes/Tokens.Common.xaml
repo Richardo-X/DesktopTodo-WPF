@@ -1,0 +1,98 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+      设计令牌 · 尺寸/圆角/时长/缓动（主题无关，一次定义）
+      基准：docs/参考/交互原型-v3.4-taste.html + docs/参考/v1.1.1-L1-体验说明书.md
+      技能口径（design-taste-frontend）：产品 UI 不在其 landing 射程内，本套是
+      "preserve 重设计"的桌面工具令牌系统；无官方 WPF Fluent 包，故为原生
+      ResourceDictionary（诚实口径，非重建某个官方包）。
+    -->
+
+    <!-- 圆角阶梯：6 控件 / 8 行 / 10 对话框与面板 / 4 手柄悬停 -->
+    <CornerRadius x:Key="Radius.Control">6</CornerRadius>
+    <CornerRadius x:Key="Radius.Row">8</CornerRadius>
+    <CornerRadius x:Key="Radius.Dialog">10</CornerRadius>
+    <CornerRadius x:Key="Radius.Panel">10</CornerRadius>
+    <CornerRadius x:Key="Radius.Grip">4</CornerRadius>
+
+    <!-- 按钮规格阶梯（v1.1.1 定稿）：图标 32 / 主 30 / 小 26 / 步进器 28 / 勾选框与＋框 20 -->
+    <sys:Double x:Key="Size.IconButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">32</sys:Double>
+    <sys:Double x:Key="Size.Button" xmlns:sys="clr-namespace:System;assembly=mscorlib">30</sys:Double>
+    <sys:Double x:Key="Size.SmallButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">26</sys:Double>
+    <sys:Double x:Key="Size.Stepper" xmlns:sys="clr-namespace:System;assembly=mscorlib">28</sys:Double>
+    <sys:Double x:Key="Size.Checkbox" xmlns:sys="clr-namespace:System;assembly=mscorlib">20</sys:Double>
+    <sys:Double x:Key="Size.TitlebarButtonWidth" xmlns:sys="clr-namespace:System;assembly=mscorlib">42</sys:Double>
+    <sys:Double x:Key="Size.TitlebarHeight" xmlns:sys="clr-namespace:System;assembly=mscorlib">36</sys:Double>
+    <!-- RowDefinition.Height 需要 GridLength（Double 不能用于该属性） -->
+    <GridLength x:Key="GridLength.Titlebar">36</GridLength>
+    <sys:Double x:Key="Size.BackButtonWidth" xmlns:sys="clr-namespace:System;assembly=mscorlib">34</sys:Double>
+
+    <!-- 图标尺寸阶梯：按容器分配 16 / 13 / 11 / 12 -->
+    <sys:Double x:Key="Size.IconLarge" xmlns:sys="clr-namespace:System;assembly=mscorlib">16</sys:Double>
+    <sys:Double x:Key="Size.IconMedium" xmlns:sys="clr-namespace:System;assembly=mscorlib">13</sys:Double>
+    <sys:Double x:Key="Size.IconSmall" xmlns:sys="clr-namespace:System;assembly=mscorlib">11</sys:Double>
+    <sys:Double x:Key="Size.IconCheck" xmlns:sys="clr-namespace:System;assembly=mscorlib">12</sys:Double>
+
+    <!-- 窗口基准（v3.4 布局口径） -->
+    <sys:Double x:Key="Size.MainWindowWidth" xmlns:sys="clr-namespace:System;assembly=mscorlib">470</sys:Double>
+    <sys:Double x:Key="Size.MainWindowHeight" xmlns:sys="clr-namespace:System;assembly=mscorlib">640</sys:Double>
+    <sys:Double x:Key="Size.SideWindowWidth" xmlns:sys="clr-namespace:System;assembly=mscorlib">310</sys:Double>
+    <sys:Double x:Key="Size.ClusterGap" xmlns:sys="clr-namespace:System;assembly=mscorlib">4</sys:Double>
+
+    <!-- 时钟（30px Display 半粗 + 12px 日期；等宽数字在用例处以 Typography 设置） -->
+    <sys:Double x:Key="Size.ClockTimeFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">30</sys:Double>
+    <sys:Double x:Key="Size.ClockDateFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">12</sys:Double>
+
+    <!-- 字号阶梯（正文 12.5 / 小注 11.5 / 微标 11） -->
+    <sys:Double x:Key="Size.BodyFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">12.5</sys:Double>
+    <sys:Double x:Key="Size.SmallFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">11.5</sys:Double>
+    <sys:Double x:Key="Size.MicroFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">11</sys:Double>
+
+    <!-- 字体（技能 §4.1：系统字体，禁外链字体 CDN 的 WPF 对应做法） -->
+    <FontFamily x:Key="Font.Text">Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI</FontFamily>
+    <FontFamily x:Key="Font.Display">Segoe UI Variable Display, Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI</FontFamily>
+
+    <!-- 动效（L1）：统一缓出 cubic-bezier(.22,.61,.36,1)；时长 120/150/180ms -->
+    <KeySpline x:Key="KeySpline.EaseOut" ControlPoint1="0.22,0.61" ControlPoint2="0.36,1"/>
+    <Duration x:Key="Duration.Press">0:0:0.12</Duration>
+    <Duration x:Key="Duration.Row">0:0:0.15</Duration>
+    <Duration x:Key="Duration.Hover">0:0:0.18</Duration>
+    <sys:Double x:Key="Double.PressScale" xmlns:sys="clr-namespace:System;assembly=mscorlib">0.96</sys:Double>
+
+    <!-- 确认框（L1 定稿）：宽 420、圆角 10、双层蓝黑投影 rgba(10,20,40,.5/.25) -->
+    <sys:Double x:Key="Size.DialogWidth" xmlns:sys="clr-namespace:System;assembly=mscorlib">420</sys:Double>
+    <Color x:Key="Color.ShadowTint">#0A1428</Color>
+    <sys:Double x:Key="Double.DialogShadowOpacity" xmlns:sys="clr-namespace:System;assembly=mscorlib">0.5</sys:Double>
+    <sys:Double x:Key="Double.DialogShadowOpacitySoft" xmlns:sys="clr-namespace:System;assembly=mscorlib">0.25</sys:Double>
+    <DropShadowEffect x:Key="Effect.DialogShadowMain"
+                      Color="{StaticResource Color.ShadowTint}"
+                      Opacity="{StaticResource Double.DialogShadowOpacity}"
+                      BlurRadius="28" ShadowDepth="12" Direction="270"/>
+    <DropShadowEffect x:Key="Effect.DialogShadowSoft"
+                      Color="{StaticResource Color.ShadowTint}"
+                      Opacity="{StaticResource Double.DialogShadowOpacitySoft}"
+                      BlurRadius="8" ShadowDepth="2" Direction="270"/>
+
+    <!-- 危险系（日夜同值，继承原型）：按钮 / 危险幽灵描边 / 悬停深红 -->
+    <SolidColorBrush x:Key="Brush.Danger" Color="#C42B1C"/>
+    <SolidColorBrush x:Key="Brush.DangerHover" Color="#A9271C"/>
+    <SolidColorBrush x:Key="Brush.DangerBorder" Color="#8CC42B1C"/>
+
+    <!-- 玻璃窗沿（原型 .win 边框，日夜同值） -->
+    <SolidColorBrush x:Key="Brush.GlassEdge" Color="#2EFFFFFF"/>
+
+    <!-- 键盘焦点描边（L1 第 8 项：仅键盘焦点；样式引用 Accent 画刷） -->
+    <Style x:Key="FocusRing">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Rectangle Margin="-2" StrokeThickness="2"
+                               Stroke="{DynamicResource Brush.Accent}"
+                               RadiusX="7" RadiusY="7"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

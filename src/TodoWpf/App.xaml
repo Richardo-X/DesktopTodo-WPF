@@ -1,9 +1,6 @@
-﻿<Application x:Class="TodoWpf.App"
+<Application x:Class="TodoWpf.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:TodoWpf"
-             StartupUri="MainWindow.xaml">
-    <Application.Resources>
-         
-    </Application.Resources>
+             ShutdownMode="OnLastWindowClose">
+    <!-- 资源字典在 App.xaml.cs OnStartup 按序合并（减少动画关怀需在控件样式解析前判定） -->
 </Application>

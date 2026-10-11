@@ -1,0 +1,15 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+      减少动画关怀（L1 第 10 项）：系统关闭客户端区域动画时
+      （WPF SystemParameters.ClientAreaAnimation == false，即 SPI_GETCLIENTAREAANIMATIONS），
+      启动时在令牌之后、控件样式之前合并本字典——同名 Duration 令牌全部归零，
+      控件样式里经 StaticResource 解析到的时长即为 0。
+    -->
+
+    <Duration x:Key="Duration.Press">0:0:0</Duration>
+    <Duration x:Key="Duration.Row">0:0:0</Duration>
+    <Duration x:Key="Duration.Hover">0:0:0</Duration>
+
+</ResourceDictionary>
