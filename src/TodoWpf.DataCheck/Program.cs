@@ -93,7 +93,19 @@ internal static class Program
         Console.WriteLine($"  修改时间：{before.LastWriteTimeUtc:yyyy-MM-dd HH:mm:ss} UTC（读取前/后{(unchanged ? "一致" : "不一致")}）");
         Console.WriteLine($"  文件大小：{after.Length} 字节");
         Console.WriteLine(unchanged ? "  文件未被修改 ✓" : "  警告：文件发生了变化，请报告！");
+        PrintAcceptanceHint();
         return 0;
+    }
+
+    /// <summary>批次验收提示（中文由本工具输出：cmd 脚本本身保持纯 ASCII，避免控制台编码问题）。</summary>
+    private static void PrintAcceptanceHint()
+    {
+        Console.WriteLine();
+        Console.WriteLine("【批次 01（核心数据层）验收怎么看】");
+        Console.WriteLine("  1. dotnet build → 出现“0 个错误”");
+        Console.WriteLine("  2. dotnet test  → 出现“失败: 0”");
+        Console.WriteLine("  3. 本探针 → 上面出现“文件未被修改 ✓”，且统计/设置与旧版一致");
+        Console.WriteLine("  三项都满足即验收通过；有异常请把本窗口内容截图发给开发会话。");
     }
 
     private static void PrintStats(AppData data, string todayKey)
