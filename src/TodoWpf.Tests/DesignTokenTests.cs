@@ -129,6 +129,18 @@ public class DesignTokenTests
         Assert.Equal("10", Text(common["Radius.Dialog"]));
     }
 
+    [Fact]
+    public void ShadowComparison_ProvidesBlueAndPureBlackVariants()
+    {
+        // 验收反馈（批次 02）：确认框投影需提供三档对比样张——双层蓝黑（L1 定稿）/ 单层蓝黑 / 单层纯黑对照。
+        var common = XamlTokenReader.LoadKeyed("src", "TodoWpf", "Themes", "Tokens.Common.xaml");
+
+        Assert.True(common.ContainsKey("Effect.DialogShadowMain"), "缺单层蓝黑主投影");
+        Assert.True(common.ContainsKey("Effect.DialogShadowSoft"), "缺双层软投影");
+        Assert.True(common.ContainsKey("Effect.DialogShadowBlack"), "缺单层纯黑对照投影");
+        Assert.Equal("#000000", Hex(common["Color.ShadowBlack"]));
+    }
+
     // ---------- 尺寸与圆角阶梯 ----------
 
     [Fact]
