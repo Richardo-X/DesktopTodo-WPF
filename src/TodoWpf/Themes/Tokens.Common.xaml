@@ -63,6 +63,7 @@
     <!-- 确认框（L1 定稿）：宽 420、圆角 10、双层蓝黑投影 rgba(10,20,40,.5/.25) -->
     <sys:Double x:Key="Size.DialogWidth" xmlns:sys="clr-namespace:System;assembly=mscorlib">420</sys:Double>
     <Color x:Key="Color.ShadowTint">#0A1428</Color>
+    <Color x:Key="Color.ShadowBlack">#000000</Color>
     <sys:Double x:Key="Double.DialogShadowOpacity" xmlns:sys="clr-namespace:System;assembly=mscorlib">0.5</sys:Double>
     <sys:Double x:Key="Double.DialogShadowOpacitySoft" xmlns:sys="clr-namespace:System;assembly=mscorlib">0.25</sys:Double>
     <DropShadowEffect x:Key="Effect.DialogShadowMain"
@@ -73,6 +74,11 @@
                       Color="{StaticResource Color.ShadowTint}"
                       Opacity="{StaticResource Double.DialogShadowOpacitySoft}"
                       BlurRadius="8" ShadowDepth="2" Direction="270"/>
+    <!-- 纯黑单层对照（规格陈列对比用：展示为何 L1 弃纯黑改蓝黑） -->
+    <DropShadowEffect x:Key="Effect.DialogShadowBlack"
+                      Color="{StaticResource Color.ShadowBlack}"
+                      Opacity="{StaticResource Double.DialogShadowOpacity}"
+                      BlurRadius="28" ShadowDepth="12" Direction="270"/>
 
     <!-- 危险系（日夜同值，继承原型）：按钮 / 危险幽灵描边 / 悬停深红 -->
     <SolidColorBrush x:Key="Brush.Danger" Color="#C42B1C"/>
