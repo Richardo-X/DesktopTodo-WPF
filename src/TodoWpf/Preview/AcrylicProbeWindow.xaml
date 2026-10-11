@@ -1,0 +1,75 @@
+<Window x:Class="TodoWpf.Preview.AcrylicProbeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="磨砂实验 · 预览工具"
+        Width="400" Height="330"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="True"
+        UseLayoutRounding="True" TextOptions.TextRenderingMode="ClearType"
+        FontFamily="{StaticResource Font.Text}">
+
+    <!-- 磨砂实验窗（预览工具）：C2 判定 = 真 Acrylic。开关切换 DWM blur behind，卡面保持半透明。 -->
+
+    <Border x:Name="Root"
+            Background="{DynamicResource Brush.WinBg}"
+            BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
+            CornerRadius="{StaticResource Radius.Panel}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="Titlebar_Drag">
+                <TextBlock Text="磨砂实验 · 预览工具" FontSize="{StaticResource Size.BodyFont}"
+                           FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"
+                           Margin="12,0,0,0" VerticalAlignment="Center"/>
+                <Button Style="{StaticResource TitlebarCloseButton}" Tag="{StaticResource Icon.X}"
+                        HorizontalAlignment="Right" ToolTip="关闭实验窗" Click="CloseBtn_Click"/>
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="16,8,16,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" FontSize="{StaticResource Size.MicroFont}"
+                           Foreground="{DynamicResource Brush.Muted}"
+                           Text="按住本窗标题栏，把它拖到桌面壁纸上对比磨砂效果；再按开关切换，观察背景从清晰变为模糊。"
+                           TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                <!-- 卡面采样（半透明；磨砂开=DWM 模糊透出壁纸，磨砂关=半透明不模糊） -->
+                <Border Grid.Row="1" Background="{DynamicResource Brush.Card}"
+                        BorderBrush="{DynamicResource Brush.CardBorder}" BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Row}" Padding="12">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="磨砂卡面采样" FontSize="{StaticResource Size.BodyFont}"
+                                   FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"/>
+                        <TextBlock Text="磨砂开启时，这行文字背后的壁纸应该被模糊；"
+                                   FontSize="{StaticResource Size.MicroFont}"
+                                   Foreground="{DynamicResource Brush.Muted}" Margin="0,4,0,0"/>
+                        <TextBlock Text="关闭时保持半透明但背景清晰（上一版 Electron 的对照形态）。"
+                                   FontSize="{StaticResource Size.MicroFont}"
+                                   Foreground="{DynamicResource Brush.Muted}"/>
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,12,0,0">
+                    <Button x:Name="AcrylicToggle" Style="{StaticResource PrimaryButton}"
+                            Content="磨砂：开" Click="AcrylicToggle_Click"/>
+                    <TextBlock x:Name="StateText" FontSize="{StaticResource Size.MicroFont}"
+                               Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Center"
+                               Margin="10,0,0,0" Text="DWM blur behind 已启用"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="3" FontSize="{StaticResource Size.MicroFont}"
+                           Foreground="{DynamicResource Brush.Faint}" TextWrapping="Wrap"
+                           Margin="0,10,0,0"
+                           Text="判定口径（C2）：本机能出真模糊 = 可用；出现黑块/拖影/明显卡顿 = 记录现象报告。Win10 与 Win11 的 DWM 通道不同，实验结论会如实记录。"/>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

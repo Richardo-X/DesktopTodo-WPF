@@ -485,4 +485,4 @@ $RECYCLE.BIN/
 .zcode/
 
 # 批次02 外观预览发布产物
-preview/
+/preview/
