@@ -13,7 +13,7 @@ public class ClusterLayoutTests
         Assert.Equal(470, ClusterLayout.MainWidth);
         Assert.Equal(640, ClusterLayout.MainHeight);
         Assert.Equal(310, ClusterLayout.SideWidth);
-        Assert.Equal(310, ClusterLayout.SideHeight);
+        Assert.Equal(640, ClusterLayout.SideHeight);
         Assert.Equal(4, ClusterLayout.Gap);
         Assert.Equal(0.7, ClusterLayout.MinScale);
     }
@@ -45,7 +45,8 @@ public class ClusterLayoutTests
         var anchor = new WinPoint(100, 100);
 
         var onlyMain = ClusterLayout.Arrange(WorkArea, anchor, 1.0, quickVisible: false, doneVisible: false);
-        Assert.Equal(720, onlyMain.Quick.X); // 语义值（隐藏窗不出场）
+        // 隐藏面板仍给出"若显示应在"的几何（快捷窗右缘=锚点-4），由 Visible 决定是否出场
+        Assert.Equal(100 - 4 - 310, onlyMain.Quick.X);
         Assert.False(onlyMain.Quick.Visible);
         Assert.False(onlyMain.Done.Visible);
         Assert.True(onlyMain.Main.Visible);
@@ -81,9 +82,9 @@ public class ClusterLayoutTests
     [Fact]
     public void ClampScale_RespectsWorkAreaWidthLimit()
     {
-        // 窄屏 1000 宽：三窗全开总宽 = (470+310+310)*s + 2*4 ≤ 1000 → s ≤ 0.987…
+        // 窄屏 1000 宽：三窗全开总宽（含 2 条缝隙）= 470+4+310+4+310 = 1098 → s ≤ 1000/1098
         var clamped = ClusterLayout.ClampScale(1.2, new WinRect(0, 0, 1000, 1040), true, true);
-        Assert.Equal((1000 - 8) / (470.0 + 310 + 310), clamped, 10);
+        Assert.Equal(1000 / 1098.0, clamped, 10);
 
         // 只开主窗时宽度上限更宽松
         var mainOnly = ClusterLayout.ClampScale(1.2, new WinRect(0, 0, 1000, 1040), false, false);
