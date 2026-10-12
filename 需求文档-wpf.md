@@ -6,7 +6,7 @@
 | 创建日期 | 2026-10-11 |
 | 技术栈 | C# / .NET 10 LTS / WPF（net10.0-windows） |
 | 需求来源 | `docs/参考/需求文档-electron-v1.4.md`（全量原文）+ 2026-10-11 用户判定 |
-| 设计基准 | `docs/参考/交互原型-v3.4-taste.html` + `design/设计说明.md`（设计层整体移交 design-taste-frontend） |
+| 设计基准 | `docs/参考/交互原型-v3.4-L1.html`（= 应用 v1.1.1 视觉终态；2026-10-12 起为权威基准） + `design/设计说明.md`（设计层整体移交 design-taste-frontend） |
 | 可行性 | 2026-10-11 已完成 WPF 可行性分析：全部基础需求可行，无阻断项 |
 
 ---

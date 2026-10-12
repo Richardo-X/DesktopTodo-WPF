@@ -3,7 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>桌面待办 · 交互原型 v3.3（缩放呈现演示——边框缩放+底色代替）</title>
+<title>桌面待办 · 交互原型 v3.4-L1（= 应用 v1.1.1 视觉终态）</title>
+<!--
+  ================= v3.4-L1 =================
+  本文件由 交互原型-v3.4-taste.html 改名而来（2026-10-12，用户指示）。
+  定位：v3.3 纯净基线 + L1 视觉精修（L1 轮 + L1.5 反馈轮）= 落地应用 v1.1.1 的设计终态镜像。
+  本轮回补（L1.5 定稿中应用侧领先于原型的三处，与 v1.1.1 逐像素对齐）：
+    ① 主窗 ⚡ 图标光学配平：原型原路径外包 g 0.8 等比缩放（墨迹与 ☑ 同高，见 #quickBtn）
+    ② 列表左右端对齐 2px：.actions / .foot-btn / .batch-bar 收 2px 与列表行同边
+    ③ .btn.sm 间隙 5px（26px 小按钮带图标口径，同应用 .btn.sm/.b）
+  已知非 L1 差异（v3.3 与 v3.4 两侧一致的既有漂移，本轮未动）：图标按钮底纹（应用为浅底描边）、
+  二级窗动作按钮尺寸（原型 .btn 30px vs 应用 .b 26px）、历史窗导航形态、已完成列表自绘滑块、
+  勾选绘制动画、快捷窗空态文案等——完整清单见 HANDOFF §11.E。
+-->
+
 <style>
 :root{
   --accent:#0a63b8; --accent-hover:#0d6fc9; --accent-fg:#ffffff;
@@ -123,7 +136,8 @@ body{
 .clock{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 0 10px}
 .clock-time{font-size:30px;font-weight:600;line-height:1.1;letter-spacing:1px;font-variant-numeric:tabular-nums;font-family:var(--font-display)}
 .clock-date{font-size:12px;color:var(--muted)}
-.actions{display:grid;grid-template-columns:1fr auto auto;gap:6px 8px;align-items:center;padding-bottom:10px;position:relative}
+/* v3.4-L1：左右端 2px——操作区与下方列表行同边（.scroll 内边距 2px），按钮边缘和列表边缘对齐（同应用 .actions） */
+.actions{display:grid;grid-template-columns:1fr auto auto;gap:6px 8px;align-items:center;padding:0 2px 10px;position:relative}
 /* 日期行「行内」模式：日期穿过操作区第一行中间空档（⚡ 与 ☑ 之间），不再占独立行 */
 .actions .a-date{position:absolute;left:50%;top:16px;transform:translate(-50%,-50%);margin:0;white-space:nowrap}
 /* 仅日期行内：时间下移贴住日期（按钮行位置不变，顶部留白相应增大） */
@@ -198,7 +212,8 @@ body{
 .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px}
 .empty-main{font-size:16px;color:var(--muted);letter-spacing:2px}
 .empty-sub{font-size:11.5px;color:var(--faint)}
-.foot-btn{flex:none;margin-top:8px}
+/* v3.4-L1：左右端 2px——与上方已完成列表行同边（.scroll 内边距 2px），按钮边缘和列表边缘对齐（同应用 .foot） */
+.foot-btn{flex:none;margin:8px 2px 0}
 
 /* ---------- 按钮 / 开关 / 表单 ---------- */
 .btn{height:30px;padding:0 13px;border-radius:6px;border:1px solid var(--btn-border);background:var(--btn);color:var(--text);font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
@@ -210,7 +225,8 @@ body{
 .btn.danger{background:var(--danger);border-color:transparent;color:#fff}
 .btn.danger:hover:not(:disabled){background:#a9271c}
 .btn.danger-ghost{color:var(--danger);border-color:rgba(196,43,28,.55)}
-.btn.sm{height:26px;padding:0 9px;font-size:11.5px}
+/* v3.4-L1：带图标小按钮行内间隙 5px（同应用 .btn.sm/.b；30px 大按钮保持 .btn 基础 6px） */
+.btn.sm{height:26px;padding:0 9px;font-size:11.5px;gap:5px}
 .btn.block{width:100%;justify-content:center}
 .btn:active,.icon-btn:active,.checkbox:active,.plusbox:active{transform:scale(.96)}
 .btn,.icon-btn,.checkbox,.plusbox,.switch,.wbtn{transition:transform .12s var(--ease-out),background-color .18s var(--ease-out),border-color .18s var(--ease-out),color .18s var(--ease-out)}
@@ -372,7 +388,7 @@ input[type="date"]{font-size:calc(11.5px * var(--fs))}
 /* 8.2-3 全禁（定稿：维持置灰，"只禁点不置灰"不采纳）：批量进行中，
  * 非当前批量目标的窗口/按钮整体冻结——不可点+45% 置灰示意（与模态锁定同风格） */
 .frozen{pointer-events:none;user-select:none;opacity:.45}
-.batch-bar{flex:none;display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 10px;border:1px solid var(--accent);border-radius:8px;background:var(--hover);font-size:calc(12px * var(--fs));color:var(--muted)}
+.batch-bar{flex:none;display:flex;align-items:center;gap:10px;margin:8px 2px 0;padding:8px 10px;border:1px solid var(--accent);border-radius:8px;background:var(--hover);font-size:calc(12px * var(--fs));color:var(--muted)}
 .checkbox:disabled,.plusbox:disabled{opacity:.35;cursor:default}
 
 ::-webkit-scrollbar{width:9px;height:9px}
@@ -381,7 +397,7 @@ input[type="date"]{font-size:calc(11.5px * var(--fs))}
 </style>
 </head>
 <body>
-<div class="watermark">WINDOWS 11 桌面 · 交互原型 v3.2（三窗分离评审版 · 非正式软件）</div>
+<div class="watermark">WINDOWS 11 桌面 · 交互原型 v3.4-L1（= 应用 v1.1.1 视觉终态 · 非正式软件）</div>
 
 <!-- v3.2 评审要点 -->
 <div id="notesPanel">
@@ -1035,7 +1051,9 @@ function renderMain(){
       ${dateInline?'':'<div class="clock-date" id="clockDate"></div>'}
     </div>`}
     <div class="actions${clockInline?' clock-inline':''}">
-      <button class="icon-btn a-bolt ${batch.target?'frozen':''} ${S().quickVisible?'on':''}" id="quickBtn" title="快捷添加（独立窗口显示/隐藏）">${I.bolt}</button>
+      <!-- v3.4-L1（同应用）：⚡ 路径外包 g 0.8 等比缩放=光学配平——原路径墨迹 16×20 单位，比 ☑（18×16）高一档，
+           缩放后两者墨迹同高。I.bolt 本身保持原样（二级窗「添加到模板」仍用原始比例） -->
+      <button class="icon-btn a-bolt ${batch.target?'frozen':''} ${S().quickVisible?'on':''}" id="quickBtn" title="快捷添加（独立窗口显示/隐藏）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(12 12) scale(0.8) translate(-12 -12)"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></g></svg></button>
       ${dateInline?'<span class="clock-date a-date" id="clockDate"></span>':''}
       ${clockInline?`<div class="clock-inline-block"><div class="clock-time" id="clockTime"></div><div class="clock-date" id="clockDate"></div></div>`:''}
       <span class="cap-chip a-chip">待办 ${state.todos.length}/${S().maxItems}</span>
