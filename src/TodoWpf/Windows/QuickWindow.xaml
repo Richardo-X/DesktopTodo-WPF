@@ -9,8 +9,13 @@
 
     <!-- 快捷添加（模板库）壳：假数据；业务批次 04 接线 -->
 
+    <!-- 卡面尺寸＝当前目标档（由 SetContentScale 写 Width/Height），**不再铺满窗口**：
+         拖动缩放时窗口矩形会预先放大到本次上限（方案 D：矩形冻结以避免合成器重贴旧表面），
+         若卡面仍铺满窗口，就会出现"一按角标整块卡跳到最大"（用户 2026-10-13 反馈）。
+         卡面右上角对齐，于是按上限放大的那圈窗口区域全透明、看不见。 -->
     <Border x:Name="CardRoot" Background="{DynamicResource Brush.WinBg}"
             BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
+            HorizontalAlignment="Right" VerticalAlignment="Top"
             CornerRadius="{StaticResource Radius.Panel}">
 
         <!-- 内容按设计尺寸（310×640）绘制一次，缩放走 LayoutTransform（ScaleTransform）：

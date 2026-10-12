@@ -144,6 +144,7 @@ public sealed class ClusterController : IDisposable
         // 显隐交给 ApplyLayout（按存档的面板开关决定）——此前三个窗口无条件 Show()，
         // 会把"已关闭"的面板以 WPF 默认尺寸（1536×844）显示出来（Viewbox 又把内容放大填满）= 启动巨窗 bug。
         _main.SetPanelToggles(_data.UiState.QuickVisible, _data.UiState.DoneVisible);
+
     }
 
     // ---------- 布局 ----------
@@ -530,14 +531,14 @@ public sealed class ClusterController : IDisposable
 
             if (TraceResize)
             {
-                var dpi = VisualTreeHelper.GetDpi(_quick);
-                var rect = WindowPlacement.PhysicalRight(_quick);
-                var contentRight = _quick.ContentRightInDip();
+                var winRight = WindowPlacement.PhysicalRight(_quick);
+                var cardRight = _quick.CardRightInWindowDip();
                 try
                 {
                     System.IO.File.AppendAllText(
                         System.IO.Path.Combine(System.IO.Path.GetTempPath(), "resize-trace.log"),
-                        $"scale={_scale:F4} quickWinRightPhysical={rect} quickContentRightDip={contentRight:F2}"
+                        $"scale={_scale:F4} frozen={( _quickResizeFrozen is not null)} "
+                        + $"quickWinRightPhysical={winRight} quickCardRightDip={cardRight:F2} quickCardW={_quick.Card.Width:F1}"
                         + Environment.NewLine);
                 }
                 catch { }
