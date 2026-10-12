@@ -42,6 +42,13 @@ public sealed class ClusterController : IDisposable
     private bool _resizing;
     private Point _resizeStartMouse;
     private double _resizeStartMainWidth;
+
+    /// <summary>
+    /// 方案 D（仅快捷窗）：拖动期间它的窗口矩形冻结不动，只让内容在渲染层缩放预览，松手一次落位。
+    /// 冻结值取"本次拖动可能达到的最大档"，保证放大时内容不会被截。
+    /// 这样拖动全程不改快捷窗的窗口矩形 ⇒ 合成器没有"新矩形+旧表面"的机会 ⇒ 缝隙/残影不再出现。
+    /// </summary>
+    private WinRect? _quickResizeFrozen;
     private WinPoint _dragStartAnchor;
     private Point _dragStartMouse;
 
@@ -184,6 +191,24 @@ public sealed class ClusterController : IDisposable
         return physical / dpi.DpiScaleX / designWidth;
     }
 
+    /// <summary>
+    /// 方案 D：算出快捷窗"冻结矩形"——按本次拖动能达到的最大档计算，右缘仍钉在主窗左缘减缝隙。
+    /// 拖动期间快捷窗就停在这个矩形上，内容另行缩放。
+    /// </summary>
+    private WinRect? ComputeFrozenQuickRect()
+    {
+        var ui = _data.UiState;
+        if (!ui.QuickVisible)
+        {
+            return null;
+        }
+
+        var workArea = WorkArea();
+        var maxScale = ClusterLayout.MaxScale(workArea, ui.QuickVisible, ui.DoneVisible);
+        var frame = ClusterLayout.Arrange(workArea, SnappedAnchor(), maxScale, ui.QuickVisible, ui.DoneVisible);
+        return frame.Quick.Rect;
+    }
+
     /// <summary>按锚点+缩放+开关重排三窗（隐藏窗同时就位但不出场）。</summary>
     public void ApplyLayout(bool saveState = true)
     {
@@ -191,10 +216,21 @@ public sealed class ClusterController : IDisposable
         var workArea = WorkArea();
         var frame = ClusterLayout.Arrange(workArea, SnappedAnchor(), _scale, ui.QuickVisible, ui.DoneVisible);
 
-        PlaceBatch(
-            (frame.Main.Rect, _main, true, PinEdge.Left),
-            (frame.Quick.Rect, _quick, frame.Quick.Visible, PinEdge.Right),
-            (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
+        // 方案 D：拖动期间完全不提交快捷窗的几何（矩形已在拖动开始时冻结），
+        // 只在渲染层改它的内容缩放 → 拖动全程零 SetWindowPos，缝隙/残影无从出现。
+        if (_resizing && _quickResizeFrozen is not null)
+        {
+            PlaceBatch(
+                (frame.Main.Rect, _main, true, PinEdge.Left),
+                (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
+        }
+        else
+        {
+            PlaceBatch(
+                (frame.Main.Rect, _main, true, PinEdge.Left),
+                (frame.Quick.Rect, _quick, frame.Quick.Visible, PinEdge.Right),
+                (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
+        }
 
         // 内容缩放比不从 _scale 直接取，而是从"窗口矩形取整后的实际尺寸"反推：
         // 窗口宽度要落到整数物理像素（PlaceBatch 里 round），若内容仍按原始 _scale 排版，
@@ -399,6 +435,14 @@ public sealed class ClusterController : IDisposable
         _resizing = true;
         _resizeStartMouse = ToScreen(_main, e);
         _resizeStartMainWidth = _main.ActualWidth;
+        _quickResizeFrozen = ComputeFrozenQuickRect();
+        if (_quickResizeFrozen is { } frozen)
+        {
+            // 就这一次把快捷窗摆到冻结矩形（放大到本次上限）。之后整个拖动过程不再改它的矩形，
+            // 合成器因此没有"新矩形 + 旧表面"的重贴机会。透明区域内侧不外扩可见内容，观感无跳变。
+            WindowPlacement.SetBoundsBatch([(_quick, frozen, PinEdge.Right)]);
+        }
+
         _tuck.SetResizing(true);
         SetResizeVisual(resizing: true);
         _ = _main.CaptureMouse();
@@ -431,6 +475,7 @@ public sealed class ClusterController : IDisposable
         }
 
         _resizing = false;
+        _quickResizeFrozen = null;
         _main.MouseMove -= ScaleGrip_MouseMove;
         _main.MouseUp -= ScaleGrip_MouseUp;
         if (_main.IsMouseCaptured)
@@ -455,7 +500,7 @@ public sealed class ClusterController : IDisposable
     /// 【临时测试开关】屏蔽快捷添加窗的内容层——只留卡面底色 + 1px 描边，用来对照
     /// "内容重绘"对拖缩放时观感的影响。测完改回 false（或改为"仅拖动期间"）。
     /// </summary>
-    private const bool HideQuickContentForTest = true;
+    private const bool HideQuickContentForTest = false;
 
     private void SetResizeVisual(bool resizing)
     {
