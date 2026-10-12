@@ -40,6 +40,8 @@ public sealed class ClusterController : IDisposable
     // 拖动/缩放进行中状态
     private bool _dragging;
     private bool _resizeLayoutQueued;
+    private double _resizeStartMainWidth;
+    private double _resizeTotalDelta;
     private WinPoint _dragStartAnchor;
     private Point _dragStartMouse;
 
@@ -66,6 +68,7 @@ public sealed class ClusterController : IDisposable
         _main.TitlebarPressed += OnTitlebarPressed;
         _quick.TitlebarPressed += OnTitlebarPressed;
         _done.TitlebarPressed += OnTitlebarPressed;
+        _main.ScaleGripHandle.DragStarted += ScaleGrip_DragStarted;
         _main.ScaleGripHandle.DragDelta += ScaleGrip_DragDelta;
         _main.ScaleGripHandle.DragCompleted += ScaleGrip_DragCompleted;
         _tuckBar.BarHit += (_, _) => OnPointerEnter();
@@ -213,8 +216,10 @@ public sealed class ClusterController : IDisposable
         // 仅在变化时写入：拖动/缩放期间每帧重设宽高会强制重排并引发抖动（批次 03 验收反馈）
         var x = SnapToDevicePixel(window, rect.X);
         var y = SnapToDevicePixel(window, rect.Y);
-        if (window.Width != rect.Width) { window.Width = rect.Width; }
-        if (window.Height != rect.Height) { window.Height = rect.Height; }
+        var w = SnapToDevicePixel(window, rect.Width);
+        var h = SnapToDevicePixel(window, rect.Height);
+        if (window.Width != w) { window.Width = w; }
+        if (window.Height != h) { window.Height = h; }
         if (window.Left != x) { window.Left = x; }
         if (window.Top != y) { window.Top = y; }
 
@@ -309,12 +314,20 @@ public sealed class ClusterController : IDisposable
 
     // ---------- 等比缩放 ----------
 
+    /// <summary>缩放起点宽度：以它为基准累加增量——帧节流会合并同帧多次事件，绝不能逐次以 ActualWidth 为基准（会丢增量、跟手变差）。</summary>
+    private void ScaleGrip_DragStarted(object sender, DragStartedEventArgs e)
+    {
+        _resizeStartMainWidth = _main.ActualWidth;
+        _resizeTotalDelta = 0;
+    }
+
     private void ScaleGrip_DragDelta(object sender, DragDeltaEventArgs e)
     {
+        _resizeTotalDelta += e.HorizontalChange;
         var ui = _data.UiState;
         var targetMainWidth = Math.Max(
             ClusterLayout.MainWidth * ClusterLayout.MinScale,
-            _main.ActualWidth + e.HorizontalChange);
+            _resizeStartMainWidth + _resizeTotalDelta);
         var rawScale = targetMainWidth / ClusterLayout.MainWidth;
         _scale = ClusterLayout.ClampScale(rawScale, WorkArea(), ui.QuickVisible, ui.DoneVisible);
         _tuck.SetResizing(true);
