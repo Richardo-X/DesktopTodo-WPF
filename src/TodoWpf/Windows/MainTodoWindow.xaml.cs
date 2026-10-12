@@ -25,8 +25,15 @@ public partial class MainTodoWindow : Window
     /// <summary>卡面根（缩放期间切换为不透明底以抑制拖影）。</summary>
     public Border Card => CardRoot;
 
+    /// <summary>按屏等比缩放内容（只改变换，不触发布局）。</summary>
+    public void SetContentScale(double scale)
+    {
+        ContentScale.ScaleX = scale;
+        ContentScale.ScaleY = scale;
+    }
+
     /// <summary>卡面内容（缩放期间冻结，只留窗壳）。</summary>
-    public Viewbox CardBody => CardContent;
+    public FrameworkElement CardBody => CardContent;
 
     public void SetCount(int current, int max) => CountText.Text = $"待办 {current}/{max}";
 

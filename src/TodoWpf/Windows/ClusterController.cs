@@ -172,6 +172,10 @@ public sealed class ClusterController : IDisposable
         Place(_quick, frame.Quick.Rect, frame.Quick.Visible);
         Place(_done, frame.Done.Rect, frame.Done.Visible);
 
+        _main.SetContentScale(_scale);
+        _quick.SetContentScale(_scale);
+        _done.SetContentScale(_scale);
+
         // 白条定位：可见组水平中心、贴屏顶
         var left = frame.Quick.Visible ? frame.Quick.Rect.X : frame.Main.Rect.X;
         var right = frame.Done.Visible ? frame.Done.Rect.Right : frame.Main.Rect.Right;

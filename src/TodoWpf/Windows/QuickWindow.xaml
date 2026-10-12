@@ -15,8 +15,13 @@
             CornerRadius="{StaticResource Radius.Panel}">
         <!-- 等比缩放：内容按设计尺寸固定绘制，再由 Viewbox 整体缩放（含文字），
              使"缩放=真窗口尺寸变化+内容同步缩放"与原型口径一致（批次 03 验收修复） -->
-        <Viewbox x:Name="CardContent" Stretch="Fill">
-            <Grid Width="310" Height="640">
+        <!-- 缩放实现：内容按设计尺寸布局一次，之后只做整体变换（RenderTransform）——
+             布局不再随缩放重排，每帧成本极低（对照：Viewbox 每帧重新测量/排列整棵树，是缩放缓和的根源） -->
+        <Grid x:Name="CardContent" Width="310" Height="640"
+              HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0,0">
+            <Grid.RenderTransform>
+                <ScaleTransform x:Name="ContentScale" ScaleX="1" ScaleY="1"/>
+            </Grid.RenderTransform>
         <Grid.RowDefinitions>
             <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
             <RowDefinition Height="*"/>
@@ -108,7 +113,6 @@
                            Foreground="{DynamicResource Brush.Muted}" TextWrapping="Wrap"/>
             </Border>
         </Grid>
-            </Grid>
-        </Viewbox>
+        </Grid>
     </Border>
 </Window>
