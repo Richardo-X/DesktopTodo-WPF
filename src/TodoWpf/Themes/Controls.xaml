@@ -504,7 +504,11 @@
          行整体是一块"浅底卡片"而非透明（用户 2026-10-12 反馈：列表行缺少纯色底）。 -->
     <Style x:Key="TodoRow" TargetType="Border">
         <Setter Property="CornerRadius" Value="{StaticResource Radius.Row}"/>
-        <Setter Property="Padding" Value="11,12"/>
+        <!-- 行间距 8（原型 #todoList.scroll{gap:8px}）。写在样式上：ItemsControl 对 UIElement 项
+             不会套 ItemContainerStyle，挂在那里不生效（行会贴行）。 -->
+        <Setter Property="Margin" Value="0,0,0,8"/>
+        <!-- 内边距：横 12 / 竖 10（原型 padding:11px 12px 为"竖 11 / 横 12"；竖再减 1 让事项框更小） -->
+        <Setter Property="Padding" Value="12,10"/>
         <Setter Property="Background" Value="{DynamicResource Brush.Card}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.CardBorder}"/>
         <Setter Property="BorderThickness" Value="1"/>
