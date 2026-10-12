@@ -28,8 +28,8 @@ public partial class MainTodoWindow : Window
     /// <summary>按屏等比缩放内容（只改变换，不触发布局）。</summary>
     public void SetContentScale(double scale)
     {
-        ContentScale.ScaleX = scale;
-        ContentScale.ScaleY = scale;
+        // Viewbox 方案：内容随窗口尺寸自动缩放，无需显式设置
+        _ = scale;
     }
 
     /// <summary>卡面内容（缩放期间冻结，只留窗壳）。</summary>

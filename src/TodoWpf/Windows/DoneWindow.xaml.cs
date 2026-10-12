@@ -23,8 +23,7 @@ public partial class DoneWindow : Window
     /// <summary>按屏等比缩放内容（只改变换，不触发布局）。</summary>
     public void SetContentScale(double scale)
     {
-        ContentScale.ScaleX = scale;
-        ContentScale.ScaleY = scale;
+        _ = scale; // Viewbox 方案：内容随窗口尺寸自动缩放
     }
 
     /// <summary>卡面内容（缩放期间冻结）。</summary>
