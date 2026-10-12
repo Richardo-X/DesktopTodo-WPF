@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace TodoWpf.Windows;
@@ -15,6 +16,12 @@ public partial class QuickWindow : Window
 
     private void Titlebar_MouseDown(object sender, MouseButtonEventArgs e) =>
         TitlebarPressed?.Invoke(this, e);
+
+    /// <summary>卡面根（缩放期间切换为不透明底）。</summary>
+    public Border Card => CardRoot;
+
+    /// <summary>卡面内容（缩放期间冻结）。</summary>
+    public Viewbox CardBody => CardContent;
 
     public ClusterController? Controller { get; set; }
 }

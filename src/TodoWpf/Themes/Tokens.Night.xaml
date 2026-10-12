@@ -31,6 +31,7 @@
          hover .06→0F / active .12→1F / btn .08→14 / btn-border .15→26 / btn-hover .16→29） -->
     <!-- 真磨砂（C2）：卡面 α 由 96% 降至 75%，配合 DWM blur 让壁纸隐约透出 -->
     <SolidColorBrush x:Key="Brush.WinBg" Color="#BF1E1E21"/>
+    <SolidColorBrush x:Key="Brush.WinBgSolid" Color="#1E1E21"/>
     <SolidColorBrush x:Key="Brush.Card" Color="#0EFFFFFF"/>
     <SolidColorBrush x:Key="Brush.CardBorder" Color="#1CFFFFFF"/>
     <SolidColorBrush x:Key="Brush.Field" Color="#12FFFFFF"/>

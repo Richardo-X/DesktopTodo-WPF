@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -18,7 +19,16 @@ public partial class MainTodoWindow : Window
     private void Titlebar_MouseDown(object sender, MouseButtonEventArgs e) =>
         TitlebarPressed?.Invoke(this, e);
 
-    public Thumb ScaleGripHandle => ScaleGrip;
+    /// <summary>缩放柄命中区（自绘鼠标捕获，见控制器）。</summary>
+    public FrameworkElement ScaleGripHandle => ScaleGrip;
+
+    /// <summary>卡面根（缩放期间切换为不透明底以抑制拖影）。</summary>
+    public Border Card => CardRoot;
+
+    /// <summary>卡面内容（缩放期间冻结，只留窗壳）。</summary>
+    public Viewbox CardBody => CardContent;
+
+    public void SetCount(int current, int max) => CountText.Text = $"待办 {current}/{max}";
 
     public void SetClock(string time, string date)
     {
@@ -27,6 +37,7 @@ public partial class MainTodoWindow : Window
     }
 
     /// <summary>⚡/☑ 开关态：开启=主题色描边+图标（成品 .icon-btn.on 口径），不做透明度变化。</summary>
+    /// <summary>⚡/☑ 开关态：开启=主题色描边+图标（成品 .icon-btn.on 口径）。</summary>
     public void SetPanelToggles(bool quickVisible, bool doneVisible)
     {
         ApplyToggleState(QuickBtn, quickVisible);

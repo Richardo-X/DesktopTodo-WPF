@@ -31,6 +31,8 @@
          hover .05→0D / active .09→17 / btn .75→BF / btn-border .13→21 / btn-hover→FF） -->
     <!-- 真磨砂（C2）：卡面 α 由 94% 降至 75%，配合 DWM blur 让壁纸隐约透出 -->
     <SolidColorBrush x:Key="Brush.WinBg" Color="#BFF3F6FB"/>
+    <!-- 不透明卡面底：拖拽缩放期间临时替换（抑制透明窗逐帧合成的拖影） -->
+    <SolidColorBrush x:Key="Brush.WinBgSolid" Color="#F3F6FB"/>
     <SolidColorBrush x:Key="Brush.Card" Color="#B3FFFFFF"/>
     <SolidColorBrush x:Key="Brush.CardBorder" Color="#17000000"/>
     <SolidColorBrush x:Key="Brush.Field" Color="#E6FFFFFF"/>

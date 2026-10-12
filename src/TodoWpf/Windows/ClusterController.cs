@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -40,8 +39,9 @@ public sealed class ClusterController : IDisposable
     // 拖动/缩放进行中状态
     private bool _dragging;
     private bool _resizeLayoutQueued;
+    private bool _resizing;
+    private Point _resizeStartMouse;
     private double _resizeStartMainWidth;
-    private double _resizeTotalDelta;
     private WinPoint _dragStartAnchor;
     private Point _dragStartMouse;
 
@@ -68,9 +68,7 @@ public sealed class ClusterController : IDisposable
         _main.TitlebarPressed += OnTitlebarPressed;
         _quick.TitlebarPressed += OnTitlebarPressed;
         _done.TitlebarPressed += OnTitlebarPressed;
-        _main.ScaleGripHandle.DragStarted += ScaleGrip_DragStarted;
-        _main.ScaleGripHandle.DragDelta += ScaleGrip_DragDelta;
-        _main.ScaleGripHandle.DragCompleted += ScaleGrip_DragCompleted;
+        _main.ScaleGripHandle.MouseLeftButtonDown += ScaleGrip_MouseDown;
         _tuckBar.BarHit += (_, _) => OnPointerEnter();
 
         // 指针进出 → 状态机（窗口级，被遮挡时系统不派发 = 真实命中语义）
@@ -320,24 +318,78 @@ public sealed class ClusterController : IDisposable
 
     // ---------- 等比缩放 ----------
 
-    /// <summary>缩放起点宽度：以它为基准累加增量——帧节流会合并同帧多次事件，绝不能逐次以 ActualWidth 为基准（会丢增量、跟手变差）。</summary>
-    private void ScaleGrip_DragStarted(object sender, DragStartedEventArgs e)
+    /// <summary>
+    /// 缩放（自绘鼠标捕获，与标题栏拖动同一套"屏幕逻辑像素"采样）：
+    /// 以按下时的鼠标位置与主窗宽度为基准，横向增量决定等比缩放（原型口径：横向拖动）。
+    /// 不用 Thumb.DragDelta——其在 Viewbox 缩放坐标空间下的增量会随缩放比失真。
+    /// </summary>
+    private void ScaleGrip_MouseDown(object sender, MouseButtonEventArgs e)
     {
+        if (_resizing)
+        {
+            return;
+        }
+
+        _resizing = true;
+        _resizeStartMouse = ToScreen(_main, e);
         _resizeStartMainWidth = _main.ActualWidth;
-        _resizeTotalDelta = 0;
+        _tuck.SetResizing(true);
+        SetResizeVisual(frozen: true);
+        _ = _main.CaptureMouse();
+        _main.MouseMove += ScaleGrip_MouseMove;
+        _main.MouseUp += ScaleGrip_MouseUp;
+        e.Handled = true;
     }
 
-    private void ScaleGrip_DragDelta(object sender, DragDeltaEventArgs e)
+    private void ScaleGrip_MouseMove(object sender, MouseEventArgs e)
     {
-        _resizeTotalDelta += e.HorizontalChange;
-        var ui = _data.UiState;
+        if (!_resizing || e.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        var mouse = ToScreen(_main, e);
         var targetMainWidth = Math.Max(
             ClusterLayout.MainWidth * ClusterLayout.MinScale,
-            _resizeStartMainWidth + _resizeTotalDelta);
-        var rawScale = targetMainWidth / ClusterLayout.MainWidth;
-        _scale = ClusterLayout.ClampScale(rawScale, WorkArea(), ui.QuickVisible, ui.DoneVisible);
-        _tuck.SetResizing(true);
-        RequestResizeLayout(); // 按帧节流：每帧最多重排一次，避免事件风暴引发缩放抖动
+            _resizeStartMainWidth + (mouse.X - _resizeStartMouse.X));
+        var ui = _data.UiState;
+        _scale = ClusterLayout.ClampScale(targetMainWidth / ClusterLayout.MainWidth, WorkArea(), ui.QuickVisible, ui.DoneVisible);
+        RequestResizeLayout();
+    }
+
+    private void ScaleGrip_MouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_resizing)
+        {
+            return;
+        }
+
+        _resizing = false;
+        _main.MouseMove -= ScaleGrip_MouseMove;
+        _main.MouseUp -= ScaleGrip_MouseUp;
+        if (_main.IsMouseCaptured)
+        {
+            _main.ReleaseMouseCapture();
+        }
+
+        _tuck.SetResizing(false);
+        SetResizeVisual(frozen: false);
+        ApplyLayout(); // 松手：完整布局 + 落盘
+    }
+
+    /// <summary>
+    /// 缩放期间的视觉降级（对齐成品口径"按下冻结两侧窗内容、只看窗壳"，并抑制透明窗逐帧合成拖影）：
+    /// ① 三窗卡面切为不透明底；② 两侧窗内容冻结（待办主窗内容保留，便于看缩放结果）。
+    /// </summary>
+    private void SetResizeVisual(bool frozen)
+    {
+        var key = frozen ? "Brush.WinBgSolid" : "Brush.WinBg";
+        var background = (Brush)Application.Current.Resources[key];
+        _main.Card.Background = background;
+        _quick.Card.Background = background;
+        _done.Card.Background = background;
+        _quick.CardBody.Visibility = frozen ? Visibility.Hidden : Visibility.Visible;
+        _done.CardBody.Visibility = frozen ? Visibility.Hidden : Visibility.Visible;
     }
 
     /// <summary>缩放中的布局请求：合并到下一帧统一执行（CompositionTarget.Rendering 每帧一次）。</summary>
@@ -359,11 +411,7 @@ public sealed class ClusterController : IDisposable
         CompositionTarget.Rendering += handler;
     }
 
-    private void ScaleGrip_DragCompleted(object sender, DragCompletedEventArgs e)
-    {
-        _tuck.SetResizing(false);
-        Mutate(d => d);
-    }
+
 
     // ---------- 面板开关 ----------
 

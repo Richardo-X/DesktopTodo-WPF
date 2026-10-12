@@ -10,12 +10,12 @@
     <!-- 已完成（当天）壳：假数据；业务批次 04 接线 -->
 
     <!-- 卡面（令牌化：面板底色 + 玻璃窗沿 + 圆角 10；圆角外由 AllowsTransparency 保持全透明） -->
-    <Border Background="{DynamicResource Brush.WinBg}"
+    <Border x:Name="CardRoot" Background="{DynamicResource Brush.WinBg}"
             BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
             CornerRadius="{StaticResource Radius.Panel}">
         <!-- 等比缩放：内容按设计尺寸固定绘制，再由 Viewbox 整体缩放（含文字），
              使"缩放=真窗口尺寸变化+内容同步缩放"与原型口径一致（批次 03 验收修复） -->
-        <Viewbox Stretch="Fill">
+        <Viewbox x:Name="CardContent" Stretch="Fill">
             <Grid Width="310" Height="640">
         <Grid.RowDefinitions>
             <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
