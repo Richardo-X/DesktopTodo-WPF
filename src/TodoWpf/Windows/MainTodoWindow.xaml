@@ -109,7 +109,18 @@
                                 VerticalAlignment="Center"/>
                     </Grid>
 
-                    <ItemsControl Grid.Row="2">
+                    <!-- 行间距 8（原型 #todoList.scroll{gap:8px}） -->
+                    <ItemsControl Grid.Row="2" Margin="0,0,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="ContentPresenter">
+                                <Setter Property="Margin" Value="0,0,0,8"/>
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
                         <ItemsControl.Items>
                             <Border Style="{StaticResource TodoRow}">
                                 <Grid>

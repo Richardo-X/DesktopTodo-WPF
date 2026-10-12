@@ -55,7 +55,7 @@
                         ToolTip="新建模板（批次 04 实装）" VerticalAlignment="Center"/>
             </Grid>
 
-            <StackPanel Grid.Row="1">
+            <StackPanel Grid.Row="1">  <!-- 模板行间距 6（原型快捷窗列表口径） -->
                 <Border Style="{StaticResource TodoRow}">
                     <Grid>
                         <Grid.ColumnDefinitions>

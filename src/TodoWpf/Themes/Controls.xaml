@@ -500,10 +500,14 @@
     </Style>
 
     <!-- 待办行（悬停底色；行内边距 11/12；圆角 8） -->
+    <!-- 事项行（原型 .todo-row）：底色取 Brush.Card（半透明白，日 70% / 夜 5.5%）+ 1px 描边 Brush.CardBorder，
+         行整体是一块"浅底卡片"而非透明（用户 2026-10-12 反馈：列表行缺少纯色底）。 -->
     <Style x:Key="TodoRow" TargetType="Border">
         <Setter Property="CornerRadius" Value="{StaticResource Radius.Row}"/>
         <Setter Property="Padding" Value="11,12"/>
-        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Background" Value="{DynamicResource Brush.Card}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.CardBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
