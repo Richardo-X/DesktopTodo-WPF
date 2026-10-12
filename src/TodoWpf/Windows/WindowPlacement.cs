@@ -97,6 +97,30 @@ internal static class WindowPlacement
         _ = EndDeferWindowPos(batch);
     }
 
+    /// <summary>窗口右缘的物理像素（调试用）。返回 int.MinValue 表示拿不到句柄。</summary>
+    public static int PhysicalRight(Window window)
+    {
+        var hwnd = new WindowInteropHelper(window).Handle;
+        if (hwnd == IntPtr.Zero || !GetWindowRect(hwnd, out var rect))
+        {
+            return int.MinValue;
+        }
+
+        return rect.Right;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Rect
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool GetWindowRect(IntPtr hwnd, out Rect rect);
+
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr BeginDeferWindowPos(int windowCount);
 

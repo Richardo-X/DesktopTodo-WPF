@@ -36,6 +36,10 @@ public partial class QuickWindow : Window
         }
     }
 
+    /// <summary>内容右缘在窗口内的 DIP 坐标（调试用：应恒等于窗口宽度）。</summary>
+    public double ContentRightInDip() =>
+        CardContent.TransformToAncestor(this).Transform(new Point(CardContent.ActualWidth, 0)).X;
+
     /// <summary>卡面内容（缩放期间冻结）。</summary>
     public FrameworkElement CardBody => CardContent;
 

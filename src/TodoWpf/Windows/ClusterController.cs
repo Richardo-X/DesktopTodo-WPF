@@ -189,6 +189,15 @@ public sealed class ClusterController : IDisposable
         _quick.SetContentScale(_scale);
         _done.SetContentScale(_scale);
 
+        // 窗口矩形已在本帧落位；这里把内容布局也同步推完，避免"内容晚窗口一帧"
+        // （内容若晚一帧，右对齐的快捷窗右缘与两窗缝隙就会被看见在动）。
+        if (_resizing)
+        {
+            _main.UpdateLayout();
+            _quick.UpdateLayout();
+            _done.UpdateLayout();
+        }
+
         // 白条定位：可见组水平中心、贴屏顶
         var left = frame.Quick.Visible ? frame.Quick.Rect.X : frame.Main.Rect.X;
         var right = frame.Done.Visible ? frame.Done.Rect.Right : frame.Main.Rect.Right;
@@ -429,6 +438,9 @@ public sealed class ClusterController : IDisposable
         _done.Opacity = opacity;
     }
 
+    /// <summary>置 true 可在拖缩放柄时把每帧几何写盘（临时目录下的 resize-trace.log），用于定位“边缘没钉住”。</summary>
+    public static bool TraceResize;
+
     /// <summary>缩放中的布局请求：合并到下一帧统一执行（CompositionTarget.Rendering 每帧一次）。</summary>
     private void RequestResizeLayout()
     {
@@ -444,6 +456,21 @@ public sealed class ClusterController : IDisposable
             CompositionTarget.Rendering -= handler;
             _resizeLayoutQueued = false;
             ApplyLayout(saveState: false);
+
+            if (TraceResize)
+            {
+                var dpi = VisualTreeHelper.GetDpi(_quick);
+                var rect = WindowPlacement.PhysicalRight(_quick);
+                var contentRight = _quick.ContentRightInDip();
+                try
+                {
+                    System.IO.File.AppendAllText(
+                        System.IO.Path.Combine(System.IO.Path.GetTempPath(), "resize-trace.log"),
+                        $"scale={_scale:F4} quickWinRightPhysical={rect} quickContentRightDip={contentRight:F2}"
+                        + Environment.NewLine);
+                }
+                catch { }
+            }
         };
         CompositionTarget.Rendering += handler;
     }
