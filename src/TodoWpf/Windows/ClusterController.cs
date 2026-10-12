@@ -173,6 +173,17 @@ public sealed class ClusterController : IDisposable
             Math.Round(_anchor.Y * dpi.DpiScaleY) / dpi.DpiScaleY);
     }
 
+    /// <summary>
+    /// 把设计尺寸按"窗口实际宽度"（已按物理像素取整）折算成内容缩放比：
+    /// 与 WindowPlacement 用同一套取整，保证内容布局尺寸＝客户区尺寸。
+    /// </summary>
+    private double NormalizedScale(double rectWidth, double designWidth)
+    {
+        var dpi = VisualTreeHelper.GetDpi(_main);
+        var physical = Math.Max(1, (int)Math.Round(rectWidth * dpi.DpiScaleX));
+        return physical / dpi.DpiScaleX / designWidth;
+    }
+
     /// <summary>按锚点+缩放+开关重排三窗（隐藏窗同时就位但不出场）。</summary>
     public void ApplyLayout(bool saveState = true)
     {
@@ -185,9 +196,14 @@ public sealed class ClusterController : IDisposable
             (frame.Quick.Rect, _quick, frame.Quick.Visible, PinEdge.Right),
             (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
 
-        _main.SetContentScale(_scale);
-        _quick.SetContentScale(_scale);
-        _done.SetContentScale(_scale);
+        // 内容缩放比不从 _scale 直接取，而是从"窗口矩形取整后的实际尺寸"反推：
+        // 窗口宽度要落到整数物理像素（PlaceBatch 里 round），若内容仍按原始 _scale 排版，
+        // 两者会差零点几像素——内容比窗口宽 ⇒ 右对齐的卡面被裁掉一条；比窗口窄 ⇒
+        // 卡面右缘缩进窗内，肉眼就是"两窗缝隙在缩放中变宽/变窄"（用户视频慢放实证：缝隙 13→17→13）。
+        // 反推后 内容布局尺寸 ≡ 窗口客户区尺寸，卡面边缘逐帧与窗口边缘重合。
+        _main.SetContentScale(NormalizedScale(frame.Main.Rect.Width, ClusterLayout.MainWidth));
+        _quick.SetContentScale(NormalizedScale(frame.Quick.Rect.Width, ClusterLayout.SideWidth));
+        _done.SetContentScale(NormalizedScale(frame.Done.Rect.Width, ClusterLayout.SideWidth));
 
         // 窗口矩形已在本帧落位；这里把内容布局也同步推完，避免"内容晚窗口一帧"
         // （内容若晚一帧，右对齐的快捷窗右缘与两窗缝隙就会被看见在动）。
