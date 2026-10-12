@@ -231,24 +231,48 @@ public sealed class ClusterController : IDisposable
     /// </summary>
     private static void PlaceBatch(params (WinRect Rect, Window Window, bool Visible, PinEdge Pin)[] panels)
     {
-        var batch = new List<(Window Window, WinRect Rect, PinEdge Pin)>(panels.Length);
+        var atomic = new List<(Window Window, WinRect Rect, PinEdge Pin)>(panels.Length);
+        var toShow = new List<Window>(panels.Length);
+        var toHide = new List<Window>(panels.Length);
+
         foreach (var (rect, window, visible, pin) in panels)
         {
             if (visible)
             {
-                batch.Add((window, rect, pin));
-                if (!window.IsVisible)
+                if (window.IsVisible)
                 {
-                    window.Show();
+                    // 已显示：走原子批量（逐帧路径，避免"新宽度+旧位置"的中间帧错位）
+                    atomic.Add((window, rect, pin));
+                }
+                else
+                {
+                    // 首次显示：先把 WPF 属性同步到目标几何，Show() 由 WPF 按其属性一次落位。
+                    // 若先 Show 再摆位，会以默认尺寸（1536×844）闪一帧——即用户报告的"启动闪一下"。
+                    window.WindowStartupLocation = WindowStartupLocation.Manual;
+                    window.Left = rect.X;
+                    window.Top = rect.Y;
+                    window.Width = rect.Width;
+                    window.Height = rect.Height;
+                    toShow.Add(window);
                 }
             }
             else if (window.IsVisible)
             {
-                window.Hide();
+                toHide.Add(window);
             }
         }
 
-        WindowPlacement.SetBoundsBatch(batch);
+        WindowPlacement.SetBoundsBatch(atomic);
+
+        foreach (var window in toShow)
+        {
+            window.Show();
+        }
+
+        foreach (var window in toHide)
+        {
+            window.Hide();
+        }
     }
 
     // ---------- 整簇拖动（手写：MouseCapture 下同步三窗，DragMove 无法联动） ----------
