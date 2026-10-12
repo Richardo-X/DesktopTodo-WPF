@@ -342,7 +342,6 @@ public sealed class ClusterController : IDisposable
         }
 
         _dragging = true;
-        _quick.SetHitRegionEnabled(false); // 移动期间撤掉区域：避免区域裁剪把旧表面裁成"缺一块"
         _dragStartAnchor = _anchor;
         _dragStartMouse = ToScreen(window, e);
         _tuck.SetDragging(true);
@@ -395,7 +394,6 @@ public sealed class ClusterController : IDisposable
         }
 
         _tuck.SetDragging(false);
-        _quick.SetHitRegionEnabled(true); // 移动结束：恢复命中区
         _tuck.SetSnapped(_anchor.Y <= WorkArea().Y);
         ApplyLayout(); // 松手：完整布局 + 落盘
     }
