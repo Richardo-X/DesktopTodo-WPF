@@ -47,11 +47,11 @@
     <!-- 字号阶梯：逐值取自基准 交互原型-v3.4-L1（.tt 13.5 / .panel-title 13 / .btn 12.5 /
          .btn.sm 11.5 / .cap-chip 11 / .tag 10 / .step-btn 15 / .clock-time 30 / .clock-date 12） -->
     <sys:Double x:Key="Size.RowFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">13.5</sys:Double>
-    <sys:Double x:Key="Size.PanelTitleFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">13</sys:Double>
+    <sys:Double x:Key="Size.PanelTitleFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">15</sys:Double>
     <sys:Double x:Key="Size.TagFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">10</sys:Double>
     <sys:Double x:Key="Size.StepperFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">15</sys:Double>
     <sys:Double x:Key="Size.BodyFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">12.5</sys:Double>
-    <sys:Double x:Key="Size.SmallFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">11.5</sys:Double>
+    <sys:Double x:Key="Size.SmallFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">11</sys:Double>
     <sys:Double x:Key="Size.MicroFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">11</sys:Double>
 
     <!-- 字体（技能 §4.1：系统字体，禁外链字体 CDN 的 WPF 对应做法） -->
