@@ -9,6 +9,10 @@
 
     <!-- 快捷添加（模板库）壳：假数据；业务批次 04 接线 -->
 
+    <!-- 卡面（令牌化：面板底色 + 玻璃窗沿 + 圆角 10；圆角外由 AllowsTransparency 保持全透明） -->
+    <Border Background="{DynamicResource Brush.WinBg}"
+            BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
+            CornerRadius="{StaticResource Radius.Panel}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
@@ -102,4 +106,5 @@
             </Border>
         </Grid>
     </Grid>
+    </Border>
 </Window>

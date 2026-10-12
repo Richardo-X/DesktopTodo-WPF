@@ -298,6 +298,32 @@ public class DesignTokenTests
     }
 
     [Fact]
+    public void ClusterWindows_UseTokenizedCardBackground()
+    {
+        // 回归（批次 03 验收发现）：三张卡片窗必须带令牌化卡面（面板底色 + 玻璃窗沿 + 圆角 10），
+        // 否则窗口透明、图标文字直接压在桌面上不可读。曾因漏写卡面 Border 发生一次。
+        string[] clusterWindows =
+        [
+            "src/TodoWpf/Windows/MainTodoWindow.xaml",
+            "src/TodoWpf/Windows/QuickWindow.xaml",
+            "src/TodoWpf/Windows/DoneWindow.xaml",
+        ];
+
+        foreach (var relative in clusterWindows)
+        {
+            var doc = RepoRoot.LoadXaml(relative.Split('/'));
+            var card = doc.Descendants()
+                .Where(e => e.Name.LocalName == "Border")
+                .FirstOrDefault(e =>
+                    e.Attribute("Background")?.Value == "{DynamicResource Brush.WinBg}"
+                    && e.Attribute("CornerRadius")?.Value == "{StaticResource Radius.Panel}");
+
+            Assert.True(card is not null, $"{relative} 缺少令牌化卡面 Border（背景 Brush.WinBg + 圆角 Radius.Panel）");
+            Assert.Equal("{DynamicResource Brush.GlassEdge}", card!.Attribute("BorderBrush")?.Value ?? "");
+        }
+    }
+
+    [Fact]
     public void ReducedMotion_OverridesAllDurations_ToZero()
     {
         var reduced = XamlTokenReader.LoadKeyed("src", "TodoWpf", "Themes", "ReducedMotion.xaml");
