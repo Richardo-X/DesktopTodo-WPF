@@ -9,17 +9,23 @@
 
     <!-- 已完成（当天）壳：假数据；业务批次 04 接线 -->
 
-    <Border x:Name="CardRoot" Background="{DynamicResource Brush.WinBg}"
+    <!-- 与快捷窗同一套：卡面固定设计尺寸 310×640，缩放走渲染层；本窗钉住左上角，
+         但它的左缘跟着主窗右缘走（缩放时会平移）——所以卡面除缩放外还要**渲染层平移**，
+         窗口矩形依旧恒定不变 ⇒ 无拖影、无闪动。 -->
+    <Border x:Name="CardRoot" Width="310" Height="640"
+            Background="{DynamicResource Brush.WinBg}"
             BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
+            HorizontalAlignment="Left" VerticalAlignment="Top"
+            RenderTransformOrigin="0,0"
             CornerRadius="{StaticResource Radius.Panel}">
-
-        <!-- 内容按设计尺寸（310×640）绘制一次，缩放走 LayoutTransform（ScaleTransform）：
-             布局尺寸＝设计尺寸×scale，窗口就是按这个尺寸摆的，两者必然一致，
-             没有"内容比窗口宽/窄"的余量问题。左上角＝本窗钉住角。 -->
-        <Grid x:Name="CardContent" Width="310" Height="640" HorizontalAlignment="Left" VerticalAlignment="Top">
-            <Grid.LayoutTransform>
+        <Border.RenderTransform>
+            <TransformGroup x:Name="ContentTransform">
                 <ScaleTransform x:Name="ContentScale" ScaleX="1" ScaleY="1"/>
-            </Grid.LayoutTransform>
+                <TranslateTransform x:Name="ContentOffsetX"/>
+            </TransformGroup>
+        </Border.RenderTransform>
+
+        <Grid x:Name="CardContent" Width="310" Height="640">
         <Grid.RowDefinitions>
             <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
             <RowDefinition Height="*"/>
