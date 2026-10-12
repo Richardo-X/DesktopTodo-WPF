@@ -44,6 +44,7 @@ public partial class QuickWindow : Window
     /// </summary>
     public void SetContentScale(double scale)
     {
+        _scale = scale;
         var transform = (ScaleTransform)ContentScale;
         if (transform.ScaleX != scale)
         {
@@ -52,6 +53,32 @@ public partial class QuickWindow : Window
         }
 
         ApplyHitRegion(scale);
+    }
+
+    /// <summary>当前缩放比（供区域重算）。</summary>
+    private double _scale = 1;
+
+    /// <summary>
+    /// 命中区开关。**整体移动期间必须关掉**：窗口区域会裁剪绘制，而快速移动时窗口表面更新晚于
+    /// 位置更新——区域会把"上一帧画面"按新位置裁一刀，表现为卡片缺一块、内容被切（用户 2026-10-13 截图）。
+    /// 移动中不需要命中区，松手后再装上即可。
+    /// </summary>
+    public void SetHitRegionEnabled(bool enabled)
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd == IntPtr.Zero)
+        {
+            return;
+        }
+
+        if (enabled)
+        {
+            ApplyHitRegion(_scale);
+        }
+        else
+        {
+            SetWindowRgn(hwnd, IntPtr.Zero, true); // 清空区域 → 恢复整窗矩形
+        }
     }
 
     // 卡面之外那圈"画布余量"是透明的，但它仍会**吞掉鼠标**（实测 WindowFromPoint 命中的是本窗），
