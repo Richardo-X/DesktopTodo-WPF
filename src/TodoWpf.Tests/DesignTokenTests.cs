@@ -214,7 +214,7 @@ public class DesignTokenTests
 
         string[] required =
         [
-            "Icon.Check", "Icon.Plus", "Icon.ChevL", "Icon.ChevR", "Icon.X", "Icon.Clock",
+            "Icon.Check", "Icon.Plus", "Icon.ChevL", "Icon.ChevR", "Icon.X", "Icon.Clock", "Icon.BoltOptical",
             "Icon.Trash", "Icon.Undo", "Icon.Bolt", "Icon.PanelCheck", "Icon.Gear",
             "Icon.Moon", "Icon.Sun", "Icon.Pin", "Icon.TuckLock", "Icon.Grip",
             "Icon.SortAsc", "Icon.SortDesc",

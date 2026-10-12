@@ -146,7 +146,7 @@
                                   Height="{StaticResource Size.IconMedium}"
                                   Stretch="Uniform" StrokeThickness="1.7"
                                   StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                                  Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                  Margin="0,0,5,0" VerticalAlignment="Center"/>
                             <ContentPresenter x:Name="body" VerticalAlignment="Center"
                                               RecognizesAccessKey="False"/>
                         </StackPanel>

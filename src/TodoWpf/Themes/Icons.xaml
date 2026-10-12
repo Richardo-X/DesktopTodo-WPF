@@ -53,6 +53,14 @@
 
     <PathGeometry x:Key="Icon.Bolt" Figures="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/>
 
+    <!-- ⚡ 光学配平（v3.4-L1 回补：主窗 ⚡ 与 ☑ 墨迹同高；二级窗「添加到模板」用原始 Icon.Bolt） -->
+    <GeometryGroup x:Key="Icon.BoltOptical">
+        <GeometryGroup.Transform>
+            <ScaleTransform ScaleX="0.8" ScaleY="0.8" CenterX="12" CenterY="12"/>
+        </GeometryGroup.Transform>
+        <PathGeometry Figures="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/>
+    </GeometryGroup>
+
     <PathGeometry x:Key="Icon.X" Figures="M6 6l12 12M18 6L6 18"/>
 
     <GeometryGroup x:Key="Icon.PanelCheck">
