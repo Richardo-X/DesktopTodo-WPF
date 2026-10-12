@@ -348,7 +348,7 @@ public sealed class ClusterController : IDisposable
         _resizeStartMouse = ToScreen(_main, e);
         _resizeStartMainWidth = _main.ActualWidth;
         _tuck.SetResizing(true);
-        SetResizeVisual(frozen: true);
+        SetResizeVisual(resizing: true);
         _ = _main.CaptureMouse();
         _main.MouseMove += ScaleGrip_MouseMove;
         _main.MouseUp += ScaleGrip_MouseUp;
@@ -387,23 +387,22 @@ public sealed class ClusterController : IDisposable
         }
 
         _tuck.SetResizing(false);
-        SetResizeVisual(frozen: false);
+        SetResizeVisual(resizing: false);
         ApplyLayout(); // 松手：完整布局 + 落盘
     }
 
     /// <summary>
-    /// 缩放期间的视觉降级（对齐成品口径"按下冻结两侧窗内容、只看窗壳"，并抑制透明窗逐帧合成拖影）：
-    /// ① 三窗卡面切为不透明底；② 两侧窗内容冻结（待办主窗内容保留，便于看缩放结果）。
+    /// 缩放期间的视觉简化：两侧卡片暂时隐去（透明度 0），松手恢复。
+    /// 目的：消除"缝隙呼吸"——放大时主窗右缘属于"需重绘内容"的边、已完成窗左缘属于"纯移动"的边，
+    /// 二者合成落在不同帧，会导致缝宽瞬时先变大再回位；拖动期间不显示两侧就不存在可"呼吸"的边。
+    /// 主窗自身的等比缩放全程实时呈现（拖动期间唯一可见的卡片，就是缩放结果本身）。
+    /// 注：位移与尺寸每帧照常计算，松手时两侧已就地正确。
     /// </summary>
-    private void SetResizeVisual(bool frozen)
+    private void SetResizeVisual(bool resizing)
     {
-        var key = frozen ? "Brush.WinBgSolid" : "Brush.WinBg";
-        var background = (Brush)Application.Current.Resources[key];
-        _main.Card.Background = background;
-        _quick.Card.Background = background;
-        _done.Card.Background = background;
-        _quick.CardBody.Visibility = frozen ? Visibility.Hidden : Visibility.Visible;
-        _done.CardBody.Visibility = frozen ? Visibility.Hidden : Visibility.Visible;
+        var opacity = resizing ? 0d : 1d;
+        _quick.Opacity = opacity;
+        _done.Opacity = opacity;
     }
 
     /// <summary>缩放中的布局请求：合并到下一帧统一执行（CompositionTarget.Rendering 每帧一次）。</summary>
