@@ -192,30 +192,22 @@ public sealed class ClusterController : IDisposable
     }
 
     /// <summary>
-    /// 三个窗各自的"画布矩形"：窗口矩形恒定不变的那块地方（三窗都不再逐帧改矩形）
-    /// ⇒ 合成器没有"新矩形+旧表面"的重贴机会 ⇒ 无拖影、无按下/松手闪动、三窗同节拍。
-    /// 尺寸取 max(设计尺寸, 设计尺寸×缩放上限)，保证卡面（固定设计尺寸+渲染层缩放）不被父级夹小。
-    /// 锚定关系不变：主窗左上角＝锚点；快捷窗右缘＝主窗左缘−缝隙；已完成窗左缘＝主窗右缘+缝隙。
+    /// 快捷窗的"画布矩形"：窗口矩形恒定不变的那块地方（右缘钉主窗左缘减缝隙、上缘钉锚点）。
+    /// 尺寸取 max(设计尺寸, 设计尺寸×缩放上限) —— 保证卡面（固定设计尺寸 310×640，靠渲染层缩放
+    /// 表现大小）在窗口内不被父级夹小。窗口矩形永不改变 ⇒ 合成器不会重贴旧表面
+    /// ⇒ 无拖影、无按下/松手闪动。
+    /// 主窗与已完成窗仍在"逐帧改窗口矩形"的老路上（用户 2026-10-13 裁定）。
     /// </summary>
-    private (WinRect Main, WinRect Quick) CanvasRects()
+    private WinRect QuickCanvasRect()
     {
         var ui = _data.UiState;
         var workArea = WorkArea();
-        var anchor = SnappedAnchor();
         var maxScale = ClusterLayout.MaxScale(workArea, ui.QuickVisible, ui.DoneVisible);
         var span = Math.Max(1, maxScale);
-
-        var mainW = ClusterLayout.MainWidth * span;
-        var mainH = ClusterLayout.MainHeight * span;
-        var sideW = ClusterLayout.SideWidth * span;
-        var sideH = ClusterLayout.SideHeight * span;
-
-        var main = new WinRect(anchor.X, anchor.Y, mainW, mainH);
-
-        var quick = new WinRect(
-            anchor.X - ClusterLayout.Gap - sideW, anchor.Y, sideW, sideH);
-
-        return (main, quick);
+        var w = ClusterLayout.SideWidth * span;
+        var h = ClusterLayout.SideHeight * span;
+        var anchor = SnappedAnchor();
+        return new WinRect(anchor.X - ClusterLayout.Gap - w, anchor.Y, w, h);
     }
 
     /// <summary>按锚点+缩放+开关重排三窗（隐藏窗同时就位但不出场）。</summary>
@@ -225,11 +217,10 @@ public sealed class ClusterController : IDisposable
         var workArea = WorkArea();
         var frame = ClusterLayout.Arrange(workArea, SnappedAnchor(), _scale, ui.QuickVisible, ui.DoneVisible);
 
-        // 三窗一律用"画布矩形"：窗口矩形全程不变，只靠渲染层的缩放/平移表现大小与位置变化。
-        var canvas = CanvasRects();
+        // 快捷窗用固定画布（零矩形变更）；主窗/已完成窗逐帧摆位。
         PlaceBatch(
-            (canvas.Main, _main, true, PinEdge.Left),
-            (canvas.Quick, _quick, frame.Quick.Visible, PinEdge.Right),
+            (frame.Main.Rect, _main, true, PinEdge.Left),
+            (QuickCanvasRect(), _quick, frame.Quick.Visible, PinEdge.Right),
             (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
 
         // 内容缩放比不从 _scale 直接取，而是从"窗口矩形取整后的实际尺寸"反推：

@@ -10,22 +10,17 @@
     <!-- 待办主窗（应用主页）。布局按基准 交互原型-v3.4-L1：
          标题栏 → 操作区两行（上行 ⚡左/☑右＋时钟居中；下行 计数胶囊左、批量删除+＋右）→ 列表。
          业务按钮批次 04 接线。 -->
-
-    <!-- 与快捷窗同一套：卡面固定设计尺寸 470×640，缩放走**渲染层**（不触发布局），
-         锚点＝左上角（0,0）＝本窗钉住角（锚点即主窗左上角）。窗口矩形恒为"画布"，永不改变
-         ⇒ 拖动/按下/松手全程无矩形变更 ⇒ 无拖影、无闪动、与其它窗同步（同一渲染节拍）。 -->
-    <Border x:Name="CardRoot" Width="470" Height="640"
-            Background="{DynamicResource Brush.WinBg}"
+    <Border x:Name="CardRoot" Background="{DynamicResource Brush.WinBg}"
             BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
-            HorizontalAlignment="Left" VerticalAlignment="Top"
-            RenderTransformOrigin="0,0"
             CornerRadius="{StaticResource Radius.Panel}">
-        <Border.RenderTransform>
-            <ScaleTransform x:Name="ContentScale" ScaleX="1" ScaleY="1"/>
-        </Border.RenderTransform>
 
-        <Grid x:Name="CardContent" Width="470" Height="640">
-                <Grid.RowDefinitions>
+        <!-- 内容按设计尺寸（470×640）绘制一次，缩放走 LayoutTransform：布局尺寸＝设计尺寸×scale，
+             窗口就是按这个尺寸摆的，两者一致。左上角＝本窗钉住角（缩放锚点＝主窗左上角）。 -->
+        <Grid x:Name="CardContent" Width="470" Height="640" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Grid.LayoutTransform>
+                <ScaleTransform x:Name="ContentScale" ScaleX="1" ScaleY="1"/>
+            </Grid.LayoutTransform>
+        <Grid.RowDefinitions>
                     <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>

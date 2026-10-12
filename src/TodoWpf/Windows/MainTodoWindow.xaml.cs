@@ -1,9 +1,7 @@
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
 
 namespace TodoWpf.Windows;
@@ -27,15 +25,9 @@ public partial class MainTodoWindow : Window
     /// <summary>卡面根（缩放期间切换为不透明底以抑制拖影）。</summary>
     public Border Card => CardRoot;
 
-    /// <summary>设计尺寸（XAML 中 CardRoot 的固定 Width/Height）。</summary>
-    private const double DesignWidth = 470;
-
-    private const double DesignHeight = 640;
-
     /// <summary>
-    /// 缩放走**渲染层**（不触发布局，与其它窗同一渲染节拍）：卡面固定设计尺寸、锚点＝左上角
-    /// （本窗钉住角＝锚点）。窗口矩形恒为"画布"、永不改变 ⇒ 无拖影、无按下/松手闪动。
-    /// 同时把窗口命中区收窄到卡面（卡面之外那圈画布余量透明但仍会吞点击，实测确认）。
+    /// 内容按设计尺寸（470×640）绘制，缩放走 LayoutTransform：布局尺寸＝设计尺寸×scale。
+    /// 本窗左上角＝锚点（钉住角），窗口矩形按目标档逐帧摆位。
     /// </summary>
     public void SetContentScale(double scale)
     {
@@ -45,36 +37,7 @@ public partial class MainTodoWindow : Window
             transform.ScaleX = scale;
             transform.ScaleY = scale;
         }
-
-        ApplyHitRegion(scale, 0);
     }
-
-    /// <summary>把命中范围收窄到卡面（区域只影响裁剪/命中，不改窗口矩形或原点）。</summary>
-    private void ApplyHitRegion(double scale, double offsetX)
-    {
-        var hwnd = new WindowInteropHelper(this).Handle;
-        if (hwnd == IntPtr.Zero || ActualWidth <= 0)
-        {
-            return;
-        }
-
-        var dpi = VisualTreeHelper.GetDpi(this);
-        var left = (int)Math.Round(offsetX * dpi.DpiScaleX);
-        var right = (int)Math.Round((offsetX + DesignWidth * scale) * dpi.DpiScaleX);
-        var bottom = (int)Math.Round(DesignHeight * scale * dpi.DpiScaleY);
-
-        var rgn = CreateRectRgn(left, 0, right, bottom);
-        if (rgn != IntPtr.Zero)
-        {
-            SetWindowRgn(hwnd, rgn, true);
-        }
-    }
-
-    [DllImport("gdi32.dll")]
-    private static extern IntPtr CreateRectRgn(int left, int top, int right, int bottom);
-
-    [DllImport("user32.dll")]
-    private static extern int SetWindowRgn(IntPtr hwnd, IntPtr hRgn, bool redraw);
 
     /// <summary>卡面内容（缩放期间冻结，只留窗壳）。</summary>
     public FrameworkElement CardBody => CardContent;
