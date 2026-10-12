@@ -20,12 +20,10 @@
             BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
             CornerRadius="{StaticResource Radius.Panel}">
 
-        <!-- 内容按设计尺寸只布局一次；缩放走纯渲染层 ScaleTransform，锚点＝本窗钉住角，钉住的边不随缩放位移。 -->
-        <Grid x:Name="CardContent" Width="470" Height="640"
-              HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0,0">
-            <Grid.RenderTransform>
-                <TransformGroup x:Name="ContentScale"><ScaleTransform/></TransformGroup>
-            </Grid.RenderTransform>
+        <!-- 内容按设计尺寸（470×640）绘制一次，由 Viewbox 整体缩放（含文字与描边）。
+             锚点在左上角＝本窗钉住角，钉住的边不随缩放位移。 -->
+        <Viewbox x:Name="CardContent" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Top">
+        <Grid Width="470" Height="640">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
                     <RowDefinition Height="*"/>
@@ -86,19 +84,26 @@
                                 Click="DoneBtn_Click" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
                     </Grid>
 
+                    <!-- 底排三列：计数（占剩余）｜批量删除（固定）｜＋（固定）。列宽确定，
+                         右侧两枚按钮不会被压窄，标签也就不会被裁。 -->
                     <Grid Grid.Row="1" Margin="2,10,2,10">
-                        <Border Background="{DynamicResource Brush.Hover}" CornerRadius="99" Padding="10,3"
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="{DynamicResource Brush.Hover}" CornerRadius="99" Padding="10,3"
                                 HorizontalAlignment="Left" VerticalAlignment="Center">
                             <TextBlock x:Name="CountText" Text="待办 3/10" FontSize="{StaticResource Size.MicroFont}"
                                        Foreground="{DynamicResource Brush.Muted}"
                                        Typography.NumeralAlignment="Tabular"/>
                         </Border>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Style="{StaticResource SmallButton}" Tag="{StaticResource Icon.Trash}"
-                                    Content="批量删除" ToolTip="批量删除（批次 04 实装）" Margin="0,0,8,0"/>
-                            <Button Style="{StaticResource AddButton}"
-                                    Tag="{StaticResource Icon.Plus}" ToolTip="新建待办（批次 04 实装）"/>
-                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource SmallButton}" Tag="{StaticResource Icon.Trash}"
+                                Content="批量删除" ToolTip="批量删除（批次 04 实装）" Margin="0,0,8,0"
+                                VerticalAlignment="Center"/>
+                        <Button Grid.Column="2" Style="{StaticResource AddButton}"
+                                Tag="{StaticResource Icon.Plus}" ToolTip="新建待办（批次 04 实装）"
+                                VerticalAlignment="Center"/>
                     </Grid>
 
                     <ItemsControl Grid.Row="2">
@@ -193,6 +198,7 @@
                             CornerRadius="0,0,9,0"/>
                 </Grid>
         </Grid>
+        </Viewbox>
     </Border>
     </Grid>
 

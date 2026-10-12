@@ -18,12 +18,10 @@
             BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
             CornerRadius="{StaticResource Radius.Panel}">
 
-        <!-- 内容按设计尺寸只布局一次；缩放走纯渲染层 ScaleTransform，锚点＝本窗钉住角，钉住的边不随缩放位移。 -->
-        <Grid x:Name="CardContent" Width="310" Height="640"
-              HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0,0">
-            <Grid.RenderTransform>
-                <TransformGroup x:Name="ContentScale"><ScaleTransform/></TransformGroup>
-            </Grid.RenderTransform>
+        <!-- 内容按设计尺寸（310×640）绘制一次，由 Viewbox 整体缩放（含文字与描边）。
+             锚点在左上角＝本窗钉住角，钉住的边不随缩放位移。 -->
+        <Viewbox x:Name="CardContent" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Top">
+        <Grid Width="310" Height="640">
         <Grid.RowDefinitions>
             <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
             <RowDefinition Height="*"/>
@@ -117,6 +115,7 @@
                     ToolTip="历史记录（批次 04 实装）"/>
         </Grid>
         </Grid>
+        </Viewbox>
     </Border>
     </Grid>
 

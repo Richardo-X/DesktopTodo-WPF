@@ -16,6 +16,7 @@ public partial class MainTodoWindow : Window
 
     public event EventHandler<MouseButtonEventArgs>? TitlebarPressed;
 
+
     private void Titlebar_MouseDown(object sender, MouseButtonEventArgs e) =>
         TitlebarPressed?.Invoke(this, e);
 
@@ -26,22 +27,12 @@ public partial class MainTodoWindow : Window
     public Border Card => CardRoot;
 
     /// <summary>
-    /// 按屏等比缩放内容（只写变换，不触发布局）。本窗钉住**左上角**（锚点即本窗左上角）：
-    /// 内容左对齐、原点 (0,0)——内容本就从窗口左上角起排，恒与窗口左上角重合。
+    /// 内容按设计尺寸（470×640）绘制，缩放由 Viewbox（Stretch=Fill）随窗口尺寸自动完成；
+    /// 左上角即本窗钉住角（缩放锚点＝主窗左上角），钉住的边不随缩放位移。
     /// </summary>
     public void SetContentScale(double scale)
     {
-        var transform = (ScaleTransform)ContentScale.Children[0];
-        if (transform.ScaleX != scale)
-        {
-            transform.ScaleX = scale;
-            transform.ScaleY = scale;
-        }
-
-        if (CardContent.RenderTransformOrigin != new Point(0, 0))
-        {
-            CardContent.RenderTransformOrigin = new Point(0, 0);
-        }
+        // Viewbox 随窗口尺寸自动等比缩放（Stretch=Fill），无需逐帧写变换。
     }
 
     /// <summary>卡面内容（缩放期间冻结，只留窗壳）。</summary>
@@ -55,7 +46,6 @@ public partial class MainTodoWindow : Window
         ClockDate.Text = date;
     }
 
-    /// <summary>⚡/☑ 开关态：开启=主题色描边+图标（成品 .icon-btn.on 口径），不做透明度变化。</summary>
     /// <summary>⚡/☑ 开关态：开启=主题色描边+图标（成品 .icon-btn.on 口径）。</summary>
     public void SetPanelToggles(bool quickVisible, bool doneVisible)
     {

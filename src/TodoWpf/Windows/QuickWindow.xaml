@@ -18,15 +18,10 @@
             BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
             CornerRadius="{StaticResource Radius.Panel}">
 
-        <!-- 内容按设计尺寸只布局一次；缩放走纯渲染层 ScaleTransform，锚点＝本窗钉住角，钉住的边不随缩放位移。 -->
-        <Grid x:Name="CardContent" Width="310" Height="640"
-              HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0,0">
-            <Grid.RenderTransform>
-                <TransformGroup x:Name="ContentScale">
-                    <ScaleTransform/>
-                    <TranslateTransform x:Name="ContentOffset"/>
-                </TransformGroup>
-            </Grid.RenderTransform>
+        <!-- 内容按设计尺寸（310×640）绘制一次，由 Viewbox 整体缩放（含文字与描边）。
+             锚点在右上角＝本窗钉住角（右缘钉在主窗左缘），钉住的边不随缩放位移。 -->
+        <Viewbox x:Name="CardContent" Stretch="Uniform" HorizontalAlignment="Right" VerticalAlignment="Top">
+        <Grid Width="310" Height="640">
         <Grid.RowDefinitions>
             <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
             <RowDefinition Height="*"/>
@@ -45,16 +40,21 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
+            <!-- 头部三列：模板计数（占剩余）｜批量删除（固定）｜＋（固定）。 -->
             <Grid Grid.Row="0" Margin="0,0,0,10">
-                <TextBlock Text="模板 · 3/10" FontSize="{StaticResource Size.PanelTitleFont}"
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="模板 · 3/10" FontSize="{StaticResource Size.PanelTitleFont}"
                            FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"
-                           VerticalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Style="{StaticResource SmallButton}" Tag="{StaticResource Icon.Trash}"
-                            Content="批量删除" ToolTip="批量删除（批次 04 实装）" Margin="0,0,6,0"/>
-                    <Button Style="{StaticResource AddButton}" Tag="{StaticResource Icon.Plus}"
-                            ToolTip="新建模板（批次 04 实装）"/>
-                </StackPanel>
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Button Grid.Column="1" Style="{StaticResource SmallButton}" Tag="{StaticResource Icon.Trash}"
+                        Content="批量删除" ToolTip="批量删除（批次 04 实装）" Margin="0,0,6,0"
+                        VerticalAlignment="Center"/>
+                <Button Grid.Column="2" Style="{StaticResource AddButton}" Tag="{StaticResource Icon.Plus}"
+                        ToolTip="新建模板（批次 04 实装）" VerticalAlignment="Center"/>
             </Grid>
 
             <StackPanel Grid.Row="1">
@@ -119,6 +119,7 @@
             </Border>
         </Grid>
         </Grid>
+        </Viewbox>
     </Border>
     </Grid>
 
