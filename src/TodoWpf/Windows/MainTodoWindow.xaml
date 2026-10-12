@@ -41,7 +41,7 @@
                                    FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"
                                    Margin="7,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Stretch">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Stretch" Margin="0,0,14,0">
                         <Button x:Name="ThemeBtn" Style="{StaticResource TitlebarButton}"
                                 Tag="{StaticResource Icon.Moon}" ToolTip="切换日/夜主题" Click="ThemeBtn_Click"/>
                         <Button x:Name="PinBtn" Style="{StaticResource TitlebarButton}"
@@ -84,7 +84,7 @@
 
                     <!-- 底排三列：计数（占剩余）｜批量删除（固定）｜＋（固定）。列宽确定，
                          右侧两枚按钮不会被压窄，标签也就不会被裁。 -->
-                    <Grid Grid.Row="1" Margin="2,10,6,10">
+                    <Grid Grid.Row="1" Margin="2,10,10,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>

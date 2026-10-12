@@ -12,6 +12,27 @@ public partial class MainTodoWindow : Window
     public MainTodoWindow()
     {
         InitializeComponent();
+        LayoutUpdated += (_, _) => Probe();
+    }
+
+    private int _n;
+
+    private void Probe()
+    {
+        if (_n++ > 20) { return; }
+        try
+        {
+            System.IO.File.AppendAllText(
+                System.IO.Path.Combine(System.IO.Path.GetTempPath(), "w.log"),
+                $"win={ActualWidth:F1}x{ActualHeight:F1} dpi={VisualTreeHelper.GetDpi(this).DpiScaleX:F2} "
+                + $"card={CardRoot.ActualWidth:F1}x{CardRoot.ActualHeight:F1} "
+                + $"cardRender={CardRoot.RenderSize.Width:F1} "
+                + $"content={CardContent.ActualWidth:F1}x{CardContent.ActualHeight:F1} "
+                + $"contentRender={CardContent.RenderSize.Width:F1} "
+                + $"contentInWin={CardContent.TransformToAncestor(this).Transform(new Point(0,0)).X:F1}"
+                + Environment.NewLine);
+        }
+        catch { }
     }
 
     public event EventHandler<MouseButtonEventArgs>? TitlebarPressed;
