@@ -52,7 +52,7 @@
                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                 <Button Grid.Column="1" Style="{StaticResource SmallButton}" Tag="{StaticResource Icon.Trash}"
                         Content="批量删除" ToolTip="批量删除（批次 04 实装）" Margin="0,0,6,0"
-                        VerticalAlignment="Center"/>
+                        Width="92" VerticalAlignment="Center"/>
                 <Button Grid.Column="2" Style="{StaticResource AddButton}" Tag="{StaticResource Icon.Plus}"
                         ToolTip="新建模板（批次 04 实装）" VerticalAlignment="Center"/>
             </Grid>

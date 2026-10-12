@@ -130,11 +130,10 @@
     </Style>
 
     <!-- 小按钮 26px（批量删除等）：Tag=Geometry 可选图标 13px（线宽 1.7）+ 文字 11.5px。
-         MinWidth 92：容下「图标 13 + 间隙 5 + 四字标签 46 + 内边距 18 + 边框」，
-         否则窄窗（快捷添加 310 设计宽）里按钮会被压到 83，末字被自身边界切掉（真机实测「批量删除」只剩「批量删」）。 -->
+         宽度由调用方显式给出（92 = 图标 13 + 间隙 5 + 四字标签 46 + 内边距 18 + 边框 2）：
+         不给宽度时窄窗会把它压到 83、末字被自身边界切掉（真机实测「批量删除」只剩「批量删」）。 -->
     <Style x:Key="SmallButton" TargetType="Button">
         <Setter Property="Height" Value="{StaticResource Size.SmallButton}"/>
-        <Setter Property="MinWidth" Value="92"/>
         <Setter Property="Padding" Value="9,0"/>
         <Setter Property="Background" Value="{DynamicResource Brush.Btn}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.BtnBorder}"/>
@@ -149,7 +148,7 @@
                     <Border x:Name="bd" CornerRadius="{StaticResource Radius.Control}"
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
-                            Padding="{TemplateBinding Padding}">
+                            Padding="{TemplateBinding Padding}" ClipToBounds="True">
                         <Border.RenderTransform>
                             <ScaleTransform ScaleX="1" ScaleY="1"/>
                         </Border.RenderTransform>
@@ -279,7 +278,7 @@
                     <Border x:Name="bd" CornerRadius="{StaticResource Radius.Control}"
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
-                            Padding="{TemplateBinding Padding}">
+                            Padding="{TemplateBinding Padding}" ClipToBounds="True">
                         <Border.RenderTransform>
                             <ScaleTransform ScaleX="1" ScaleY="1"/>
                         </Border.RenderTransform>
