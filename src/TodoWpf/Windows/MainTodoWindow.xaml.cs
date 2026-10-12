@@ -16,8 +16,6 @@ public partial class MainTodoWindow : Window
 
     public event EventHandler<MouseButtonEventArgs>? TitlebarPressed;
 
-
-
     private void Titlebar_MouseDown(object sender, MouseButtonEventArgs e) =>
         TitlebarPressed?.Invoke(this, e);
 
