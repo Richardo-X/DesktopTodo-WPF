@@ -16,6 +16,10 @@ public partial class App : Application
 
     private static readonly string[] Weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
+    private static Mutex? _instanceMutex;
+
+    private static EventWaitHandle? _wakeEvent;
+
     private static ResourceDictionary? _dayTokens;
     private static ResourceDictionary? _nightTokens;
 
@@ -31,17 +35,28 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        // 单实例：已开启时再启动只调出现有窗口
-        using var mutex = new Mutex(true, MutexName, out var createdNew);
+        // 单实例：已开启时再启动只调出现有窗口。
+        // 注意：互斥锁必须由进程静态持有到退出——若用 using 声明，OnStartup 返回即释放，
+        // 第二实例会照常启动（批次 03 验收发现两实例并跑、同写一个数据文件）。
+        _instanceMutex = new Mutex(initiallyOwned: true, MutexName, out var createdNew);
         if (!createdNew)
         {
-            _ = EventWaitHandle.OpenExisting(WakeEventName);
-            EventWaitHandle.OpenExisting(WakeEventName).Set();
+            try
+            {
+                using var existing = EventWaitHandle.OpenExisting(WakeEventName);
+                existing.Set();
+            }
+            catch (WaitHandleCannotBeOpenedException)
+            {
+                // 唤醒事件尚不存在（对端启动竞态）：忽略，对端随后会显示自己的窗口
+            }
+
             Shutdown();
             return;
         }
 
         var wake = new EventWaitHandle(false, EventResetMode.AutoReset, WakeEventName);
+        _wakeEvent = wake;
         var wakeThread = new Thread(() =>
         {
             while (wake.WaitOne())
@@ -117,6 +132,27 @@ public partial class App : Application
         {
             IsNight = false;
         }
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        _wakeEvent?.Dispose();
+        if (_instanceMutex is not null)
+        {
+            try
+            {
+                _instanceMutex.ReleaseMutex();
+            }
+            catch (ApplicationException)
+            {
+                // 未持有（例如启动即退出的第二实例）：忽略
+            }
+
+            _instanceMutex.Dispose();
+            _instanceMutex = null;
+        }
+
+        base.OnExit(e);
     }
 
     private static ResourceDictionary Load(string relative) =>
