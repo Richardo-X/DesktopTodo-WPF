@@ -64,7 +64,7 @@ public partial class MainTodoWindow : Window
     /// <summary>卡面内容（缩放期间冻结，只留窗壳）。</summary>
     public FrameworkElement CardBody => CardContent;
 
-    public void SetCount(int current, int max) => CountText.Text = $"待办 {current}/{max}";
+    public void SetCount(int current, int max) => CountText.Text = $"{current}/{max}";
 
     public void SetClock(string time, string date)
     {

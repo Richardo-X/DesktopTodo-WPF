@@ -41,8 +41,8 @@
     <sys:Double x:Key="Size.ClusterGap" xmlns:sys="clr-namespace:System;assembly=mscorlib">4</sys:Double>
 
     <!-- 时钟（30px Display 半粗 + 12px 日期；等宽数字在用例处以 Typography 设置） -->
-    <sys:Double x:Key="Size.ClockTimeFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">30</sys:Double>
-    <sys:Double x:Key="Size.ClockDateFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">12</sys:Double>
+    <sys:Double x:Key="Size.ClockTimeFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">38</sys:Double>
+    <sys:Double x:Key="Size.ClockDateFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">15</sys:Double>
 
     <!-- 字号阶梯：逐值取自基准 交互原型-v3.4-L1（.tt 13.5 / .panel-title 13 / .btn 12.5 /
          .btn.sm 11.5 / .cap-chip 11 / .tag 10 / .step-btn 15 / .clock-time 30 / .clock-date 12） -->

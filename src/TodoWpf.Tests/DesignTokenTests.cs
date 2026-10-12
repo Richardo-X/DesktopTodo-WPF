@@ -201,8 +201,8 @@ public class DesignTokenTests
         Assert.Equal("640", Text(common["Size.MainWindowHeight"]));
         Assert.Equal("310", Text(common["Size.SideWindowWidth"]));
         Assert.Equal("4", Text(common["Size.ClusterGap"]));
-        Assert.Equal("30", Text(common["Size.ClockTimeFont"]));
-        Assert.Equal("12", Text(common["Size.ClockDateFont"]));
+        Assert.Equal("38", Text(common["Size.ClockTimeFont"]));
+        Assert.Equal("15", Text(common["Size.ClockDateFont"]));
     }
 
     // ---------- 图标集（单族：原型线性 SVG，统一 24 视箱） ----------
