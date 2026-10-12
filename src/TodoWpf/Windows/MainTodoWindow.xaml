@@ -86,7 +86,7 @@
 
                     <!-- 底排三列：计数（占剩余）｜批量删除（固定）｜＋（固定）。列宽确定，
                          右侧两枚按钮不会被压窄，标签也就不会被裁。 -->
-                    <Grid Grid.Row="1" Margin="2,10,2,10">
+                    <Grid Grid.Row="1" Margin="2,10,6,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
