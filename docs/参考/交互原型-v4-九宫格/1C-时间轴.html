@@ -75,11 +75,11 @@ body[data-theme="night"]{
 .visual{width:380px;flex:none;display:flex;flex-direction:column;align-items:center}
 .win{width:360px;background:var(--card);border:1px solid var(--card-border);
   border-radius:var(--radius-win);box-shadow:var(--win-shadow);overflow:hidden;color:var(--text)}
-.win .head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:12px 14px 2px}
-.win .brand{font-size:12.5px;font-weight:600;letter-spacing:.5px;color:var(--text);padding-top:3px}
-.clockbox{text-align:right;line-height:1.2}
-.clockbox .t{display:block;font-size:16px;font-weight:var(--clock-weight);letter-spacing:.4px;
-  font-variant-numeric:tabular-nums;color:var(--text)}
+.win .head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px 4px}
+.win .brand{font-size:12.5px;font-weight:600;letter-spacing:.5px;color:var(--text)}
+.clockbox{margin-left:auto;text-align:right;line-height:1.2}
+.clockbox .t{display:block;font-size:14px;font-weight:var(--clock-weight);letter-spacing:.4px;
+  font-variant-numeric:tabular-nums;color:var(--muted)}
 .clockbox .d{display:block;margin-top:1px;font-size:10px;color:var(--faint)}
 /* 操作区：三枚图标 + 计数；右侧五枚窗口图标 */
 .actionbar{display:flex;align-items:center;gap:2px;padding:7px 12px 9px;
@@ -130,7 +130,9 @@ body[data-theme="night"]{
 /* 底部：模板 2/10 + 批量删除 */
 .foot{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:9px 14px 11px;
   border-top:1px solid var(--card-border)}
-.flabel{flex:none;font-size:10.5px;color:var(--faint)}
+.flabel{flex:none;font-size:10.5px;color:var(--faint);cursor:pointer;
+  border-bottom:1px dotted var(--line);padding-bottom:1px;transition:color .15s,border-color .15s}
+.flabel:hover{color:var(--accent);border-color:var(--accent)}
 .chip{display:inline-flex;align-items:center;gap:5px;padding:3px 4px 3px 9px;border-radius:999px;
   border:1px solid var(--card-border);font-size:11px;color:var(--muted);cursor:pointer;
   transition:border-color .15s,color .15s}
@@ -191,14 +193,22 @@ body[data-theme="night"]{
   <aside class="brief">
     <h1>风格一 · 极简克制</h1>
     <div class="sub">变体 1C · 时间轴</div>
-    <p class="tagline">让一天有一条骨架：左列一条竖直点线，已过的时刻是实心点，未到的还是空心点，事项按时间挂在这条轴右侧。时钟缩到右上角小号，把读时交给轴本身，视线自上而下就是一天从早到晚的流程。</p>
+    <p class="tagline">让一天有一条骨架：左列一条竖直点线，已过的时刻是实心点，未到的还是空心点，事项按时间挂在这条轴右侧。五枚窗口图标收在右上角，时间与日期缩成操作区右端的小号字，把读时的重心交给轴本身，视线自上而下就是一天从早到晚的流程。</p>
     <div class="dials"><span class="dial">VARIANCE 4</span><span class="dial">MOTION 2</span><span class="dial">DENSITY 4</span></div>
     <div class="mech">
       <h3>三项机制 · 新旧对照</h3>
       <table>
-        <tr><td>收纳</td><td>新：整组淡出后，屏顶只留一条 3×48 的极细线，平时几乎不可见；悬停变主题色并整组滑回。<br><span class="old">可改回旧版：贴顶缩成 160×12 白条。</span></td></tr>
+        <tr><td>收纳</td><td>新：整组淡出后，屏顶只留一条<b>竖线</b>（宽 3 × 高 48，垂直于屏幕顶边向下伸出），平时几乎不可见；悬停变主题色并整组滑回。<br>竖线而不是横线的理由：命中柱很窄（3px），几乎不会误触，必须刻意对准才触发；横线容易被误读成窗口的边框装饰，竖线则一眼就是"能拉出来的拉手"（像露出的书签角）。代价是要瞄准，如嫌难点可加宽到 4×56 或改回横向细线。<br><span class="old">可改回旧版：贴顶缩成 160×12 白条（横向）。</span></td></tr>
         <tr><td>显隐</td><td>新：托盘三途径不变，另加 Esc 快速收纳（键盘向，不替代托盘）。<br><span class="old">可改回旧版：仅托盘三途径（× / 双击 / 右键）。</span></td></tr>
         <tr><td>质感</td><td>新：实心卡面；轴线、点、方框都用 1px 细线，彩度只留给实心点与勾选框。<br><span class="old">可改回旧版：半透明不模糊。</span></td></tr>
+      </table>
+    </div>
+    <div class="mech">
+      <h3>怎么用 · 添加待办与模板</h3>
+      <table>
+        <tr><td>加待办</td><td>点操作区高亮的 ＋ → 弹出「新建待办」窗：输入 300 字内（带字数计数）→ 确认，新条进列表末尾；空内容不可确认。受上限约束（当前 3/10）。</td></tr>
+        <tr><td>从模板加</td><td>点底部胶囊右端的 ＋（如「写周报 ＋」）→ 内容原样加入待办末尾，模板保留；待办已满会先提示。</td></tr>
+        <tr><td>加模板</td><td>点底部「模板 · 2/10」这几个字 → 打开模板管理：＋ 新建模板（上限 10、同内容查重）、双击改文字、拖手柄排序、批量删除。</td></tr>
       </table>
     </div>
     <div class="foot-note">二级窗（新建/编辑/设置/历史）沿用本风格令牌，本样板未展开。</div>
@@ -207,26 +217,28 @@ body[data-theme="night"]{
   <!-- ---------- 右侧主视觉 ---------- -->
   <div class="visual">
     <div class="win">
-      <!-- 标题区：品牌 + 右上角小号时钟 -->
+      <!-- 标题区：品牌 + 右上角五枚窗口图标 -->
       <div class="head">
         <span class="brand">桌面待办</span>
-        <span class="clockbox">
-          <span class="t">14:32</span>
-          <span class="d">10月12日 星期一</span>
-        </span>
-      </div>
-      <!-- 操作区：闪电 / 面板勾 / 加号 + 计数；右侧五枚窗口图标 -->
-      <div class="actionbar">
-        <span class="ib" title="快捷添加（模板）"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>
-        <span class="ib" title="已完成"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M14.5 4v16"/><path d="M6.5 12.5l2 2 3.5-4.5"/></svg></span>
-        <span class="ib primary" title="新建待办"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
-        <span class="cnt">3/10</span>
+        <!-- 五枚窗口图标（主题/置顶/缩进锁/设置/关闭）收在右上角 -->
         <span class="wicons">
           <span class="ib" title="主题"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
           <span class="ib" title="置顶"><svg class="ic" viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l1 7 3 3H5l3-3 1-7z"/></svg></span>
           <span class="ib" title="缩进锁"><svg class="ic" viewBox="0 0 24 24"><path d="M3 4h18"/><rect x="7" y="11.5" width="10" height="8" rx="1.6"/><path d="M9.6 11.5V9a2.4 2.4 0 0 1 4.8 0v2.5"/></svg></span>
           <span class="ib" title="设置"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
           <span class="ib" title="关闭"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+        
+        </span>
+      </div>
+      <div class="actionbar">
+<span class="ib" title="快捷添加（模板）"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>
+        <span class="ib" title="已完成"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M14.5 4v16"/><path d="M6.5 12.5l2 2 3.5-4.5"/></svg></span>
+        <span class="ib primary" title="新建待办"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+                <span class="cnt">3/10</span>
+        <!-- 小号时间与日期移到操作区右端 -->
+        <span class="clockbox">
+          <span class="t">14:32</span>
+          <span class="d">10月12日 星期一</span>
         </span>
       </div>
       <!-- 时间轴：已过（实心点）→ 现在 → 未到（空心点） -->
@@ -280,14 +292,14 @@ body[data-theme="night"]{
       </div>
       <!-- 底部：模板 2/10 + 批量删除 -->
       <div class="foot">
-        <span class="flabel">模板 · 2/10</span>
-        <span class="chip">每天站会前喝口水<span class="plus"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></span>
-        <span class="chip">写周报<span class="plus"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></span>
+        <span class="flabel" title="打开模板管理：新建模板 / 编辑 / 拖动排序 / 批量删除">模板 · 2/10</span>
+        <span class="chip" title="点击右端 ＋ 把这条加入今日待办（模板保留）">每天站会前喝口水<span class="plus"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></span>
+        <span class="chip" title="点击右端 ＋ 把这条加入今日待办（模板保留）">写周报<span class="plus"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></span>
         <span class="fdel">批量删除</span>
       </div>
     </div>
     <div class="mock-label">1C 主窗 · 左列点线为轴，已过实心、未到空心（静态演示）</div>
-    <div class="mock-sub">操作区三枚：闪电 = 快捷添加（模板）、面板勾 = 已完成、＋ = 新建待办；右侧计数 3/10。</div>
+    <div class="mock-sub">右上角五枚＝主题/置顶/缩进锁/设置/关闭；操作区三枚＝闪电（模板开关）、面板勾（已完成开关）、＋（新建待办），右端小号字＝时间与日期。</div>
 
     <!-- 收纳态示意 -->
     <div class="caprow">
@@ -303,7 +315,7 @@ body[data-theme="night"]{
       </div>
       <div class="capnote">
         <b>收纳态示意</b>
-        整组淡出后，屏顶只留一条 3×48 的极细线（常态近乎透明，只有仔细看才认得出）。鼠标碰到即弹出，悬停时细线变主题色作为回应。
+        整组淡出后，屏顶只留一条<b>竖线</b>（宽 3 × 高 48，垂直伸出屏顶；常态近乎透明，只有仔细看才认得出）。鼠标碰到即弹出，悬停时竖线变主题色作为回应。
       </div>
     </div>
   </div>
