@@ -227,7 +227,9 @@ public sealed class ClusterController : IDisposable
         // 两者会差零点几像素——内容比窗口宽 ⇒ 右对齐的卡面被裁掉一条；比窗口窄 ⇒
         // 卡面右缘缩进窗内，肉眼就是"两窗缝隙在缩放中变宽/变窄"（用户视频慢放实证：缝隙 13→17→13）。
         // 反推后 内容布局尺寸 ≡ 窗口客户区尺寸，卡面边缘逐帧与窗口边缘重合。
-        _quick.SetContentVisible(!HideQuickContentForTest);
+        // 拖动期间快捷窗内容不参与重绘（基准「缩放呈现 v3.3」口径：只看窗壳缩放，松手恢复内容）。
+        // 目的：把每帧要重绘+推送的像素量压到最小，让它的尺寸变化跟上主窗的节拍。
+        _quick.SetContentVisible(!HideQuickContentForTest && !_resizing);
         _main.SetContentScale(NormalizedScale(frame.Main.Rect.Width, ClusterLayout.MainWidth));
         _quick.SetContentScale(NormalizedScale(frame.Quick.Rect.Width, ClusterLayout.SideWidth));
         _done.SetContentScale(NormalizedScale(frame.Done.Rect.Width, ClusterLayout.SideWidth));
