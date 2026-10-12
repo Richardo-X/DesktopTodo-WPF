@@ -45,14 +45,11 @@ public partial class MainTodoWindow : Window
         TuckLockBtn.ToolTip = on ? "缩进锁定：已开启（贴边保持弹出）" : "缩进锁定";
     }
 
-    private void ApplyToggleState(Button button, bool on)
-    {
-        button.Foreground = (Brush)FindResource(on ? "Brush.Accent" : "Brush.Text");
-        button.BorderBrush = (Brush)FindResource(on ? "Brush.Accent" : "Brush.BtnBorder");
-    }
+    private void ApplyToggleState(Button button, bool on) =>
+        button.Style = (Style)FindResource(on ? "IconButtonOn" : "IconButton");
 
-    private static void ApplyTitlebarOnState(Button button, bool on) =>
-        button.Foreground = (Brush)Application.Current.Resources[on ? "Brush.Accent" : "Brush.Text"];
+    private void ApplyTitlebarOnState(Button button, bool on) =>
+        button.Style = (Style)FindResource(on ? "TitlebarButtonOn" : "TitlebarButton");
 
     private void ThemeBtn_Click(object sender, RoutedEventArgs e) =>
         Controller?.ToggleTheme();

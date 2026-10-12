@@ -39,6 +39,7 @@ public sealed class ClusterController : IDisposable
 
     // 拖动/缩放进行中状态
     private bool _dragging;
+    private bool _resizeLayoutQueued;
     private WinPoint _dragStartAnchor;
     private Point _dragStartMouse;
 
@@ -58,7 +59,6 @@ public sealed class ClusterController : IDisposable
             ToolWindowChrome.Apply(window);
         }
 
-        ApplyAcrylic();
 
         _scale = _data.UiState.ClusterScale;
         _anchor = ResolveAnchor();
@@ -114,7 +114,6 @@ public sealed class ClusterController : IDisposable
     public void Start()
     {
         ApplyThemeState();
-        ApplyAcrylic();
         _main.Controller = this;
         _quick.Controller = this;
         _done.Controller = this;
@@ -319,7 +318,26 @@ public sealed class ClusterController : IDisposable
         var rawScale = targetMainWidth / ClusterLayout.MainWidth;
         _scale = ClusterLayout.ClampScale(rawScale, WorkArea(), ui.QuickVisible, ui.DoneVisible);
         _tuck.SetResizing(true);
-        ApplyLayout(saveState: false); // 缩放中：布局但不落盘
+        RequestResizeLayout(); // 按帧节流：每帧最多重排一次，避免事件风暴引发缩放抖动
+    }
+
+    /// <summary>缩放中的布局请求：合并到下一帧统一执行（CompositionTarget.Rendering 每帧一次）。</summary>
+    private void RequestResizeLayout()
+    {
+        if (_resizeLayoutQueued)
+        {
+            return;
+        }
+
+        _resizeLayoutQueued = true;
+        EventHandler? handler = null;
+        handler = (_, _) =>
+        {
+            CompositionTarget.Rendering -= handler;
+            _resizeLayoutQueued = false;
+            ApplyLayout(saveState: false);
+        };
+        CompositionTarget.Rendering += handler;
     }
 
     private void ScaleGrip_DragCompleted(object sender, DragCompletedEventArgs e)
@@ -372,16 +390,6 @@ public sealed class ClusterController : IDisposable
     {
         App.ApplyTheme(!App.IsNight);
         _main.ThemeBtn.Tag = (System.Windows.Media.Geometry)_main.FindResource(App.IsNight ? "Icon.Sun" : "Icon.Moon");
-        ApplyAcrylic();
-    }
-
-    /// <summary>三张卡片窗的真磨砂（C2）：随日/夜切换刷新磨砂底色。</summary>
-    private void ApplyAcrylic()
-    {
-        foreach (var window in (Window[])[_main, _quick, _done])
-        {
-            AcrylicBackdrop.Apply(window, App.IsNight);
-        }
     }
 
     private void ApplyThemeState()

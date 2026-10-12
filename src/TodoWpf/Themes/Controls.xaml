@@ -86,6 +86,13 @@
         </Setter>
     </Style>
 
+    <!-- 图标按钮 · 开启态（⚠/☑ 面板开关）：用 DynamicResource 让日/夜切换自动解析，
+         避免代码里缓存旧主题色刷导致"浅色图标压浅底"（批次 03 验收反馈） -->
+    <Style x:Key="IconButtonOn" TargetType="Button" BasedOn="{StaticResource IconButton}">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+    </Style>
+
     <!-- ＋新建按钮 32×32 主色块（白图标） -->
     <Style x:Key="AddButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
         <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
@@ -453,6 +460,11 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- 标题栏按钮 · 开启态（置顶/缩进锁）：主题色图标（成品 .wbtn.on 口径，随主题自动解析） -->
+    <Style x:Key="TitlebarButtonOn" TargetType="Button" BasedOn="{StaticResource TitlebarButton}">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}"/>
     </Style>
 
     <!-- 标题栏关闭（悬停红底白图标，同原型 .wbtn.close） -->
