@@ -26,10 +26,8 @@ public partial class MainTodoWindow : Window
     public Border Card => CardRoot;
 
     /// <summary>
-    /// 内容按设计尺寸（470×640）绘制，缩放走**渲染层** RenderTransform。
-    /// 为什么不沿用 LayoutTransform：它每帧要重排整棵子树（文字/图标重新测量）才可见，
-    /// 而窗口矩形（"框"）是系统层即时生效的——两者一先一后，肉眼就是"框先到、内容后追"、
-    /// 内容像是被框裁掉一截或与框分离（用户视频实证）。渲染层变换不触发布局，框内容同帧。
+    /// 内容按设计尺寸（470×640）绘制，缩放走 LayoutTransform：布局尺寸＝设计尺寸×scale。
+    /// 本窗左上角＝锚点（钉住角），窗口矩形按目标档逐帧摆位。
     /// </summary>
     public void SetContentScale(double scale)
     {
