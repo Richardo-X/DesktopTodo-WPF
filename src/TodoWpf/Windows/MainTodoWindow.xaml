@@ -65,6 +65,10 @@
                     <!-- 操作区上排：⚡（左）/ 时钟块（居中）/ ☑（右）。
                          上排沿用 Electron 口径：⚡☑ 上缘对齐"日期上缘"（=时间行高 38×1.1 + 日期上边距 2 = 43.8），
                          所以两枚按钮的下推量与时钟字号绑定，改字号时此处一起看。 -->
+                    <!-- ⚡/☑ 的底边与"日期"底边对齐（Electron .row-top .icon-btn{
+                         margin-top: calc(38px*1.1 + 2px) }、.row-top{align-items:flex-start}）：
+                         时钟块含日期在内总高 = 时间行高 38×1.1 + 日期上边距 2 + 日期行高 15×1.35 ≈ 62；
+                         按钮高 32，故自底部上推 62 − 32 = 30。 -->
                     <Grid Grid.Row="0" Margin="2,0,2,0">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top">
                             <TextBlock x:Name="ClockTime" Text="14:32" FontSize="{StaticResource Size.ClockTimeFont}"
@@ -79,12 +83,12 @@
                         </StackPanel>
                         <Button x:Name="QuickBtn" Style="{StaticResource IconButton}"
                                 Tag="{StaticResource Icon.BoltOptical}" ToolTip="快捷添加开关"
-                                Click="QuickBtn_Click" HorizontalAlignment="Left" VerticalAlignment="Top"
-                                Margin="0,43.8,0,0"/>
+                                Click="QuickBtn_Click" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                                Margin="0,0,0,31"/>
                         <Button x:Name="DoneBtn" Style="{StaticResource IconButton}"
                                 Tag="{StaticResource Icon.PanelCheck}" ToolTip="已完成开关"
-                                Click="DoneBtn_Click" HorizontalAlignment="Right" VerticalAlignment="Top"
-                                Margin="0,43.8,0,0"/>
+                                Click="DoneBtn_Click" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                Margin="0,0,0,31"/>
                     </Grid>
 
                     <!-- 底排三列：计数（占剩余）｜批量删除（固定）｜＋（固定）。列宽确定，
