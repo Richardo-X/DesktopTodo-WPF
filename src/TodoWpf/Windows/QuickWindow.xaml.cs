@@ -28,11 +28,6 @@ public partial class QuickWindow : Window
     /// <summary>卡面根（缩放期间切换为不透明底）。</summary>
     public Border Card => CardRoot;
 
-    /// <summary>设计尺寸（XAML 中 CardContent 的固定 Width/Height）。</summary>
-    private const double DesignWidth = 310;
-
-    private const double DesignHeight = 640;
-
     /// <summary>
     /// 内容按设计尺寸绘制，缩放走 LayoutTransform：布局尺寸＝设计尺寸×scale。
     /// 卡面（底色+描边）也跟着"目标档"走而不是铺满窗口——拖动缩放时窗口矩形会预先放大到
@@ -47,13 +42,6 @@ public partial class QuickWindow : Window
         {
             transform.ScaleX = scale;
             transform.ScaleY = scale;
-        }
-
-        var w = DesignWidth * scale;
-        if (CardRoot.Width != w)
-        {
-            CardRoot.Width = w;
-            CardRoot.Height = DesignHeight * scale;
         }
     }
 

@@ -192,17 +192,20 @@ public sealed class ClusterController : IDisposable
     }
 
     /// <summary>
-    /// 快捷窗的"画布矩形"：按缩放上限（ClusterLayout.MaxScale）算出的最大矩形，右缘仍钉在主窗左缘减缝隙。
-    /// 快捷窗**恒定**停在这个矩形上，卡面尺寸另由 SetContentScale 决定（右上角对齐）。
-    /// 这样按下/拖动/松手全程都不改它的窗口矩形 ⇒ 合成器没有"新矩形 + 旧表面"的重贴机会
-    /// ⇒ 拖动无拖影，按下/松手也不再各闪一次（用户 2026-10-13 反馈）。
+    /// 快捷窗的"画布矩形"：窗口矩形恒定不变的那块地方（右缘钉主窗左缘减缝隙、上缘钉锚点）。
+    /// 尺寸取 max(设计尺寸, 设计尺寸×缩放上限) —— 保证卡面（固定设计尺寸 310×640，靠渲染层缩放表现大小）
+    /// 在窗口内**不被约束**：否则卡面被父级宽度夹小，渲染层缩放的锚点算错，卡会缩到左下角去。
+    /// 窗口矩形永不改变 ⇒ 合成器不会重贴旧表面（无拖影、无按下/松手闪动）。
     /// </summary>
     private WinRect QuickCanvasRect()
     {
         var ui = _data.UiState;
         var workArea = WorkArea();
         var maxScale = ClusterLayout.MaxScale(workArea, ui.QuickVisible, ui.DoneVisible);
-        return ClusterLayout.Arrange(workArea, SnappedAnchor(), maxScale, ui.QuickVisible, ui.DoneVisible).Quick.Rect;
+        var w = ClusterLayout.SideWidth * Math.Max(1, maxScale);
+        var h = ClusterLayout.SideHeight * Math.Max(1, maxScale);
+        var right = SnappedAnchor().X - ClusterLayout.Gap;
+        return new WinRect(right - w, SnappedAnchor().Y, w, h);
     }
 
     /// <summary>按锚点+缩放+开关重排三窗（隐藏窗同时就位但不出场）。</summary>
