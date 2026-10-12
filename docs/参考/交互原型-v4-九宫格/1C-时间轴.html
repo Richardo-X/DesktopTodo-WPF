@@ -7,7 +7,7 @@
 <style>
 /* 交互原型 v4 · 九宫格 E1 · 风格一「极简克制」变体 1C：时间轴
    静态演示，无业务逻辑。令牌沿用 交互原型-v4-方向样板.html 的 body[data-dir="1"] 日/夜两套。
-   形态：左列竖直点线，已过时刻为实心点、未到为空心点；时钟缩到右上角小号。 */
+   形态：左列竖直点线，已过时刻为实心点、未到为空心点；五枚窗口图标收右上角，时间与日期缩到操作区右端小号。 */
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{
@@ -149,7 +149,7 @@ body[data-theme="night"]{
 .mock-sub{margin-top:5px;width:360px;font-size:10.5px;line-height:1.7;color:rgba(255,255,255,.38);
   text-align:center}
 
-/* ---------- 收纳态示意（3×48 极细线） ---------- */
+/* ---------- 收纳态示意（48×3 横向细线） ---------- */
 .caprow{margin-top:16px;width:380px}
 .capstrips{display:flex;gap:10px}
 .capcell{flex:1;min-width:0}
@@ -160,7 +160,7 @@ body[data-theme="night"]{
   background:rgba(255,255,255,.13)}
 .capsample .edgetag{position:absolute;left:8px;top:8px;font-size:10px;letter-spacing:1px;
   color:rgba(255,255,255,.26)}
-.tick{position:absolute;left:50%;top:0;width:3px;height:48px;margin-left:-1.5px;
+.tick{position:absolute;left:50%;top:0;width:48px;height:3px;margin-left:-24px;
   background:rgba(255,255,255,.13)}
 .tick.on{background:var(--accent)}
 .capcap{margin-top:7px;font-size:10.5px;text-align:center;color:rgba(255,255,255,.40)}
@@ -198,7 +198,7 @@ body[data-theme="night"]{
     <div class="mech">
       <h3>三项机制 · 新旧对照</h3>
       <table>
-        <tr><td>收纳</td><td>新：整组淡出后，屏顶只留一条<b>竖线</b>（宽 3 × 高 48，垂直于屏幕顶边向下伸出），平时几乎不可见；悬停变主题色并整组滑回。<br>竖线而不是横线的理由：命中柱很窄（3px），几乎不会误触，必须刻意对准才触发；横线容易被误读成窗口的边框装饰，竖线则一眼就是"能拉出来的拉手"（像露出的书签角）。代价是要瞄准，如嫌难点可加宽到 4×56 或改回横向细线。<br><span class="old">可改回旧版：贴顶缩成 160×12 白条（横向）。</span></td></tr>
+        <tr><td>收纳</td><td>新：整组淡出后，屏顶只留一条<b>横向细线</b>（宽 48 × 高 3，贴着屏幕顶边、居中于组件原位）；平时几乎不可见，悬停变主题色并整组滑回。<br>只做 48px 一小段而不是整条屏幕边：比竖线好点中，同时不会"鼠标扫到屏幕顶部就误弹"（必须正好落在这段上才算碰到）。<br><span class="old">可改回旧版：贴顶缩成 160×12 白条（更宽、更显眼的横向白条）。</span></td></tr>
         <tr><td>显隐</td><td>新：托盘三途径不变，另加 Esc 快速收纳（键盘向，不替代托盘）。<br><span class="old">可改回旧版：仅托盘三途径（× / 双击 / 右键）。</span></td></tr>
         <tr><td>质感</td><td>新：实心卡面；轴线、点、方框都用 1px 细线，彩度只留给实心点与勾选框。<br><span class="old">可改回旧版：半透明不模糊。</span></td></tr>
       </table>
@@ -315,7 +315,7 @@ body[data-theme="night"]{
       </div>
       <div class="capnote">
         <b>收纳态示意</b>
-        整组淡出后，屏顶只留一条<b>竖线</b>（宽 3 × 高 48，垂直伸出屏顶；常态近乎透明，只有仔细看才认得出）。鼠标碰到即弹出，悬停时竖线变主题色作为回应。
+        整组淡出后，屏顶只留一条<b>横向细线</b>（宽 48 × 高 3，沿屏幕顶边、居中于组件原位；常态近乎透明，只有仔细看才认得出）。鼠标碰到即弹出，悬停时细线变主题色作为回应。
       </div>
     </div>
   </div>
