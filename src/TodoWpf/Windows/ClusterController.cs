@@ -134,9 +134,8 @@ public sealed class ClusterController : IDisposable
         UpdateClock();
         ApplyLayout();
 
-        _main.Show();
-        _quick.Show();
-        _done.Show();
+        // 显隐交给 ApplyLayout（按存档的面板开关决定）——此前三个窗口无条件 Show()，
+        // 会把"已关闭"的面板以 WPF 默认尺寸（1536×844）显示出来（Viewbox 又把内容放大填满）= 启动巨窗 bug。
         _main.SetPanelToggles(_data.UiState.QuickVisible, _data.UiState.DoneVisible);
     }
 
