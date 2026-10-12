@@ -51,6 +51,14 @@ public sealed class ClusterController : IDisposable
         _done = new DoneWindow();
         _tuckBar = new TuckBarWindow();
 
+        // 不进任务栏/Alt+Tab（需求 §2.2）：ShowInTaskbar=false 只管任务栏，Alt+Tab 需 WS_EX_TOOLWINDOW
+        foreach (var window in (Window[])[_main, _quick, _done, _tuckBar])
+        {
+            ToolWindowChrome.Apply(window);
+        }
+
+        ApplyAcrylic();
+
         _scale = _data.UiState.ClusterScale;
         _anchor = ResolveAnchor();
 
@@ -105,6 +113,7 @@ public sealed class ClusterController : IDisposable
     public void Start()
     {
         ApplyThemeState();
+        ApplyAcrylic();
         _main.Controller = this;
         _quick.Controller = this;
         _done.Controller = this;
@@ -320,6 +329,16 @@ public sealed class ClusterController : IDisposable
     {
         App.ApplyTheme(!App.IsNight);
         _main.ThemeBtn.Tag = (System.Windows.Media.Geometry)_main.FindResource(App.IsNight ? "Icon.Sun" : "Icon.Moon");
+        ApplyAcrylic();
+    }
+
+    /// <summary>三张卡片窗的真磨砂（C2）：随日/夜切换刷新磨砂底色。</summary>
+    private void ApplyAcrylic()
+    {
+        foreach (var window in (Window[])[_main, _quick, _done])
+        {
+            AcrylicBackdrop.Apply(window, App.IsNight);
+        }
     }
 
     private void ApplyThemeState()

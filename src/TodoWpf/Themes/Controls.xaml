@@ -244,6 +244,60 @@
         </Setter>
     </Style>
 
+    <!-- 块按钮 30px（全宽中性底；原型 .btn.block：已完成窗「历史记录」） -->
+    <Style x:Key="BlockButton" TargetType="Button">
+        <Setter Property="Height" Value="{StaticResource Size.Button}"/>
+        <Setter Property="Padding" Value="13,0"/>
+        <Setter Property="Background" Value="{DynamicResource Brush.Btn}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BtnBorder}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+        <Setter Property="FontFamily" Value="{StaticResource Font.Text}"/>
+        <Setter Property="FontSize" Value="{StaticResource Size.BodyFont}"/>
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" CornerRadius="{StaticResource Radius.Control}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                            Padding="{TemplateBinding Padding}">
+                        <Border.RenderTransform>
+                            <ScaleTransform ScaleX="1" ScaleY="1"/>
+                        </Border.RenderTransform>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Path x:Name="icon" Data="{TemplateBinding Tag}" Fill="Transparent"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}"
+                                  Width="{StaticResource Size.IconMedium}"
+                                  Height="{StaticResource Size.IconMedium}"
+                                  Stretch="Uniform" StrokeThickness="1.8"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="False"/>
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Tag" Value="{x:Null}">
+                            <Setter TargetName="icon" Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.BtnHover}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard Storyboard="{StaticResource Anim.PressIn}"/>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard Storyboard="{StaticResource Anim.PressOut}"/>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- 危险幽灵按钮 26px（二级窗「删除」） -->
     <Style x:Key="DangerGhostButton" TargetType="Button" BasedOn="{StaticResource SmallButton}">
         <Setter Property="Background" Value="Transparent"/>

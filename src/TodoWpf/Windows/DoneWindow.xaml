@@ -102,8 +102,8 @@
                 </Border>
             </StackPanel>
 
-            <Button Grid.Row="2" Style="{StaticResource PrimaryButton}" Tag="{StaticResource Icon.Clock}"
-                    Content="历史记录" HorizontalAlignment="Stretch"
+            <Button Grid.Row="2" Style="{StaticResource BlockButton}" Tag="{StaticResource Icon.Clock}"
+                    Content="历史记录"
                     ToolTip="历史记录（批次 04 实装）"/>
         </Grid>
     </Grid>
