@@ -36,6 +36,14 @@ internal static class WindowPlacement
 
     private const uint SwpNoActivate = 0x0010;
 
+    /// <summary>
+    /// 丢弃客户区旧像素（不搬旧内容）。
+    /// 默认行为会把旧像素按**左上角**搬移后再补新区域，而我们是"右缘钉住、向左变宽"——
+    /// 两套锚定方式不一致，就会在重绘前的一帧看到"画出来的右缘向左退一点再弹回"（用户报告的缩放抖动）。
+    /// 加此标志让系统整块作废、交由应用当帧重画，从根上取消那次"旧内容贴新位置"。
+    /// </summary>
+    private const uint SwpNoCopyBits = 0x0100;
+
     /// <summary>一次提交单个窗口几何（非批量场景）。</summary>
     public static void SetBounds(Window window, WinRect rect) => SetBoundsBatch([(window, rect, PinEdge.Left)]);
 
@@ -78,7 +86,8 @@ internal static class WindowPlacement
             var y = topPx;
             var cy = Math.Max(1, bottomPx - topPx);
 
-            batch = DeferWindowPos(batch, hwnd, IntPtr.Zero, x, y, cx, cy, SwpNoZOrder | SwpNoActivate);
+            batch = DeferWindowPos(
+                batch, hwnd, IntPtr.Zero, x, y, cx, cy, SwpNoZOrder | SwpNoActivate | SwpNoCopyBits);
             if (batch == IntPtr.Zero)
             {
                 return; // 失败时放弃本批；下一帧会重新请求
