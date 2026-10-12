@@ -9,16 +9,21 @@
 
     <!-- 已完成（当天）壳：假数据；业务批次 04 接线 -->
 
-    <!-- 卡面（令牌化：面板底色 + 玻璃窗沿 + 圆角 10；圆角外由 AllowsTransparency 保持全透明） -->
+    <!-- 负外边距：卡面比客户区各边外扩 1px，让设计尺寸永远铺满窗口。
+         窗口矩形是整数物理像素、而内容排版宽度是逻辑像素，两者换算后常差零点几像素，
+         差这一点就会把最右一列内容裁掉（真机实测：快捷窗「批量删除」字被切）。
+         外扩后系统按窗口边界裁剪，卡面与窗口边缘严格重合。 -->
+    <Grid Margin="-1">
     <Border x:Name="CardRoot" Background="{DynamicResource Brush.WinBg}"
             BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
             CornerRadius="{StaticResource Radius.Panel}">
-        <!-- 等比缩放：内容按设计尺寸固定绘制，再由 Viewbox 整体缩放（含文字），
-             使"缩放=真窗口尺寸变化+内容同步缩放"与原型口径一致（批次 03 验收修复） -->
-        <!-- 等比缩放：内容按设计尺寸（310×640）固定绘制，由 Viewbox 整体缩放（含文字）。
-             注：曾试过"固定尺寸 + RenderTransform"以期更省，实测该方案内容未缩放（右半被裁），已回退至此。 -->
-        <Viewbox x:Name="CardContent" Stretch="Fill">
-            <Grid Width="310" Height="640">
+
+        <!-- 内容按设计尺寸只布局一次；缩放走纯渲染层 ScaleTransform，锚点＝本窗钉住角，钉住的边不随缩放位移。 -->
+        <Grid x:Name="CardContent" Width="310" Height="640"
+              HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0,0">
+            <Grid.RenderTransform>
+                <TransformGroup x:Name="ContentScale"><ScaleTransform/></TransformGroup>
+            </Grid.RenderTransform>
         <Grid.RowDefinitions>
             <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
             <RowDefinition Height="*"/>
@@ -112,6 +117,7 @@
                     ToolTip="历史记录（批次 04 实装）"/>
         </Grid>
         </Grid>
-        </Viewbox>
     </Border>
+    </Grid>
+
 </Window>

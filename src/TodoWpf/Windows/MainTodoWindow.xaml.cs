@@ -25,11 +25,23 @@ public partial class MainTodoWindow : Window
     /// <summary>卡面根（缩放期间切换为不透明底以抑制拖影）。</summary>
     public Border Card => CardRoot;
 
-    /// <summary>按屏等比缩放内容（只改变换，不触发布局）。</summary>
+    /// <summary>
+    /// 按屏等比缩放内容（只写变换，不触发布局）。本窗钉住**左上角**（锚点即本窗左上角）：
+    /// 内容左对齐、原点 (0,0)——内容本就从窗口左上角起排，恒与窗口左上角重合。
+    /// </summary>
     public void SetContentScale(double scale)
     {
-        // Viewbox 方案：内容随窗口尺寸自动缩放，无需显式设置
-        _ = scale;
+        var transform = (ScaleTransform)ContentScale.Children[0];
+        if (transform.ScaleX != scale)
+        {
+            transform.ScaleX = scale;
+            transform.ScaleY = scale;
+        }
+
+        if (CardContent.RenderTransformOrigin != new Point(0, 0))
+        {
+            CardContent.RenderTransformOrigin = new Point(0, 0);
+        }
     }
 
     /// <summary>卡面内容（缩放期间冻结，只留窗壳）。</summary>

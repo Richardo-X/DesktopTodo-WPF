@@ -11,15 +11,21 @@
          标题栏 → 操作区两行（上行 ⚡左/☑右＋时钟居中；下行 计数胶囊左、批量删除+＋右）→ 列表。
          业务按钮批次 04 接线。 -->
 
-    <!-- 卡面（令牌化：面板底色 + 玻璃窗沿 + 圆角 10；圆角外由 AllowsTransparency 保持全透明） -->
+    <!-- 负外边距：卡面比客户区各边外扩 1px，让设计尺寸永远铺满窗口。
+         窗口矩形是整数物理像素、而内容排版宽度是逻辑像素，两者换算后常差零点几像素，
+         差这一点就会把最右一列内容裁掉（真机实测：快捷窗「批量删除」字被切）。
+         外扩后系统按窗口边界裁剪，卡面与窗口边缘严格重合。 -->
+    <Grid Margin="-1">
     <Border x:Name="CardRoot" Background="{DynamicResource Brush.WinBg}"
             BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
             CornerRadius="{StaticResource Radius.Panel}">
-        <!-- 等比缩放：内容按设计尺寸固定绘制，再由 Viewbox 整体缩放（含文字） -->
-        <!-- 等比缩放：内容按设计尺寸（470×640）固定绘制，由 Viewbox 整体缩放（含文字）。
-             注：曾试过"固定尺寸 + RenderTransform"以期更省，实测该方案内容未缩放（右半被裁），已回退至此。 -->
-        <Viewbox x:Name="CardContent" Stretch="Fill">
-            <Grid Width="470" Height="640">
+
+        <!-- 内容按设计尺寸只布局一次；缩放走纯渲染层 ScaleTransform，锚点＝本窗钉住角，钉住的边不随缩放位移。 -->
+        <Grid x:Name="CardContent" Width="470" Height="640"
+              HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0,0">
+            <Grid.RenderTransform>
+                <TransformGroup x:Name="ContentScale"><ScaleTransform/></TransformGroup>
+            </Grid.RenderTransform>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
                     <RowDefinition Height="*"/>
@@ -53,7 +59,6 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- 主体 -->
                 <Grid Grid.Row="1" Margin="14,10,14,24">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -61,7 +66,6 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- 操作区·上排：⚡（左）/ 时钟（居中）/ ☑（右）；⚡☑ 与列表左右边缘同边、底对齐 -->
                     <Grid Grid.Row="0" Height="56" Margin="2,0,2,0">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top">
                             <TextBlock x:Name="ClockTime" Text="14:32" FontSize="{StaticResource Size.ClockTimeFont}"
@@ -82,7 +86,6 @@
                                 Click="DoneBtn_Click" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
                     </Grid>
 
-                    <!-- 操作区·下排：计数胶囊（左）＋ 批量删除/＋（右） -->
                     <Grid Grid.Row="1" Margin="2,10,2,10">
                         <Border Background="{DynamicResource Brush.Hover}" CornerRadius="99" Padding="10,3"
                                 HorizontalAlignment="Left" VerticalAlignment="Center">
@@ -98,7 +101,6 @@
                         </StackPanel>
                     </Grid>
 
-                    <!-- 列表（假数据；悬停演示 L1 行过渡） -->
                     <ItemsControl Grid.Row="2">
                         <ItemsControl.Items>
                             <Border Style="{StaticResource TodoRow}">
@@ -182,7 +184,6 @@
                     </ItemsControl>
                 </Grid>
 
-                <!-- 缩放柄：右下角 L 形细线角标（原型 .resize-grip 同款）；命中区=透明 Grid（自绘鼠标捕获，见控制器） -->
                 <Grid x:Name="ScaleGrip" Grid.Row="1" Width="24" Height="24"
                       HorizontalAlignment="Right" VerticalAlignment="Bottom" Cursor="SizeNWSE"
                       Background="Transparent">
@@ -192,6 +193,7 @@
                             CornerRadius="0,0,9,0"/>
                 </Grid>
         </Grid>
-        </Viewbox>
     </Border>
+    </Grid>
+
 </Window>
