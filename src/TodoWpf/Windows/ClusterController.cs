@@ -268,9 +268,13 @@ public sealed class ClusterController : IDisposable
         var ui = _data.UiState;
         var frame = ClusterLayout.Arrange(WorkArea(), SnappedAnchor(), _scale, ui.QuickVisible, ui.DoneVisible);
 
+        // 快捷窗在移动路径上也必须用**画布矩形**（与 ApplyLayout 一致）：
+        // 它是个固定设计尺寸 + 渲染层缩放的窗，卡面比目标档宽（310 设计宽）。
+        // 这里若用目标矩形（缩放后的实际宽度）摆它，卡片就被塞进更窄的窗口里 ⇒ 移动过程中被裁；
+        // 松手走 ApplyLayout 又换回画布矩形 ⇒ 于是"移动时被裁、松手恢复"（用户 2026-10-13 实测）。
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
-            (frame.Quick.Rect, _quick, frame.Quick.Visible, PinEdge.Right),
+            (QuickCanvasRect(), _quick, frame.Quick.Visible, PinEdge.Right),
             (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
 
         var left = frame.Quick.Visible ? frame.Quick.Rect.X : frame.Main.Rect.X;
