@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="day">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>交互原型 v4 · 九宫格 · 1B 窄列表输入条（风格一 极简克制）</title>
+<style>
+/* 交互原型 v4 · 九宫格 E1 · 风格一「极简克制」变体 1B：窄列表输入条
+   静态演示，无业务逻辑。令牌沿用 交互原型-v4-方向样板.html 的 body[data-dir="1"] 日/夜两套。
+   形态：瘦长卡，底部常驻回车即建输入线；已完成与模板收成顶部一行极小文字链接。 */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  --accent:#5b7a99;--accent-hover:#6d8cab;--accent-fg:#f6f8fa;--accent-soft:rgba(91,122,153,.15);
+  --text:#3a3f46;--muted:#6d737b;--faint:#9aa0a8;
+  --card:#f7f8f9;--card-border:rgba(30,35,42,.10);--row-hover:rgba(30,35,42,.045);
+  --chip:rgba(30,35,42,.055);--line:rgba(30,35,42,.22);--overdue:#b3403a;--done-time:#9aa0a8;
+  --radius-win:8px;--radius-row:6px;--win-shadow:0 6px 24px rgba(16,24,34,.16);
+  --clock-weight:450;
+  font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif;
+  overflow:hidden;color:var(--text);
+  background:
+    radial-gradient(1180px 760px at 78% 12%, rgba(126,151,173,.12), transparent 62%),
+    radial-gradient(920px 640px at 10% 88%, rgba(110,124,142,.10), transparent 60%),
+    linear-gradient(160deg,#0d1116,#141a21 55%,#0d1116);
+}
+body[data-theme="night"]{
+  --accent:#7e97ad;--accent-hover:#92a9bd;--accent-fg:#10151b;--accent-soft:rgba(126,151,173,.20);
+  --text:#d9dde2;--muted:#9aa2ac;--faint:#767d86;
+  --card:#1d2127;--card-border:rgba(255,255,255,.08);--row-hover:rgba(255,255,255,.05);
+  --chip:rgba(255,255,255,.07);--line:rgba(255,255,255,.18);--overdue:#d4706a;--done-time:#767d86;
+  --win-shadow:0 6px 24px rgba(0,0,0,.45);
+}
+
+/* ---------- 原型工具条 ---------- */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:10px;
+  padding:10px 16px;background:rgba(13,17,22,.86);backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(255,255,255,.08)}
+.topbar .brand{font-size:12.5px;font-weight:600;color:#e8ecf4;letter-spacing:.4px}
+.topbar .sep{width:1px;height:18px;background:rgba(255,255,255,.12)}
+.themebtn{border:1px solid rgba(255,255,255,.16);background:transparent;color:#cfd6e2;height:28px;
+  padding:0 13px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;
+  transition:background .15s,color .15s,border-color .15s}
+.themebtn:hover{background:rgba(255,255,255,.08);color:#f5f7fa}
+.themebtn.on{background:rgba(255,255,255,.13);border-color:transparent;color:#f5f7fa}
+.back{color:#cfd6e2;text-decoration:none;font-size:12px;height:28px;display:inline-flex;align-items:center;
+  padding:0 12px;border:1px solid rgba(255,255,255,.16);border-radius:6px;
+  transition:background .15s,color .15s}
+.back:hover{background:rgba(255,255,255,.08);color:#f5f7fa}
+.stage-note{margin-left:auto;font-size:11px;color:rgba(255,255,255,.40);letter-spacing:1px}
+
+/* ---------- 舞台 ---------- */
+.stage{position:absolute;inset:0;padding:66px 32px 46px;display:flex;align-items:flex-start;
+  justify-content:center;gap:40px;flex-wrap:wrap;overflow:auto}
+
+/* ---------- 左列说明卡 ---------- */
+.brief{width:300px;flex:none;background:rgba(255,255,255,.028);border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;padding:18px 18px 16px;color:#e9edf2}
+.brief h1{font-size:17px;letter-spacing:.5px;color:#f5f7fa;margin-bottom:4px}
+.brief .sub{font-size:12px;color:rgba(233,237,242,.58);margin-bottom:10px}
+.brief .tagline{font-size:12.5px;line-height:1.95;color:rgba(233,237,242,.82)}
+.brief .dials{display:flex;gap:8px;margin:14px 0 4px}
+.brief .dial{font-size:11px;color:rgba(233,237,242,.70);border:1px solid rgba(255,255,255,.16);
+  border-radius:99px;padding:3px 10px}
+.mech{border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 14px;margin-top:12px;
+  background:rgba(255,255,255,.022)}
+.mech h3{font-size:12.5px;color:#f5f7fa;margin-bottom:8px;letter-spacing:.5px}
+.mech table{width:100%;border-collapse:collapse;font-size:11.5px;line-height:1.75;color:rgba(233,237,242,.82)}
+.mech td{vertical-align:top;padding:4px 0}
+.mech td:first-child{width:44px;color:rgba(255,255,255,.46);padding-right:8px;white-space:nowrap}
+.mech .old{color:rgba(233,237,242,.50)}
+.foot-note{margin-top:14px;font-size:11px;line-height:1.7;color:rgba(255,255,255,.38)}
+
+/* ---------- 主窗 mock（瘦长 280） ---------- */
+.visual{width:300px;flex:none;display:flex;flex-direction:column;align-items:center}
+.win{width:280px;background:var(--card);border:1px solid var(--card-border);
+  border-radius:var(--radius-win);box-shadow:var(--win-shadow);overflow:hidden;color:var(--text)}
+.win .head{display:flex;align-items:center;justify-content:space-between;padding:11px 12px 4px}
+.win .brand{font-size:12px;font-weight:600;letter-spacing:.5px;color:var(--text)}
+.ibrow{display:flex;align-items:center;gap:0}
+.ib{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--faint);
+  border-radius:5px;transition:background .15s,color .15s}
+.ib:hover{background:var(--row-hover);color:var(--text)}
+.ib svg{width:14px;height:14px}
+.win .clockline{display:flex;align-items:baseline;gap:8px;padding:0 12px 7px}
+.win .clock{font-size:20px;line-height:1.1;font-weight:var(--clock-weight);letter-spacing:.3px;
+  font-variant-numeric:tabular-nums;color:var(--text)}
+.win .date{font-size:10.5px;color:var(--muted)}
+.win .cnt{margin-left:auto;font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+.minilinks{display:flex;align-items:center;gap:5px;padding:0 12px 7px}
+.lnk{font-size:10.5px;color:var(--muted);cursor:pointer;text-decoration:underline;
+  text-decoration-color:var(--line);text-underline-offset:3px;transition:color .15s}
+.lnk:hover{color:var(--accent)}
+.sepdot{font-size:10.5px;color:var(--faint)}
+.fdel{margin-left:auto;flex:none;padding:2px 5px;border-radius:5px;font-size:10.5px;color:var(--faint);
+  cursor:pointer;transition:background .15s,color .15s}
+.fdel:hover{background:var(--row-hover);color:var(--text)}
+.win .rows{padding:2px 6px 6px}
+.row{display:flex;align-items:center;gap:8px;padding:7px;border-radius:var(--radius-row);
+  transition:background .15s}
+.row:hover{background:var(--row-hover)}
+.row .txt{flex:1;min-width:0;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.tag{flex:none;font-size:10px;color:var(--overdue)}
+.cb{width:16px;height:16px;flex:none;border:1px solid var(--line);border-radius:4px;background:var(--card);
+  display:flex;align-items:center;justify-content:center;color:var(--accent);
+  transition:border-color .15s,background .15s}
+.cb.done{background:var(--accent-soft);border-color:var(--accent)}
+.chk{stroke-width:2}
+
+/* 底部常驻输入线：回车即建 */
+.inputline{display:flex;align-items:center;gap:8px;padding:9px 12px;
+  border-top:1px solid var(--card-border)}
+.nbtn{width:20px;height:20px;flex:none;border-radius:5px;background:var(--accent);color:var(--accent-fg);
+  display:flex;align-items:center;justify-content:center;transition:background .15s}
+.inputline:hover .nbtn{background:var(--accent-hover)}
+.nbtn svg{width:12px;height:12px;stroke-width:2}
+.ph{flex:1;min-width:0;font-size:12px;color:var(--faint);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.enter{flex:none;display:flex;color:var(--faint);transition:color .15s}
+.inputline:hover .enter{color:var(--accent)}
+.enter svg{width:14px;height:14px}
+.mock-label{margin-top:10px;font-size:11px;letter-spacing:.6px;color:rgba(255,255,255,.42);text-align:center}
+.mock-sub{margin-top:5px;width:280px;font-size:10.5px;line-height:1.7;color:rgba(255,255,255,.38);
+  text-align:center}
+
+/* ---------- 展开态示意：点顶部极小链接后浮出的小面板 ---------- */
+.pop{margin-top:16px;width:280px;background:var(--card);border:1px solid var(--card-border);
+  border-radius:var(--radius-win);box-shadow:var(--win-shadow);padding:10px 8px 8px;color:var(--text)}
+.pophead{display:flex;justify-content:space-between;align-items:baseline;padding:2px 8px 5px;
+  font-size:10.5px;letter-spacing:.4px;color:var(--faint)}
+.pophead.rule{margin-top:8px;border-top:1px solid var(--card-border);padding-top:10px}
+.prow{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius-row);
+  transition:background .15s}
+.prow:hover{background:var(--row-hover)}
+.prow .ptxt{flex:1;min-width:0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.prow .pt{flex:none;font-size:10.5px;color:var(--done-time);font-variant-numeric:tabular-nums}
+
+/* ---------- 收纳态示意（12×12 空心小点） ---------- */
+.caprow{margin-top:16px;width:300px}
+.capstrips{display:flex;gap:10px}
+.capcell{flex:1;min-width:0}
+.capsample{position:relative;height:72px;border:1px solid rgba(255,255,255,.10);border-top:none;
+  border-radius:0 0 10px 10px;background:linear-gradient(180deg,#171d25,#0f141a);
+  box-shadow:0 8px 22px rgba(0,0,0,.30)}
+.capsample::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;
+  background:rgba(255,255,255,.13)}
+.capsample .edgetag{position:absolute;left:8px;top:8px;font-size:10px;letter-spacing:1px;
+  color:rgba(255,255,255,.26)}
+.mark{position:absolute;left:50%;top:0;width:12px;height:12px;margin-left:-6px;border-radius:50%;
+  border:1px solid var(--faint);background:transparent}
+.mark.on{background:var(--accent);border-color:var(--accent)}
+.capcap{margin-top:7px;font-size:10.5px;text-align:center;color:rgba(255,255,255,.40)}
+.capnote{margin-top:10px;font-size:11px;line-height:1.8;color:rgba(255,255,255,.44)}
+.capnote b{color:rgba(255,255,255,.66);font-weight:600;margin-right:6px}
+
+.ic{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.watermark{position:fixed;right:18px;bottom:12px;z-index:9;font-size:11px;letter-spacing:1px;
+  color:rgba(255,255,255,.34);user-select:none}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- 原型工具条（仅原型演示） -->
+<div class="topbar">
+  <span class="brand">风格一 · 极简克制</span>
+  <span class="sep"></span>
+  <span class="brand">变体 1B · 窄列表输入条</span>
+  <span class="sep"></span>
+  <button class="themebtn on" data-t="day">白天</button>
+  <button class="themebtn" data-t="night">夜间</button>
+  <a class="back" href="0-总览.html">← 返回总览</a>
+  <span class="stage-note">静态演示</span>
+</div>
+
+<div class="stage">
+  <!-- ---------- 左列说明卡 ---------- -->
+  <aside class="brief">
+    <h1>风格一 · 极简克制</h1>
+    <div class="sub">变体 1B · 窄列表输入条</div>
+    <p class="tagline">把入口放在手指伸到就有的地方：列表在上，底部常驻一条回车即建的输入线，想到什么直接敲回车，不必先开二级窗。已完成与模板平时收成顶部一行极小文字链接，点开才在这一行下方浮出一张小面板；卡面更瘦，右侧把桌面留出来。</p>
+    <div class="dials"><span class="dial">VARIANCE 2</span><span class="dial">MOTION 2</span><span class="dial">DENSITY 6</span></div>
+    <div class="mech">
+      <h3>三项机制 · 新旧对照</h3>
+      <table>
+        <tr><td>收纳</td><td>新：以约 0.4s 慢速淡出收起（无位移、不滑动），屏顶只留一枚 12×12 空心小点（1px 描边）；鼠标碰到即弹，悬停时小点变实心。<br><span class="old">可改回旧版：贴顶缩成 160×12 白条。</span></td></tr>
+        <tr><td>显隐</td><td>新：托盘三途径不变，只是显与隐都改用同一条 0.4s 淡出曲线。<br><span class="old">可改回旧版：托盘三途径（× / 双击 / 右键），瞬时显隐。</span></td></tr>
+        <tr><td>质感</td><td>新：实心卡面加 1px 细边框；底部输入线只用一条内嵌细线分界，不画输入框。<br><span class="old">可改回旧版：半透明不模糊。</span></td></tr>
+      </table>
+    </div>
+    <div class="foot-note">二级窗（新建/编辑/设置/历史）沿用本风格令牌，本样板未展开。</div>
+  </aside>
+
+  <!-- ---------- 右侧主视觉 ---------- -->
+  <div class="visual">
+    <div class="win">
+      <!-- 标题区：品牌 + 五枚图标按钮 -->
+      <div class="head">
+        <span class="brand">桌面待办</span>
+        <span class="ibrow">
+          <span class="ib" title="主题"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+          <span class="ib" title="置顶"><svg class="ic" viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l1 7 3 3H5l3-3 1-7z"/></svg></span>
+          <span class="ib" title="缩进锁"><svg class="ic" viewBox="0 0 24 24"><path d="M3 4h18"/><rect x="7" y="11.5" width="10" height="8" rx="1.6"/><path d="M9.6 11.5V9a2.4 2.4 0 0 1 4.8 0v2.5"/></svg></span>
+          <span class="ib" title="设置"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+          <span class="ib" title="关闭"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+        </span>
+      </div>
+      <!-- 时钟 + 日期 + 计数 -->
+      <div class="clockline">
+        <span class="clock">14:32</span>
+        <span class="date">10月12日 星期一</span>
+        <span class="cnt">3/10</span>
+      </div>
+      <!-- 已完成 / 模板：一行极小文字链接 + 批量删除 -->
+      <div class="minilinks">
+        <span class="lnk">已完成 3</span>
+        <span class="sepdot">·</span>
+        <span class="lnk">模板 2</span>
+        <span class="fdel">批量删除</span>
+      </div>
+      <!-- 待办：5 条 -->
+      <div class="rows">
+        <div class="row"><span class="cb"></span><span class="txt">写周报并发给部门同步</span><span class="tag">逾期</span></div>
+        <div class="row"><span class="cb"></span><span class="txt">整理下季度 OKR 草稿，拆成可执行的关键结果</span></div>
+        <div class="row"><span class="cb"></span><span class="txt">买牛奶、鸡蛋和全麦面包</span></div>
+        <div class="row"><span class="cb"></span><span class="txt">每天站会前喝口水</span></div>
+        <div class="row"><span class="cb"></span><span class="txt">预约牙医复诊</span></div>
+      </div>
+      <!-- 底部常驻输入线 -->
+      <div class="inputline">
+        <span class="nbtn" title="新建待办（打开二级窗）"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+        <span class="ph">现在要做点什么？</span>
+        <span class="enter" title="回车即建"><svg class="ic" viewBox="0 0 24 24"><path d="M20 4v7a4 4 0 0 1-4 4H4"/><path d="M9 10l-5 5 5 5"/></svg></span>
+      </div>
+    </div>
+    <div class="mock-label">1B 主窗 · 底部常驻「回车即建」输入线（静态演示）</div>
+    <div class="mock-sub">输入线左端 ＋ 打开新建二级窗；直接敲回车即可先记下一条。</div>
+
+    <!-- 展开态示意：已完成 / 模板的小面板 -->
+    <div class="pop">
+      <div class="pophead"><span>已完成 · 3</span><span>正序</span></div>
+      <div class="prow"><span class="cb done"><svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="ptxt">整理桌面文件归档</span><span class="pt">11:48</span></div>
+      <div class="prow"><span class="cb done"><svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="ptxt">回复合作方邮件</span><span class="pt">13:02</span></div>
+      <div class="prow"><span class="cb done"><svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="ptxt">午前饮水打卡</span><span class="pt">13:15</span></div>
+      <div class="pophead rule"><span>模板 · 2/10</span><span>管理</span></div>
+      <div class="prow"><span class="ptxt">每天站会前喝口水</span><span class="plus"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></div>
+      <div class="prow"><span class="ptxt">写周报</span><span class="plus"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></div>
+    </div>
+    <div class="mock-label">展开态示意 · 点顶部极小链接浮出的小面板</div>
+
+    <!-- 收纳态示意 -->
+    <div class="caprow">
+      <div class="capstrips">
+        <div class="capcell">
+          <div class="capsample"><span class="edgetag">屏顶</span><span class="mark"></span></div>
+          <div class="capcap">常态 · 空心小点</div>
+        </div>
+        <div class="capcell">
+          <div class="capsample"><span class="edgetag">屏顶</span><span class="mark on"></span></div>
+          <div class="capcap">悬停 · 变实心</div>
+        </div>
+      </div>
+      <div class="capnote">
+        <b>收纳态示意</b>
+        收起时整卡慢速淡出（约 0.4s，无位移），屏顶只留一枚 12×12 空心小点（1px 描边）。鼠标碰到小点即弹出，悬停时小点由空心变实心作为回应。
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="watermark">交互原型 v4 · 九宫格 · 非正式软件</div>
+
+<script>
+document.querySelectorAll(".themebtn").forEach(function(b){
+  b.addEventListener("click",function(){
+    document.body.dataset.theme=b.dataset.t;
+    document.querySelectorAll(".themebtn").forEach(function(x){x.classList.toggle("on",x===b)});
+  });
+});
+</script>
+</body>
+</html>

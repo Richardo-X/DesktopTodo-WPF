@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="day">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>交互原型 v4 · 九宫格 · 1A 单卡分区（风格一 极简克制）</title>
+<style>
+/* 交互原型 v4 · 九宫格 E1 · 风格一「极简克制」变体 1A：单卡分区
+   静态演示，无业务逻辑。令牌沿用 交互原型-v4-方向样板.html 的 body[data-dir="1"] 日/夜两套。
+   形态：三窗合一，模板与已完成作为分区压在待办列表下方。 */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  --accent:#5b7a99;--accent-hover:#6d8cab;--accent-fg:#f6f8fa;--accent-soft:rgba(91,122,153,.15);
+  --text:#3a3f46;--muted:#6d737b;--faint:#9aa0a8;
+  --card:#f7f8f9;--card-border:rgba(30,35,42,.10);--row-hover:rgba(30,35,42,.045);
+  --chip:rgba(30,35,42,.055);--line:rgba(30,35,42,.22);--overdue:#b3403a;--done-time:#9aa0a8;
+  --radius-win:8px;--radius-row:6px;--win-shadow:0 6px 24px rgba(16,24,34,.16);
+  --clock-weight:450;
+  font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif;
+  overflow:hidden;color:var(--text);
+  background:
+    radial-gradient(1180px 760px at 78% 12%, rgba(126,151,173,.12), transparent 62%),
+    radial-gradient(920px 640px at 10% 88%, rgba(110,124,142,.10), transparent 60%),
+    linear-gradient(160deg,#0d1116,#141a21 55%,#0d1116);
+}
+body[data-theme="night"]{
+  --accent:#7e97ad;--accent-hover:#92a9bd;--accent-fg:#10151b;--accent-soft:rgba(126,151,173,.20);
+  --text:#d9dde2;--muted:#9aa2ac;--faint:#767d86;
+  --card:#1d2127;--card-border:rgba(255,255,255,.08);--row-hover:rgba(255,255,255,.05);
+  --chip:rgba(255,255,255,.07);--line:rgba(255,255,255,.18);--overdue:#d4706a;--done-time:#767d86;
+  --win-shadow:0 6px 24px rgba(0,0,0,.45);
+}
+
+/* ---------- 原型工具条 ---------- */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:10px;
+  padding:10px 16px;background:rgba(13,17,22,.86);backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(255,255,255,.08)}
+.topbar .brand{font-size:12.5px;font-weight:600;color:#e8ecf4;letter-spacing:.4px}
+.topbar .sep{width:1px;height:18px;background:rgba(255,255,255,.12)}
+.themebtn{border:1px solid rgba(255,255,255,.16);background:transparent;color:#cfd6e2;height:28px;
+  padding:0 13px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;
+  transition:background .15s,color .15s,border-color .15s}
+.themebtn:hover{background:rgba(255,255,255,.08);color:#f5f7fa}
+.themebtn.on{background:rgba(255,255,255,.13);border-color:transparent;color:#f5f7fa}
+.back{color:#cfd6e2;text-decoration:none;font-size:12px;height:28px;display:inline-flex;align-items:center;
+  padding:0 12px;border:1px solid rgba(255,255,255,.16);border-radius:6px;
+  transition:background .15s,color .15s}
+.back:hover{background:rgba(255,255,255,.08);color:#f5f7fa}
+.stage-note{margin-left:auto;font-size:11px;color:rgba(255,255,255,.40);letter-spacing:1px}
+
+/* ---------- 舞台 ---------- */
+.stage{position:absolute;inset:0;padding:66px 32px 46px;display:flex;align-items:flex-start;
+  justify-content:center;gap:40px;flex-wrap:wrap;overflow:auto}
+
+/* ---------- 左列说明卡 ---------- */
+.brief{width:300px;flex:none;background:rgba(255,255,255,.028);border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;padding:18px 18px 16px;color:#e9edf2}
+.brief h1{font-size:17px;letter-spacing:.5px;color:#f5f7fa;margin-bottom:4px}
+.brief .sub{font-size:12px;color:rgba(233,237,242,.58);margin-bottom:10px}
+.brief .tagline{font-size:12.5px;line-height:1.95;color:rgba(233,237,242,.82)}
+.brief .dials{display:flex;gap:8px;margin:14px 0 4px}
+.brief .dial{font-size:11px;color:rgba(233,237,242,.70);border:1px solid rgba(255,255,255,.16);
+  border-radius:99px;padding:3px 10px}
+.mech{border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 14px;margin-top:12px;
+  background:rgba(255,255,255,.022)}
+.mech h3{font-size:12.5px;color:#f5f7fa;margin-bottom:8px;letter-spacing:.5px}
+.mech table{width:100%;border-collapse:collapse;font-size:11.5px;line-height:1.75;color:rgba(233,237,242,.82)}
+.mech td{vertical-align:top;padding:4px 0}
+.mech td:first-child{width:44px;color:rgba(255,255,255,.46);padding-right:8px;white-space:nowrap}
+.mech .old{color:rgba(233,237,242,.50)}
+.foot-note{margin-top:14px;font-size:11px;line-height:1.7;color:rgba(255,255,255,.38)}
+
+/* ---------- 主窗 mock ---------- */
+.visual{width:340px;flex:none;display:flex;flex-direction:column;align-items:center}
+.win{width:320px;background:var(--card);border:1px solid var(--card-border);
+  border-radius:var(--radius-win);box-shadow:var(--win-shadow);overflow:hidden;color:var(--text)}
+.win .head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 6px}
+.win .brand{font-size:12.5px;font-weight:600;letter-spacing:.5px;color:var(--text)}
+.ibrow{display:flex;align-items:center;gap:1px}
+.ib{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--faint);
+  border-radius:5px;transition:background .15s,color .15s}
+.ib:hover{background:var(--row-hover);color:var(--text)}
+.ib svg{width:15px;height:15px}
+.win .clockline{display:flex;align-items:flex-end;gap:9px;padding:2px 16px 12px}
+.win .clock{font-size:26px;line-height:1;font-weight:var(--clock-weight);letter-spacing:.5px;
+  font-variant-numeric:tabular-nums;color:var(--text)}
+.win .date{font-size:11px;color:var(--muted);padding-bottom:2px}
+.win .cnt{margin-left:auto;font-size:11px;color:var(--faint);padding-bottom:2px;
+  font-variant-numeric:tabular-nums}
+.win .rows{padding:0 8px 4px}
+.row{display:flex;align-items:center;gap:9px;padding:8px;border-radius:var(--radius-row);
+  transition:background .15s}
+.row:hover{background:var(--row-hover)}
+.row .txt{flex:1;min-width:0;font-size:12.5px;color:var(--text);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.tag{flex:none;font-size:10px;color:var(--overdue)}
+.cb{width:16px;height:16px;flex:none;border:1px solid var(--line);border-radius:4px;background:var(--card);
+  display:flex;align-items:center;justify-content:center;color:var(--accent);
+  transition:border-color .15s,background .15s}
+.cb svg{width:13px;height:13px}
+.cb.done{background:var(--accent-soft);border-color:var(--accent)}
+.chk{stroke-width:2}
+.zone{margin:0 10px 4px;padding:8px 6px 2px;border-top:1px solid var(--card-border)}
+.zhead{display:flex;justify-content:space-between;align-items:baseline;padding:0 9px 5px;
+  font-size:10.5px;letter-spacing:.4px;color:var(--faint)}
+.zrow{display:flex;align-items:center;gap:9px;padding:6px 9px;border-radius:var(--radius-row);
+  transition:background .15s}
+.zrow:hover{background:var(--row-hover)}
+.zrow .ztxt{flex:1;min-width:0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.zrow .t{flex:none;font-size:10.5px;color:var(--done-time);font-variant-numeric:tabular-nums}
+.plus{width:17px;height:17px;flex:none;border:1px solid var(--line);border-radius:5px;
+  display:flex;align-items:center;justify-content:center;color:var(--faint);
+  transition:border-color .15s,color .15s}
+.plus svg{width:10px;height:10px;stroke-width:2}
+.zrow.tpl:hover .plus{border-color:var(--accent);color:var(--accent)}
+.win .foot{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 12px;
+  margin-top:2px;border-top:1px solid var(--card-border)}
+.fbtn{display:inline-flex;align-items:center;gap:5px;padding:5px 7px;border-radius:var(--radius-row);
+  font-size:11.5px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.fbtn:hover{background:var(--row-hover);color:var(--text)}
+.fbtn svg{width:13px;height:13px}
+.fadd{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 13px;border-radius:var(--radius-row);
+  background:var(--accent);color:var(--accent-fg);font-size:12px;cursor:pointer;
+  transition:background .15s}
+.fadd:hover{background:var(--accent-hover)}
+.fadd svg{width:13px;height:13px;stroke-width:2}
+.mock-label{margin-top:10px;font-size:11px;letter-spacing:.6px;color:rgba(255,255,255,.42);text-align:center}
+
+/* ---------- 收纳态示意（贴顶 1px 细线） ---------- */
+.caprow{margin-top:16px;width:340px}
+.capsample{position:relative;height:78px;border:1px solid rgba(255,255,255,.10);border-top:none;
+  border-radius:0 0 10px 10px;background:linear-gradient(180deg,#171d25,#0f141a);
+  box-shadow:0 8px 22px rgba(0,0,0,.30)}
+.capsample::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;
+  background:rgba(255,255,255,.13)}
+.capsample .edgetag{position:absolute;left:9px;top:9px;font-size:10px;letter-spacing:1px;
+  color:rgba(255,255,255,.28)}
+.capsample .hair{position:absolute;left:50%;top:0;width:200px;height:1px;transform:translateX(-50%);
+  background:var(--accent)}
+.capnote{margin-top:9px;font-size:11px;line-height:1.8;color:rgba(255,255,255,.44)}
+.capnote b{color:rgba(255,255,255,.66);font-weight:600;margin-right:6px}
+
+.ic{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.watermark{position:fixed;right:18px;bottom:12px;z-index:9;font-size:11px;letter-spacing:1px;
+  color:rgba(255,255,255,.34);user-select:none}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- 原型工具条（仅原型演示） -->
+<div class="topbar">
+  <span class="brand">风格一 · 极简克制</span>
+  <span class="sep"></span>
+  <span class="brand">变体 1A · 单卡分区</span>
+  <span class="sep"></span>
+  <button class="themebtn on" data-t="day">白天</button>
+  <button class="themebtn" data-t="night">夜间</button>
+  <a class="back" href="0-总览.html">← 返回总览</a>
+  <span class="stage-note">静态演示</span>
+</div>
+
+<div class="stage">
+  <!-- ---------- 左列说明卡 ---------- -->
+  <aside class="brief">
+    <h1>风格一 · 极简克制</h1>
+    <div class="sub">变体 1A · 单卡分区</div>
+    <p class="tagline">三窗合一的最小改法：主窗仍是一张窄卡，模板与已完成作为两个分区压在待办列表下方，日常只扫一列，需要时向下看一眼就有。分区之间只用一条 1px 细线分隔，不加标题色块、不加装饰，尽量让你注意不到它。</p>
+    <div class="dials"><span class="dial">VARIANCE 3</span><span class="dial">MOTION 2</span><span class="dial">DENSITY 5</span></div>
+    <div class="mech">
+      <h3>三项机制 · 新旧对照</h3>
+      <table>
+        <tr><td>收纳</td><td>新：整组上滑离屏，屏顶只留一条 1px 主题色细线（约 200px），鼠标碰到细线才整组滑回。<br><span class="old">可改回旧版：贴顶缩成 160×12 白条。</span></td></tr>
+        <tr><td>显隐</td><td>新：三途径不变（× / 双击 / 右键），分区不新增开合入口，显隐仍是唯一开关。<br><span class="old">可改回旧版：托盘三途径，本就一致。</span></td></tr>
+        <tr><td>质感</td><td>新：近乎不透明的实心卡面，靠 1px 细边框撑轮廓，不做阴影堆叠。<br><span class="old">可改回旧版：半透明不模糊。</span></td></tr>
+      </table>
+    </div>
+    <div class="foot-note">二级窗（新建/编辑/设置/历史）沿用本风格令牌，本样板未展开。</div>
+  </aside>
+
+  <!-- ---------- 右侧主视觉 ---------- -->
+  <div class="visual">
+    <div class="win">
+      <!-- 标题区：品牌 + 五枚图标按钮 -->
+      <div class="head">
+        <span class="brand">桌面待办</span>
+        <span class="ibrow">
+          <span class="ib" title="主题"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+          <span class="ib" title="置顶"><svg class="ic" viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l1 7 3 3H5l3-3 1-7z"/></svg></span>
+          <span class="ib" title="缩进锁"><svg class="ic" viewBox="0 0 24 24"><path d="M3 4h18"/><rect x="7" y="11.5" width="10" height="8" rx="1.6"/><path d="M9.6 11.5V9a2.4 2.4 0 0 1 4.8 0v2.5"/></svg></span>
+          <span class="ib" title="设置"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+          <span class="ib" title="关闭"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+        </span>
+      </div>
+      <!-- 时钟 + 日期 + 计数 -->
+      <div class="clockline">
+        <span class="clock">14:32</span>
+        <span class="date">10月12日 星期一</span>
+        <span class="cnt">3/10</span>
+      </div>
+      <!-- 待办：5 条 -->
+      <div class="rows">
+        <div class="row"><span class="cb"></span><span class="txt">写周报并发给部门同步</span><span class="tag">逾期</span></div>
+        <div class="row"><span class="cb"></span><span class="txt">整理下季度 OKR 草稿，拆成可执行的关键结果</span></div>
+        <div class="row"><span class="cb"></span><span class="txt">买牛奶、鸡蛋和全麦面包</span></div>
+        <div class="row"><span class="cb"></span><span class="txt">每天站会前喝口水</span></div>
+        <div class="row"><span class="cb"></span><span class="txt">预约牙医复诊</span></div>
+      </div>
+      <!-- 分区：已完成 3 -->
+      <div class="zone">
+        <div class="zhead"><span>已完成 · 3</span><span>正序</span></div>
+        <div class="zrow"><span class="cb done"><svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="ztxt">整理桌面文件归档</span><span class="t">11:48</span></div>
+        <div class="zrow"><span class="cb done"><svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="ztxt">回复合作方邮件</span><span class="t">13:02</span></div>
+        <div class="zrow"><span class="cb done"><svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="ztxt">午前饮水打卡</span><span class="t">13:15</span></div>
+      </div>
+      <!-- 分区：模板 2/10 -->
+      <div class="zone">
+        <div class="zhead"><span>模板 · 2/10</span><span>管理</span></div>
+        <div class="zrow tpl"><span class="ztxt">每天站会前喝口水</span><span class="plus"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></div>
+        <div class="zrow tpl"><span class="ztxt">写周报</span><span class="plus"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></div>
+      </div>
+      <!-- 底部操作：批量删除 + 新建 -->
+      <div class="foot">
+        <span class="fbtn"><svg class="ic" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>批量删除</span>
+        <span class="fadd"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>新建待办</span>
+      </div>
+    </div>
+    <div class="mock-label">1A 主窗 · 三窗合一，模板与已完成并入卡内分区（静态演示）</div>
+
+    <!-- 收纳态示意 -->
+    <div class="caprow">
+      <div class="capsample">
+        <span class="edgetag">屏顶</span>
+        <span class="hair"></span>
+      </div>
+      <div class="capnote">
+        <b>收纳态示意</b>
+        整组向上滑出屏幕后，屏顶只留一条 1px 主题色细线（约 200px）。鼠标碰到细线才整组滑回缩进前的排布，不需要点击；细线本身不带底色，桌面上几乎看不见。
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="watermark">交互原型 v4 · 九宫格 · 非正式软件</div>
+
+<script>
+document.querySelectorAll(".themebtn").forEach(function(b){
+  b.addEventListener("click",function(){
+    document.body.dataset.theme=b.dataset.t;
+    document.querySelectorAll(".themebtn").forEach(function(x){x.classList.toggle("on",x===b)});
+  });
+});
+</script>
+</body>
+</html>

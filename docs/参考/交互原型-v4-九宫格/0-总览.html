@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>桌面待办 · 交互原型 v4 · 九宫格总览</title>
+<style>
+/* 九宫格总览（E1 探索支线导航页）：3 风格 × 3 变体，逐格一句说明 + 入口。
+   基准：需求文档-wpf.md 功能清单；表现方式为重新构想，均为静态演示。 */
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;
+  font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif;
+  color:#e9eef6;
+  background:
+    radial-gradient(1100px 700px at 78% 12%, rgba(96,152,255,.22), transparent 60%),
+    radial-gradient(900px 640px at 12% 90%, rgba(0,190,180,.13), transparent 58%),
+    linear-gradient(160deg,#0c1420,#101b2c 55%,#0c1420);
+  padding:34px 30px 60px;
+}
+header{max-width:1280px;margin:0 auto 22px}
+h1{font-size:21px;letter-spacing:1px;color:#fff;margin-bottom:8px}
+.lede{font-size:12.8px;line-height:1.95;color:rgba(233,238,246,.80);max-width:900px}
+.lede b{color:#fff;font-weight:600}
+.baseline{margin-top:12px;border:1px solid rgba(255,255,255,.16);border-radius:10px;
+  background:rgba(14,20,30,.55);padding:12px 15px;max-width:900px;font-size:12px;line-height:1.85;
+  color:rgba(233,238,246,.82)}
+.baseline h2{font-size:12.5px;color:#fff;margin-bottom:6px;letter-spacing:.4px}
+.baseline table{border-collapse:collapse;width:100%}
+.baseline td{vertical-align:top;padding:2px 0}
+.baseline td:first-child{width:74px;color:rgba(255,255,255,.55);white-space:nowrap}
+
+.grid{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media (max-width:1080px){.grid{grid-template-columns:1fr 1fr}}
+@media (max-width:720px){.grid{grid-template-columns:1fr}}
+
+.colhead{display:flex;align-items:baseline;gap:9px;margin-bottom:2px}
+.colhead .swatch{width:12px;height:12px;border-radius:4px;flex:none}
+.colhead h3{font-size:14px;color:#fff;letter-spacing:.5px}
+.colhead span{font-size:11px;color:rgba(255,255,255,.45)}
+.colnote{font-size:11.5px;color:rgba(255,255,255,.55);line-height:1.8;margin-bottom:10px}
+
+.card{display:block;text-decoration:none;border:1px solid rgba(255,255,255,.15);border-radius:12px;
+  background:rgba(16,22,33,.62);padding:14px 15px;margin-bottom:12px;transition:background .15s,border-color .15s,transform .15s}
+.card:hover{background:rgba(24,32,46,.82);border-color:rgba(255,255,255,.30);transform:translateY(-1px)}
+.card .k{font-size:11px;color:rgba(255,255,255,.45);letter-spacing:1px}
+.card h4{font-size:13.5px;color:#fff;margin:4px 0 6px}
+.card p{font-size:11.8px;line-height:1.85;color:rgba(233,238,246,.78)}
+.card .go{margin-top:8px;font-size:11.5px;color:rgba(150,190,255,.9)}
+
+footer{max-width:1280px;margin:26px auto 0;font-size:11.5px;line-height:1.9;color:rgba(255,255,255,.42)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>桌面待办 · 交互原型 v4 · 九宫格总览</h1>
+  <p class="lede">
+    同一批功能、九种表现方式：<b>三列＝三种气质</b>，每列 <b>三行＝三种形态</b>（窗口结构 / 布局排布 / 收纳方式各不相同）。
+    点任意一格进原型，页内可切<b>白天/夜间</b>，并附该变体的<b>三项机制新旧对照</b>（收纳 / 显隐 / 质感，均注明可改回旧版）。
+    全部为<b>静态演示</b>，用于先选方向、再谈实现。
+  </p>
+  <div class="baseline">
+    <h2>旧版机制基线（对照用）</h2>
+    <table>
+      <tr><td>收纳</td><td>贴合屏幕上缘后整组向上滑出，屏顶留 <b>160×12 白条</b>，鼠标碰到白条滑回（当前 WPF 版已实现）</td></tr>
+      <tr><td>显隐</td><td>托盘三途径：主窗 × / 双击托盘 / 托盘右键「显示、隐藏」；右键「退出」是唯一关闭途径</td></tr>
+      <tr><td>质感</td><td>半透明卡面 + 真磨砂（WPF 用系统 Acrylic），圆角 6 阶梯，蓝色主题色 #0A63B8</td></tr>
+    </table>
+  </div>
+</header>
+
+<main class="grid">
+
+  <!-- 列 1 -->
+  <section>
+    <div class="colhead">
+      <span class="swatch" style="background:#5b7a99"></span>
+      <h3>风格一 · 极简克制</h3>
+      <span>VARIANCE 3 / MOTION 2 / DENSITY 5</span>
+    </div>
+    <p class="colnote">近乎无彩、细边框、无阴影堆叠；唯一强调色只出现在可点击处。适合"一直在，但别让我注意到它"。</p>
+
+    <a class="card" href="1A-单卡分区.html">
+      <div class="k">变体 A</div>
+      <h4>单卡分区</h4>
+      <p>三窗合一：一张 320 宽窄卡，模板与已完成压成列表下方的两个细线分区。收纳＝屏顶一条 1px 主题色细线。</p>
+      <div class="go">打开原型 →</div>
+    </a>
+    <a class="card" href="1B-窄列表输入条.html">
+      <div class="k">变体 B</div>
+      <h4>窄列表 + 输入条</h4>
+      <p>瘦长卡（280）＋底部常驻"回车即建"输入线；已完成/模板收成顶部极小文字链接。收纳＝慢速淡出，屏顶留 12×12 空心小点。</p>
+      <div class="go">打开原型 →</div>
+    </a>
+    <a class="card" href="1C-时间轴.html">
+      <div class="k">变体 C</div>
+      <h4>时间轴</h4>
+      <p>左侧竖直点线为轴（已过＝实心点、未到＝空心点），时钟缩到右上角。收纳＝屏顶留 3×48px 极细横线。</p>
+      <div class="go">打开原型 →</div>
+    </a>
+  </section>
+
+  <!-- 列 2 -->
+  <section>
+    <div class="colhead">
+      <span class="swatch" style="background:#b06a43"></span>
+      <h3>风格二 · 温和亲和</h3>
+      <span>VARIANCE 5 / MOTION 4 / DENSITY 3</span>
+    </div>
+    <p class="colnote">暖色纸面、大圆角、软投影；勾选有"落笔"满足感。适合希望待办看起来不紧张、有温度。</p>
+
+    <a class="card" href="2A-三便签.html">
+      <div class="k">变体 A</div>
+      <h4>三便签</h4>
+      <p>沿用三块心智但更像摊开的便签：主窗居中，模板/已完成两侧小卡略带错落。收纳＝缩成一颗 80×26 果冻豆胶囊。</p>
+      <div class="go">打开原型 →</div>
+    </a>
+    <a class="card" href="2B-标签页单卡.html">
+      <div class="k">变体 B</div>
+      <h4>标签页单卡</h4>
+      <p>一窗装下一天：380 单卡，顶部圆角标签切"待办/已完成"，模板收成卡底抽屉条。收纳＝团成 56×56 圆形拥抱球。</p>
+      <div class="go">打开原型 →</div>
+    </a>
+    <a class="card" href="2C-卡片流.html">
+      <div class="k">变体 C</div>
+      <h4>卡片流</h4>
+      <p>大时钟居中，待办以 2 列小圆卡成流，模板是顶部一排胶囊，已完成横排收底。收纳＝屏顶 40×40 半透明圆角块。</p>
+      <div class="go">打开原型 →</div>
+    </a>
+  </section>
+
+  <!-- 列 3 -->
+  <section>
+    <div class="colhead">
+      <span class="swatch" style="background:#2f5fe0"></span>
+      <h3>风格三 · 精致利落</h3>
+      <span>VARIANCE 4 / MOTION 3 / DENSITY 7</span>
+    </div>
+    <p class="colnote">小圆角、细边框、等宽数字、行高收紧；一眼多行。适合把待办当工作台、追求效率。</p>
+
+    <a class="card" href="3A-双栏单窗.html">
+      <div class="k">变体 A</div>
+      <h4>双栏单窗</h4>
+      <p>520 宽：左主列表（点阵拖柄）＋右窄栏"今日完成"，底部三条入口。收纳＝20×20 圆点角标，悬停展成细条，两级收纳。</p>
+      <div class="go">打开原型 →</div>
+    </a>
+    <a class="card" href="3B-命令条.html">
+      <div class="k">变体 B</div>
+      <h4>命令条</h4>
+      <p>顶部居中悬浮"回车即建"命令条＋下方展开面板（键盘向，行首带序号）。收纳＝屏顶 4×80px 边缘光条。</p>
+      <div class="go">打开原型 →</div>
+    </a>
+    <a class="card" href="3C-网格看板.html">
+      <div class="k">变体 C</div>
+      <h4>网格看板</h4>
+      <p>顶部等宽数字状态条，待办 2 列网格块（逾期红边），右下浮动 ＋。收纳＝屏底 24px 任务条式窄条。</p>
+      <div class="go">打开原型 →</div>
+    </a>
+  </section>
+
+</main>
+
+<footer>
+  对比方式建议：先看三列的"气质"差异（同一切换日/夜），再在每列里比三个变体的"形态与收纳"差异；
+  也可用 Ctrl+点击在新标签页同时开多个对照。选定后告诉我"风格几 + 变体几（或组合哪些点）"，我再出完整交互原型（E2）。
+  本页与全部变体均为静态演示，不含业务逻辑。
+</footer>
+
+<script>
+// 总览页无状态切换；保留脚本位便于后续扩展（当前无逻辑）。
+</script>
+</body>
+</html>
