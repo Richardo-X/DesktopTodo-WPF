@@ -23,6 +23,13 @@ namespace TodoWpf.Windows;
 ///
 /// 坐标：内部为逻辑像素（DIP），提交前按各窗口 DPI 换算为物理像素并取整（避免亚像素重采样）。
 /// </summary>
+/// <summary>钉边区：该边在缩放中应保持精确不动（右缘钉出的窗口用 Right，其余用 Left）。</summary>
+internal enum PinEdge
+{
+    Left,
+    Right,
+}
+
 internal static class WindowPlacement
 {
     private const uint SwpNoZOrder = 0x0004;
@@ -30,10 +37,10 @@ internal static class WindowPlacement
     private const uint SwpNoActivate = 0x0010;
 
     /// <summary>一次提交单个窗口几何（非批量场景）。</summary>
-    public static void SetBounds(Window window, WinRect rect) => SetBoundsBatch([(window, rect)]);
+    public static void SetBounds(Window window, WinRect rect) => SetBoundsBatch([(window, rect, PinEdge.Left)]);
 
     /// <summary>把一批窗口的几何放到同一个批处理里一次性提交（尽量同帧落位）。</summary>
-    public static void SetBoundsBatch(IReadOnlyList<(Window Window, WinRect Rect)> targets)
+    public static void SetBoundsBatch(IReadOnlyList<(Window Window, WinRect Rect, PinEdge Pin)> targets)
     {
         if (targets.Count == 0)
         {
@@ -46,7 +53,7 @@ internal static class WindowPlacement
             return;
         }
 
-        foreach (var (window, rect) in targets)
+        foreach (var (window, rect, pin) in targets)
         {
             var hwnd = new WindowInteropHelper(window).Handle;
             if (hwnd == IntPtr.Zero)
@@ -55,10 +62,21 @@ internal static class WindowPlacement
             }
 
             var dpi = VisualTreeHelper.GetDpi(window);
-            var x = (int)Math.Round(rect.X * dpi.DpiScaleX);
-            var y = (int)Math.Round(rect.Y * dpi.DpiScaleY);
-            var cx = Math.Max(1, (int)Math.Round(rect.Width * dpi.DpiScaleX));
-            var cy = Math.Max(1, (int)Math.Round(rect.Height * dpi.DpiScaleY));
+            var sx = dpi.DpiScaleX;
+            var sy = dpi.DpiScaleY;
+
+            // 两条边的物理像素坐标各自取整后，尺寸由二者相减得出：
+            // 这样"钉住的那条边"精确落在同一物理像素上（逐帧缩放时不会 ±1px 抖动），
+            // 自由边落在其理想位置的最近像素上。上边（Top）恒为钉住边。
+            var leftPx = (int)Math.Round(rect.X * sx);
+            var rightPx = (int)Math.Round(rect.Right * sx);
+            var topPx = (int)Math.Round(rect.Y * sy);
+            var bottomPx = (int)Math.Round(rect.Bottom * sy);
+
+            var x = pin == PinEdge.Right ? leftPx : leftPx;
+            var cx = Math.Max(1, rightPx - leftPx);
+            var y = topPx;
+            var cy = Math.Max(1, bottomPx - topPx);
 
             batch = DeferWindowPos(batch, hwnd, IntPtr.Zero, x, y, cx, cy, SwpNoZOrder | SwpNoActivate);
             if (batch == IntPtr.Zero)

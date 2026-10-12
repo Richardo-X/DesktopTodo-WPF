@@ -169,9 +169,9 @@ public sealed class ClusterController : IDisposable
         var frame = ClusterLayout.Arrange(workArea, _anchor, _scale, ui.QuickVisible, ui.DoneVisible);
 
         PlaceBatch(
-            (frame.Main.Rect, _main, true),
-            (frame.Quick.Rect, _quick, frame.Quick.Visible),
-            (frame.Done.Rect, _done, frame.Done.Visible));
+            (frame.Main.Rect, _main, true, PinEdge.Left),
+            (frame.Quick.Rect, _quick, frame.Quick.Visible, PinEdge.Right),
+            (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
 
         _main.SetContentScale(_scale);
         _quick.SetContentScale(_scale);
@@ -203,9 +203,9 @@ public sealed class ClusterController : IDisposable
         var frame = ClusterLayout.Arrange(WorkArea(), _anchor, _scale, ui.QuickVisible, ui.DoneVisible);
 
         PlaceBatch(
-            (frame.Main.Rect, _main, true),
-            (frame.Quick.Rect, _quick, frame.Quick.Visible),
-            (frame.Done.Rect, _done, frame.Done.Visible));
+            (frame.Main.Rect, _main, true, PinEdge.Left),
+            (frame.Quick.Rect, _quick, frame.Quick.Visible, PinEdge.Right),
+            (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
 
         var left = frame.Quick.Visible ? frame.Quick.Rect.X : frame.Main.Rect.X;
         var right = frame.Done.Visible ? frame.Done.Rect.Right : frame.Main.Rect.Right;
@@ -217,14 +217,14 @@ public sealed class ClusterController : IDisposable
     /// 三窗几何同批提交（DeferWindowPos）：避免逐窗提交被系统在两窗之间插入呈现，
     /// 造成"同一帧里三窗位置/尺寸不同步"；显隐状态另行处理（仅变化时切换）。
     /// </summary>
-    private static void PlaceBatch(params (WinRect Rect, Window Window, bool Visible)[] panels)
+    private static void PlaceBatch(params (WinRect Rect, Window Window, bool Visible, PinEdge Pin)[] panels)
     {
-        var batch = new List<(Window Window, WinRect Rect)>(panels.Length);
-        foreach (var (rect, window, visible) in panels)
+        var batch = new List<(Window Window, WinRect Rect, PinEdge Pin)>(panels.Length);
+        foreach (var (rect, window, visible, pin) in panels)
         {
             if (visible)
             {
-                batch.Add((window, rect));
+                batch.Add((window, rect, pin));
                 if (!window.IsVisible)
                 {
                     window.Show();
