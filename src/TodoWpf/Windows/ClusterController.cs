@@ -122,6 +122,12 @@ public sealed class ClusterController : IDisposable
         _done.Controller = this;
         _tuckBar.Controller = this;
 
+        // 焦点描边仅键盘导航显示（L1 明细；鼠标点击不留蓝框）
+        foreach (var window in (Window[])[_main, _quick, _done])
+        {
+            FocusVisualScope.Attach(window);
+        }
+
         _tuck.SetLocked(_data.UiState.TuckLock);
         _main.SetTuckLock(_data.UiState.TuckLock);
         _main.SetTopMost(_data.UiState.TopMost);
