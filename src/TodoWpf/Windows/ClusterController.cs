@@ -250,13 +250,16 @@ public sealed class ClusterController : IDisposable
             {
                 if (window.IsVisible)
                 {
-                    // 已显示：走原子批量（逐帧路径，避免"新宽度+旧位置"的中间帧错位）
+                    // 已显示：走原子批量。逐帧路径上**不**写 WPF 的 Left/Top/Width/Height——
+                    // 那会额外发出 4 次非原子 SetWindowPos（先位置后尺寸），把"新位置 + 旧尺寸"
+                    // 的中间态暴露给 DWM 合成器（叠层窗口按新矩形贴旧表面 ⇒ 右缘被拉左的假象）。
+                    // WPF 自己会跟随 WM_SIZE 同步这些属性值。
                     atomic.Add((window, rect, pin));
                 }
                 else
                 {
                     // 首次显示：先把 WPF 属性同步到目标几何，Show() 由 WPF 按其属性一次落位。
-                    // 若先 Show 再摆位，会以默认尺寸（1536×844）闪一帧——即用户报告的"启动闪一下"。
+                    // 若先 Show 再摆位，会以默认尺寸（1536×844）闪一帧——即"启动闪一下"。
                     window.WindowStartupLocation = WindowStartupLocation.Manual;
                     window.Left = rect.X;
                     window.Top = rect.Y;

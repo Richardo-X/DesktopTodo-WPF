@@ -97,7 +97,7 @@ internal static class WindowPlacement
         _ = EndDeferWindowPos(batch);
     }
 
-    /// <summary>窗口右缘的物理像素（调试用）。返回 int.MinValue 表示拿不到句柄。</summary>
+    /// <summary>窗口右缘的物理像素（TraceResize 诊断用）。拿不到句柄时返回 int.MinValue。</summary>
     public static int PhysicalRight(Window window)
     {
         var hwnd = new WindowInteropHelper(window).Handle;
