@@ -156,7 +156,7 @@ public sealed class ClusterController : IDisposable
     }
 
     /// <summary>按锚点+缩放+开关重排三窗（隐藏窗同时就位但不出场）。</summary>
-    public void ApplyLayout()
+    public void ApplyLayout(bool saveState = true)
     {
         var ui = _data.UiState;
         var workArea = WorkArea();
@@ -172,30 +172,62 @@ public sealed class ClusterController : IDisposable
         _tuckBar.Left = (left + right) / 2 - _tuckBar.Width / 2;
         _tuckBar.Top = workArea.Y;
 
-        Mutate(d => d with
+        if (saveState)
         {
-            UiState = d.UiState with
+            Mutate(d => d with
             {
-                Pos = new Position { X = _anchor.X, Y = _anchor.Y },
-                ClusterScale = _scale,
-            },
-        });
+                UiState = d.UiState with
+                {
+                    Pos = new Position { X = _anchor.X, Y = _anchor.Y },
+                    ClusterScale = _scale,
+                },
+            });
+        }
+    }
+
+    /// <summary>拖动快路径：只同步可见窗的坐标（不重设宽高、不切显隐、不落盘）。</summary>
+    private void MoveCluster()
+    {
+        var ui = _data.UiState;
+        var frame = ClusterLayout.Arrange(WorkArea(), _anchor, _scale, ui.QuickVisible, ui.DoneVisible);
+
+        Move(_main, frame.Main.Rect);
+        if (frame.Quick.Visible) { Move(_quick, frame.Quick.Rect); }
+        if (frame.Done.Visible) { Move(_done, frame.Done.Rect); }
+
+        var left = frame.Quick.Visible ? frame.Quick.Rect.X : frame.Main.Rect.X;
+        var right = frame.Done.Visible ? frame.Done.Rect.Right : frame.Main.Rect.Right;
+        var barLeft = (left + right) / 2 - _tuckBar.Width / 2;
+        if (_tuckBar.IsVisible && _tuckBar.Left != barLeft) { _tuckBar.Left = barLeft; }
+    }
+
+    private static void Move(Window window, WinRect rect)
+    {
+        var x = SnapToDevicePixel(window, rect.X);
+        var y = SnapToDevicePixel(window, rect.Y);
+        if (window.Left != x) { window.Left = x; }
+        if (window.Top != y) { window.Top = y; }
     }
 
     private static void Place(Window window, WinRect rect, bool visible = true)
     {
-        window.Left = rect.X;
-        window.Top = rect.Y;
-        window.Width = rect.Width;
-        window.Height = rect.Height;
-        if (visible)
-        {
-            window.Show();
-        }
-        else
-        {
-            window.Hide();
-        }
+        // 仅在变化时写入：拖动/缩放期间每帧重设宽高会强制重排并引发抖动（批次 03 验收反馈）
+        var x = SnapToDevicePixel(window, rect.X);
+        var y = SnapToDevicePixel(window, rect.Y);
+        if (window.Width != rect.Width) { window.Width = rect.Width; }
+        if (window.Height != rect.Height) { window.Height = rect.Height; }
+        if (window.Left != x) { window.Left = x; }
+        if (window.Top != y) { window.Top = y; }
+
+        if (visible && !window.IsVisible) { window.Show(); }
+        else if (!visible && window.IsVisible) { window.Hide(); }
+    }
+
+    /// <summary>把逻辑坐标对齐到整数物理像素（高 DPI 下避免亚像素重采样造成的画面抖动）。</summary>
+    private static double SnapToDevicePixel(Window window, double value)
+    {
+        var scale = VisualTreeHelper.GetDpi(window).DpiScaleX;
+        return scale <= 1 ? value : Math.Round(value * scale) / scale;
     }
 
     // ---------- 整簇拖动（手写：MouseCapture 下同步三窗，DragMove 无法联动） ----------
@@ -236,7 +268,7 @@ public sealed class ClusterController : IDisposable
         }
 
         _anchor = anchor;
-        ApplyLayout();
+        MoveCluster(); // 快路径：只改坐标，不重排、不落盘（抖动治理）
     }
 
     private void DragEnd_MouseUp(object sender, MouseButtonEventArgs e) => EndDrag(sender);
@@ -261,6 +293,7 @@ public sealed class ClusterController : IDisposable
 
         _tuck.SetDragging(false);
         _tuck.SetSnapped(_anchor.Y <= WorkArea().Y);
+        ApplyLayout(); // 松手：完整布局 + 落盘
     }
 
     /// <summary>
@@ -286,7 +319,7 @@ public sealed class ClusterController : IDisposable
         var rawScale = targetMainWidth / ClusterLayout.MainWidth;
         _scale = ClusterLayout.ClampScale(rawScale, WorkArea(), ui.QuickVisible, ui.DoneVisible);
         _tuck.SetResizing(true);
-        ApplyLayout();
+        ApplyLayout(saveState: false); // 缩放中：布局但不落盘
     }
 
     private void ScaleGrip_DragCompleted(object sender, DragCompletedEventArgs e)
