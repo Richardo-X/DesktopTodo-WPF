@@ -18,6 +18,13 @@ public partial class QuickWindow : Window
     private void Titlebar_MouseDown(object sender, MouseButtonEventArgs e) =>
         TitlebarPressed?.Invoke(this, e);
 
+    /// <summary>
+    /// 内容层显隐（临时测试用）：隐藏后窗口里只剩卡面底色 + 1px 描边（Brush.WinBg / Brush.GlassEdge），
+    /// 内容不再参与重绘。
+    /// </summary>
+    public void SetContentVisible(bool visible) =>
+        CardContent.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+
     /// <summary>卡面根（缩放期间切换为不透明底）。</summary>
     public Border Card => CardRoot;
 

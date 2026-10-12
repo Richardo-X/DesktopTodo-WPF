@@ -201,6 +201,7 @@ public sealed class ClusterController : IDisposable
         // 两者会差零点几像素——内容比窗口宽 ⇒ 右对齐的卡面被裁掉一条；比窗口窄 ⇒
         // 卡面右缘缩进窗内，肉眼就是"两窗缝隙在缩放中变宽/变窄"（用户视频慢放实证：缝隙 13→17→13）。
         // 反推后 内容布局尺寸 ≡ 窗口客户区尺寸，卡面边缘逐帧与窗口边缘重合。
+        _quick.SetContentVisible(!HideQuickContentForTest);
         _main.SetContentScale(NormalizedScale(frame.Main.Rect.Width, ClusterLayout.MainWidth));
         _quick.SetContentScale(NormalizedScale(frame.Quick.Rect.Width, ClusterLayout.SideWidth));
         _done.SetContentScale(NormalizedScale(frame.Done.Rect.Width, ClusterLayout.SideWidth));
@@ -449,6 +450,12 @@ public sealed class ClusterController : IDisposable
     /// 位移与尺寸无论开关如何都每帧照常计算，隐蔽期间不会影响松手后的归位。
     /// </summary>
     private const bool HideSideWindowsDuringResize = false;
+
+    /// <summary>
+    /// 【临时测试开关】屏蔽快捷添加窗的内容层——只留卡面底色 + 1px 描边，用来对照
+    /// "内容重绘"对拖缩放时观感的影响。测完改回 false（或改为"仅拖动期间"）。
+    /// </summary>
+    private const bool HideQuickContentForTest = true;
 
     private void SetResizeVisual(bool resizing)
     {
