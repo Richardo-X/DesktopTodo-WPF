@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Microsoft.Win32;
@@ -262,8 +263,17 @@ public sealed class ClusterController : IDisposable
         _tuck.SetSnapped(_anchor.Y <= WorkArea().Y);
     }
 
-    private static Point ToScreen(Window window, MouseEventArgs e) =>
-        window.PointToScreen(e.GetPosition(window));
+    /// <summary>
+    /// 拖动采样：PointToScreen 返回物理像素，而 Window.Left/Top 是逻辑像素（DIP）。
+    /// 高 DPI（如 125%）下若直接混用，窗口会比鼠标"跑得更快"、越拖越偏——
+    /// 这里统一把物理像素换算回逻辑像素，保证鼠标与窗口严格同步。
+    /// </summary>
+    private static Point ToScreen(Window window, MouseEventArgs e)
+    {
+        var device = window.PointToScreen(e.GetPosition(window));
+        var dpi = VisualTreeHelper.GetDpi(window);
+        return new Point(device.X / dpi.DpiScaleX, device.Y / dpi.DpiScaleY);
+    }
 
     // ---------- 等比缩放 ----------
 

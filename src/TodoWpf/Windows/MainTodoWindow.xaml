@@ -13,7 +13,10 @@
     <Border Background="{DynamicResource Brush.WinBg}"
             BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
             CornerRadius="{StaticResource Radius.Panel}">
-    <Grid>
+        <!-- 等比缩放：内容按设计尺寸固定绘制，再由 Viewbox 整体缩放（含文字），
+             使"缩放=真窗口尺寸变化+内容同步缩放"与原型口径一致（批次 03 验收修复） -->
+        <Viewbox Stretch="Fill">
+            <Grid Width="470" Height="640">
         <Grid.RowDefinitions>
             <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
             <RowDefinition Height="*"/>
@@ -177,15 +180,23 @@
             </ItemsControl>
         </Grid>
 
-        <!-- 缩放柄（右下角弧线角标） -->
-        <Path Grid.Row="1" Data="M0,0 H12 M0,0 V12" Stroke="{DynamicResource Brush.Muted}" StrokeThickness="2"
-              StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-              Width="16" Height="16" Stretch="None"
-              HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,3,3"
-              Cursor="SizeNWSE" IsHitTestVisible="False"/>
-        <Thumb x:Name="ScaleGrip" Grid.Row="1" Width="20" Height="20"
-               HorizontalAlignment="Right" VerticalAlignment="Bottom" Cursor="SizeNWSE"
-               Background="Transparent"/>
-    </Grid>
+        <!-- 缩放柄：右下角 L 形细线角标（原型 .resize-grip 同款）；Thumb 必须自定义模板，
+             否则会露出 WPF 默认的浅灰方块外观（批次 03 验收发现） -->
+        <Thumb x:Name="ScaleGrip" Grid.Row="1" Width="22" Height="22"
+               HorizontalAlignment="Right" VerticalAlignment="Bottom" Cursor="SizeNWSE">
+            <Thumb.Template>
+                <ControlTemplate TargetType="Thumb">
+                    <Grid Background="Transparent">
+                        <Border Width="13" Height="13"
+                                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                Margin="0,0,3,3" Opacity="0.7"
+                                BorderBrush="{DynamicResource Brush.Muted}" BorderThickness="0,0,2,2"
+                                CornerRadius="0,0,9,0"/>
+                    </Grid>
+                </ControlTemplate>
+            </Thumb.Template>
+        </Thumb>
+            </Grid>
+        </Viewbox>
     </Border>
 </Window>
