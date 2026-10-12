@@ -17,6 +17,7 @@ public partial class MainTodoWindow : Window
     public event EventHandler<MouseButtonEventArgs>? TitlebarPressed;
 
 
+
     private void Titlebar_MouseDown(object sender, MouseButtonEventArgs e) =>
         TitlebarPressed?.Invoke(this, e);
 
@@ -27,12 +28,18 @@ public partial class MainTodoWindow : Window
     public Border Card => CardRoot;
 
     /// <summary>
-    /// 内容按设计尺寸（470×640）绘制，缩放由 Viewbox（Stretch=Fill）随窗口尺寸自动完成；
-    /// 左上角即本窗钉住角（缩放锚点＝主窗左上角），钉住的边不随缩放位移。
+    /// 内容按设计尺寸绘制，缩放走 LayoutTransform：布局尺寸＝设计尺寸×scale，
+    /// 与控制器按同一 scale 算出的窗口矩形逐帧一致（不会有"内容与窗口差一截"的余量问题）。
+    /// 左上角即本窗钉住角，钉住的边不随缩放位移。
     /// </summary>
     public void SetContentScale(double scale)
     {
-        // Viewbox 随窗口尺寸自动等比缩放（Stretch=Fill），无需逐帧写变换。
+        var transform = (ScaleTransform)ContentScale;
+        if (transform.ScaleX != scale)
+        {
+            transform.ScaleX = scale;
+            transform.ScaleY = scale;
+        }
     }
 
     /// <summary>卡面内容（缩放期间冻结，只留窗壳）。</summary>

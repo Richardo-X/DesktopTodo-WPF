@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace TodoWpf.Windows;
 
@@ -21,12 +22,18 @@ public partial class DoneWindow : Window
     public Border Card => CardRoot;
 
     /// <summary>
-    /// 内容按设计尺寸（310×640）绘制，缩放由 Viewbox（Stretch=Fill）随窗口尺寸自动完成；
+    /// 内容按设计尺寸绘制，缩放走 LayoutTransform：布局尺寸＝设计尺寸×scale，
+    /// 与控制器按同一 scale 算出的窗口矩形逐帧一致（不会有"内容与窗口差一截"的余量问题）。
     /// 左上角即本窗钉住角，钉住的边不随缩放位移。
     /// </summary>
     public void SetContentScale(double scale)
     {
-        // Viewbox 随窗口尺寸自动等比缩放（Stretch=Fill），无需逐帧写变换。
+        var transform = (ScaleTransform)ContentScale;
+        if (transform.ScaleX != scale)
+        {
+            transform.ScaleX = scale;
+            transform.ScaleY = scale;
+        }
     }
 
     /// <summary>卡面内容（缩放期间冻结）。</summary>

@@ -11,19 +11,17 @@
          标题栏 → 操作区两行（上行 ⚡左/☑右＋时钟居中；下行 计数胶囊左、批量删除+＋右）→ 列表。
          业务按钮批次 04 接线。 -->
 
-    <!-- 负外边距：卡面比客户区各边外扩 1px，让设计尺寸永远铺满窗口。
-         窗口矩形是整数物理像素、而内容排版宽度是逻辑像素，两者换算后常差零点几像素，
-         差这一点就会把最右一列内容裁掉（真机实测：快捷窗「批量删除」字被切）。
-         外扩后系统按窗口边界裁剪，卡面与窗口边缘严格重合。 -->
-    <Grid Margin="-1">
     <Border x:Name="CardRoot" Background="{DynamicResource Brush.WinBg}"
             BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
             CornerRadius="{StaticResource Radius.Panel}">
 
-        <!-- 内容按设计尺寸（470×640）绘制一次，由 Viewbox 整体缩放（含文字与描边）。
-             锚点在左上角＝本窗钉住角，钉住的边不随缩放位移。 -->
-        <Viewbox x:Name="CardContent" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Top">
-        <Grid Width="470" Height="640">
+        <!-- 内容按设计尺寸（470×640）绘制一次，缩放走 LayoutTransform（ScaleTransform）：
+             布局尺寸＝设计尺寸×scale，窗口就是按这个尺寸摆的，两者必然一致，
+             没有"内容比窗口宽/窄"的余量问题。左上角＝本窗钉住角（缩放锚点＝主窗左上角）。 -->
+        <Grid x:Name="CardContent" Width="470" Height="640" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Grid.LayoutTransform>
+                <ScaleTransform x:Name="ContentScale" ScaleX="1" ScaleY="1"/>
+            </Grid.LayoutTransform>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
                     <RowDefinition Height="*"/>
@@ -198,8 +196,6 @@
                             CornerRadius="0,0,9,0"/>
                 </Grid>
         </Grid>
-        </Viewbox>
     </Border>
-    </Grid>
 
 </Window>
