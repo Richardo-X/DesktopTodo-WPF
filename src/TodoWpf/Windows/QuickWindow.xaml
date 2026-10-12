@@ -25,7 +25,7 @@
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="Titlebar_MouseDown">
-            <TextBlock Text="快捷添加" FontSize="{StaticResource Size.BodyFont}"
+            <TextBlock Text="快捷添加" FontSize="{StaticResource Size.PanelTitleFont}"
                        FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"
                        Margin="12,0,0,0" VerticalAlignment="Center"/>
         </Grid>
@@ -38,7 +38,7 @@
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0" Margin="0,0,0,10">
-                <TextBlock Text="模板 · 3/10" FontSize="{StaticResource Size.BodyFont}"
+                <TextBlock Text="模板 · 3/10" FontSize="{StaticResource Size.PanelTitleFont}"
                            FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"
                            VerticalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
@@ -60,7 +60,7 @@
                         <Path Data="{StaticResource Icon.Grip}" Fill="{DynamicResource Brush.Faint}"
                               Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" Text="每天站会前喝口水"
-                                   FontSize="{StaticResource Size.BodyFont}"
+                                   FontSize="{StaticResource Size.RowFont}"
                                    Foreground="{DynamicResource Brush.Text}"
                                    VerticalAlignment="Center" Margin="8,0,0,0"/>
                         <Button Grid.Column="2" Style="{StaticResource PlusBox}"
@@ -77,7 +77,7 @@
                         <Path Data="{StaticResource Icon.Grip}" Fill="{DynamicResource Brush.Faint}"
                               Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" Text="写周报并发给部门同步"
-                                   FontSize="{StaticResource Size.BodyFont}"
+                                   FontSize="{StaticResource Size.RowFont}"
                                    Foreground="{DynamicResource Brush.Text}"
                                    VerticalAlignment="Center" Margin="8,0,0,0"/>
                         <Button Grid.Column="2" Style="{StaticResource PlusBox}"
@@ -94,7 +94,7 @@
                         <Path Data="{StaticResource Icon.Grip}" Fill="{DynamicResource Brush.Faint}"
                               Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" Text="整理桌面文件归档"
-                                   FontSize="{StaticResource Size.BodyFont}"
+                                   FontSize="{StaticResource Size.RowFont}"
                                    Foreground="{DynamicResource Brush.Text}"
                                    VerticalAlignment="Center" Margin="8,0,0,0"/>
                         <Button Grid.Column="2" Style="{StaticResource PlusBox}"

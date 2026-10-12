@@ -25,7 +25,7 @@
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="Titlebar_MouseDown">
-            <TextBlock Text="已完成" FontSize="{StaticResource Size.BodyFont}"
+            <TextBlock Text="已完成" FontSize="{StaticResource Size.PanelTitleFont}"
                        FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"
                        Margin="12,0,0,0" VerticalAlignment="Center"/>
         </Grid>
@@ -38,7 +38,7 @@
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0" Margin="0,0,0,10">
-                <TextBlock Text="已完成 · 3" FontSize="{StaticResource Size.BodyFont}"
+                <TextBlock Text="已完成 · 3" FontSize="{StaticResource Size.PanelTitleFont}"
                            FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"
                            VerticalAlignment="Center"/>
                 <Button Style="{StaticResource IconButton}" Tag="{StaticResource Icon.SortAsc}"
@@ -56,7 +56,7 @@
                         <CheckBox Style="{StaticResource Checkbox}" IsChecked="True"
                                   IsHitTestVisible="False" VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" Text="给交好的同事补上周五落下的会议纪要"
-                                   FontSize="{StaticResource Size.BodyFont}"
+                                   FontSize="{StaticResource Size.RowFont}"
                                    Foreground="{DynamicResource Brush.Text}"
                                    TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="8,0,0,0"/>
                         <TextBlock Grid.Column="2" Text="14:02" FontSize="{StaticResource Size.MicroFont}"
@@ -75,11 +75,11 @@
                         <CheckBox Style="{StaticResource Checkbox}" IsChecked="True"
                                   IsHitTestVisible="False" VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" Text="预约牙医复诊"
-                                   FontSize="{StaticResource Size.BodyFont}"
+                                   FontSize="{StaticResource Size.RowFont}"
                                    Foreground="{DynamicResource Brush.Text}"
                                    VerticalAlignment="Center" Margin="8,0,0,0"/>
                         <TextBlock Grid.Column="2" Text="逾期"
-                                   FontSize="{StaticResource Size.MicroFont}"
+                                   FontSize="{StaticResource Size.TagFont}"
                                    Foreground="{DynamicResource Brush.Overdue}"
                                    VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBlock Grid.Column="3" Text="13:15" FontSize="{StaticResource Size.MicroFont}"
@@ -97,7 +97,7 @@
                         <CheckBox Style="{StaticResource Checkbox}" IsChecked="True"
                                   IsHitTestVisible="False" VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" Text="整理桌面文件归档"
-                                   FontSize="{StaticResource Size.BodyFont}"
+                                   FontSize="{StaticResource Size.RowFont}"
                                    Foreground="{DynamicResource Brush.Text}"
                                    VerticalAlignment="Center" Margin="8,0,0,0"/>
                         <TextBlock Grid.Column="2" Text="11:48" FontSize="{StaticResource Size.MicroFont}"

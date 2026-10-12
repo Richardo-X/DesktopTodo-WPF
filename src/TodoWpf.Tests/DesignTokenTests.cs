@@ -64,14 +64,14 @@ public class DesignTokenTests
         var night = XamlTokenReader.LoadKeyed("src", "TodoWpf", "Themes", "Tokens.Night.xaml");
 
         // #AARRGGBB（WPF 顺序）；α 换算：0.94→F0、0.7→B3、0.055→0E、0.09→17、0.05→0D、0.75→BF、0.13→21
-        Assert.Equal("#BFF3F6FB", Argb(day["Brush.WinBg"])); // 真磨砂翻译：α94→75
+        Assert.Equal("#F0F3F6FB", Argb(day["Brush.WinBg"])); // 基准 α.94
         Assert.Equal("#B3FFFFFF", Argb(day["Brush.Card"]));
         Assert.Equal("#17000000", Argb(day["Brush.CardBorder"]));
         Assert.Equal("#0D000000", Argb(day["Brush.Hover"]));
         Assert.Equal("#BFFFFFFF", Argb(day["Brush.Btn"]));
         Assert.Equal("#21000000", Argb(day["Brush.BtnBorder"]));
 
-        Assert.Equal("#BF1E1E21", Argb(night["Brush.WinBg"])); // 真磨砂翻译：α96→75
+        Assert.Equal("#F51E1E21", Argb(night["Brush.WinBg"])); // 基准 α.96
         Assert.Equal("#0EFFFFFF", Argb(night["Brush.Card"]));
         Assert.Equal("#1CFFFFFF", Argb(night["Brush.CardBorder"]));
         Assert.Equal("#0FFFFFFF", Argb(night["Brush.Hover"]));

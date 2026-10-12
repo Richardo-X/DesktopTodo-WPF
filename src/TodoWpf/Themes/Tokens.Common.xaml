@@ -44,14 +44,19 @@
     <sys:Double x:Key="Size.ClockTimeFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">30</sys:Double>
     <sys:Double x:Key="Size.ClockDateFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">12</sys:Double>
 
-    <!-- 字号阶梯（正文 12.5 / 小注 11.5 / 微标 11） -->
+    <!-- 字号阶梯：逐值取自基准 交互原型-v3.4-L1（.tt 13.5 / .panel-title 13 / .btn 12.5 /
+         .btn.sm 11.5 / .cap-chip 11 / .tag 10 / .step-btn 15 / .clock-time 30 / .clock-date 12） -->
+    <sys:Double x:Key="Size.RowFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">13.5</sys:Double>
+    <sys:Double x:Key="Size.PanelTitleFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">13</sys:Double>
+    <sys:Double x:Key="Size.TagFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">10</sys:Double>
+    <sys:Double x:Key="Size.StepperFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">15</sys:Double>
     <sys:Double x:Key="Size.BodyFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">12.5</sys:Double>
     <sys:Double x:Key="Size.SmallFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">11.5</sys:Double>
     <sys:Double x:Key="Size.MicroFont" xmlns:sys="clr-namespace:System;assembly=mscorlib">11</sys:Double>
 
     <!-- 字体（技能 §4.1：系统字体，禁外链字体 CDN 的 WPF 对应做法） -->
-    <FontFamily x:Key="Font.Text">Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI</FontFamily>
-    <FontFamily x:Key="Font.Display">Segoe UI Variable Display, Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI</FontFamily>
+    <FontFamily x:Key="Font.Text">Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI, PingFang SC</FontFamily>
+    <FontFamily x:Key="Font.Display">Segoe UI Variable Display, Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI, PingFang SC</FontFamily>
 
     <!-- 动效（L1）：统一缓出 cubic-bezier(.22,.61,.36,1)；时长 120/150/180ms -->
     <KeySpline x:Key="KeySpline.EaseOut" ControlPoint1="0.22,0.61" ControlPoint2="0.36,1"/>

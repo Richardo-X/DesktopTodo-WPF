@@ -324,7 +324,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.BtnBorder}"/>
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
         <Setter Property="FontFamily" Value="{StaticResource Font.Text}"/>
-        <Setter Property="FontSize" Value="{StaticResource Size.BodyFont}"/>
+        <Setter Property="FontSize" Value="{StaticResource Size.StepperFont}"/>
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">

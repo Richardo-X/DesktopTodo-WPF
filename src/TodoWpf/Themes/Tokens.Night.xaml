@@ -29,8 +29,8 @@
 
     <!-- 半透明卡面（α：win .96→F5 / card .055→0E / border .11→1C / field .07→12 /
          hover .06→0F / active .12→1F / btn .08→14 / btn-border .15→26 / btn-hover .16→29） -->
-    <!-- 真磨砂（C2）：卡面 α 由 96% 降至 75%，配合 DWM blur 让壁纸隐约透出 -->
-    <SolidColorBrush x:Key="Brush.WinBg" Color="#BF1E1E21"/>
+    <!-- 卡面底：逐值取自基准（#1e1e21 α.96 → #F51E1E21） -->
+    <SolidColorBrush x:Key="Brush.WinBg" Color="#F51E1E21"/>
     <SolidColorBrush x:Key="Brush.WinBgSolid" Color="#1E1E21"/>
     <SolidColorBrush x:Key="Brush.Card" Color="#0EFFFFFF"/>
     <SolidColorBrush x:Key="Brush.CardBorder" Color="#1CFFFFFF"/>

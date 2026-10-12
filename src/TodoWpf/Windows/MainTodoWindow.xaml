@@ -113,11 +113,11 @@
                                           Fill="{DynamicResource Brush.Faint}" Width="13" Height="13"
                                           Stretch="Uniform" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="1" Text="写周报并发给部门同步"
-                                               FontSize="{StaticResource Size.BodyFont}"
+                                               FontSize="{StaticResource Size.RowFont}"
                                                Foreground="{DynamicResource Brush.Text}"
                                                VerticalAlignment="Center" Margin="8,0,0,0"/>
                                     <TextBlock Grid.Column="2" Text="逾期"
-                                               FontSize="{StaticResource Size.MicroFont}"
+                                               FontSize="{StaticResource Size.TagFont}"
                                                Foreground="{DynamicResource Brush.Overdue}"
                                                VerticalAlignment="Center" Margin="0,0,8,0"/>
                                     <CheckBox Grid.Column="3" Style="{StaticResource Checkbox}" IsChecked="False"
@@ -135,7 +135,7 @@
                                           Fill="{DynamicResource Brush.Faint}" Width="13" Height="13"
                                           Stretch="Uniform" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="1" Text="整理下季度 OKR 草稿，拆成可执行的关键结果"
-                                               FontSize="{StaticResource Size.BodyFont}"
+                                               FontSize="{StaticResource Size.RowFont}"
                                                Foreground="{DynamicResource Brush.Text}"
                                                TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="8,0,0,0"/>
                                     <CheckBox Grid.Column="2" Style="{StaticResource Checkbox}" IsChecked="False"
@@ -153,7 +153,7 @@
                                           Fill="{DynamicResource Brush.Faint}" Width="13" Height="13"
                                           Stretch="Uniform" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="1" Text="买牛奶、鸡蛋和全麦面包"
-                                               FontSize="{StaticResource Size.BodyFont}"
+                                               FontSize="{StaticResource Size.RowFont}"
                                                Foreground="{DynamicResource Brush.Text}"
                                                VerticalAlignment="Center" Margin="8,0,0,0"/>
                                     <CheckBox Grid.Column="2" Style="{StaticResource Checkbox}" IsChecked="False"
@@ -171,7 +171,7 @@
                                           Fill="{DynamicResource Brush.Faint}" Width="13" Height="13"
                                           Stretch="Uniform" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="1" Text="每天站会前喝口水"
-                                               FontSize="{StaticResource Size.BodyFont}"
+                                               FontSize="{StaticResource Size.RowFont}"
                                                Foreground="{DynamicResource Brush.Text}"
                                                VerticalAlignment="Center" Margin="8,0,0,0"/>
                                     <CheckBox Grid.Column="2" Style="{StaticResource Checkbox}" IsChecked="False"
