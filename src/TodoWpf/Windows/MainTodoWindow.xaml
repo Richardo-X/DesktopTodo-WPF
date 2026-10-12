@@ -14,12 +14,15 @@
             BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
             CornerRadius="{StaticResource Radius.Panel}">
 
-        <!-- 内容按设计尺寸（470×640）绘制一次，缩放走 LayoutTransform：布局尺寸＝设计尺寸×scale，
-             窗口就是按这个尺寸摆的，两者一致。左上角＝本窗钉住角（缩放锚点＝主窗左上角）。 -->
-        <Grid x:Name="CardContent" Width="470" Height="640" HorizontalAlignment="Left" VerticalAlignment="Top">
-            <Grid.LayoutTransform>
+        <!-- 内容按设计尺寸（470×640）绘制一次，缩放走渲染层 RenderTransform（不触发布局），窗口矩形按目标档逐帧摆位。左上角＝本窗钉住角（缩放锚点＝主窗左上角）。 -->
+        <Grid x:Name="CardContent" Width="470" Height="640" HorizontalAlignment="Left" VerticalAlignment="Top"
+              RenderTransformOrigin="0,0">
+            <!-- 缩放走**渲染层**（RenderTransform，不触发布局）：窗口矩形照旧逐帧更新（"框"即时到位），
+                 内容也不再等"测量→排列→重绘"整条链，于是框与内容在同一帧一起变。
+                 LayoutTransform 会重排整棵子树（文字/图标全部重新测量），肉眼就是"框先到、内容后追"。 -->
+            <Grid.RenderTransform>
                 <ScaleTransform x:Name="ContentScale" ScaleX="1" ScaleY="1"/>
-            </Grid.LayoutTransform>
+            </Grid.RenderTransform>
         <Grid.RowDefinitions>
                     <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
                     <RowDefinition Height="*"/>
