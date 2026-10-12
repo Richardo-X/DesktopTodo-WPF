@@ -191,25 +191,6 @@ public sealed class ClusterController : IDisposable
         return physical / dpi.DpiScaleX / designWidth;
     }
 
-    /// <summary>
-    /// 快捷窗的"画布矩形"：窗口矩形恒定不变的那块地方（右缘钉主窗左缘减缝隙、上缘钉锚点）。
-    /// 尺寸取 max(设计尺寸, 设计尺寸×缩放上限) —— 保证卡面（固定设计尺寸 310×640，靠渲染层缩放
-    /// 表现大小）在窗口内不被父级夹小。窗口矩形永不改变 ⇒ 合成器不会重贴旧表面
-    /// ⇒ 无拖影、无按下/松手闪动。
-    /// 主窗与已完成窗仍在"逐帧改窗口矩形"的老路上（用户 2026-10-13 裁定）。
-    /// </summary>
-    private WinRect QuickCanvasRect()
-    {
-        var ui = _data.UiState;
-        var workArea = WorkArea();
-        var maxScale = ClusterLayout.MaxScale(workArea, ui.QuickVisible, ui.DoneVisible);
-        var span = Math.Max(1, maxScale);
-        var w = ClusterLayout.SideWidth * span;
-        var h = ClusterLayout.SideHeight * span;
-        var anchor = SnappedAnchor();
-        return new WinRect(anchor.X - ClusterLayout.Gap - w, anchor.Y, w, h);
-    }
-
     /// <summary>按锚点+缩放+开关重排三窗（隐藏窗同时就位但不出场）。</summary>
     public void ApplyLayout(bool saveState = true)
     {
@@ -217,10 +198,9 @@ public sealed class ClusterController : IDisposable
         var workArea = WorkArea();
         var frame = ClusterLayout.Arrange(workArea, SnappedAnchor(), _scale, ui.QuickVisible, ui.DoneVisible);
 
-        // 快捷窗用固定画布（零矩形变更）；主窗/已完成窗逐帧摆位。
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
-            (QuickCanvasRect(), _quick, frame.Quick.Visible, PinEdge.Right),
+            (frame.Quick.Rect, _quick, frame.Quick.Visible, PinEdge.Right),
             (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
 
         // 内容缩放比不从 _scale 直接取，而是从"窗口矩形取整后的实际尺寸"反推：
@@ -514,13 +494,11 @@ public sealed class ClusterController : IDisposable
             if (TraceResize)
             {
                 var winRight = WindowPlacement.PhysicalRight(_quick);
-                var cardRight = _quick.CardRightInWindowDip();
                 try
                 {
                     System.IO.File.AppendAllText(
                         System.IO.Path.Combine(System.IO.Path.GetTempPath(), "resize-trace.log"),
-                        $"scale={_scale:F4} "
-                        + $"quickWinRightPhysical={winRight} quickCardRightDip={cardRight:F2} quickCardW={_quick.Card.Width:F1}"
+                        $"scale={_scale:F4} quickWinRightPhysical={winRight} quickWidth={_quick.ActualWidth:F2}"
                         + Environment.NewLine);
                 }
                 catch { }
