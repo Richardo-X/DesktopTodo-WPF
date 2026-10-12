@@ -26,24 +26,33 @@ public partial class MainTodoWindow : Window
         ClockDate.Text = date;
     }
 
+    /// <summary>⚡/☑ 开关态：开启=主题色描边+图标（成品 .icon-btn.on 口径），不做透明度变化。</summary>
     public void SetPanelToggles(bool quickVisible, bool doneVisible)
     {
-        QuickBtn.Tag = (Geometry)FindResource(quickVisible ? "Icon.Bolt" : "Icon.Bolt");
-        QuickBtn.Opacity = quickVisible ? 1 : 0.45;
-        DoneBtn.Opacity = doneVisible ? 1 : 0.45;
+        ApplyToggleState(QuickBtn, quickVisible);
+        ApplyToggleState(DoneBtn, doneVisible);
     }
 
     public void SetTopMost(bool on)
     {
-        PinBtn.Opacity = on ? 1 : 0.45;
         Topmost = on;
+        ApplyTitlebarOnState(PinBtn, on);
     }
 
     public void SetTuckLock(bool on)
     {
-        TuckLockBtn.Opacity = on ? 1 : 0.45;
+        ApplyTitlebarOnState(TuckLockBtn, on);
         TuckLockBtn.ToolTip = on ? "缩进锁定：已开启（贴边保持弹出）" : "缩进锁定";
     }
+
+    private void ApplyToggleState(Button button, bool on)
+    {
+        button.Foreground = (Brush)FindResource(on ? "Brush.Accent" : "Brush.Text");
+        button.BorderBrush = (Brush)FindResource(on ? "Brush.Accent" : "Brush.BtnBorder");
+    }
+
+    private static void ApplyTitlebarOnState(Button button, bool on) =>
+        button.Foreground = (Brush)Application.Current.Resources[on ? "Brush.Accent" : "Brush.Text"];
 
     private void ThemeBtn_Click(object sender, RoutedEventArgs e) =>
         Controller?.ToggleTheme();
