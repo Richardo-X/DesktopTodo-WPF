@@ -415,15 +415,16 @@ public sealed class ClusterController : IDisposable
     }
 
     /// <summary>
-    /// 缩放期间的视觉简化：两侧卡片暂时隐去（透明度 0），松手恢复。
-    /// 目的：消除"缝隙呼吸"——放大时主窗右缘属于"需重绘内容"的边、已完成窗左缘属于"纯移动"的边，
-    /// 二者合成落在不同帧，会导致缝宽瞬时先变大再回位；拖动期间不显示两侧就不存在可"呼吸"的边。
-    /// 主窗自身的等比缩放全程实时呈现（拖动期间唯一可见的卡片，就是缩放结果本身）。
-    /// 注：位移与尺寸每帧照常计算，松手时两侧已就地正确。
+    /// 缩放期间是否隐藏两侧卡片。**当前为 false（两侧保持可见）——按用户裁定回退，进入缩放逻辑调整阶段。**
+    /// 置 true = 最后备用方案：拖动期间把两侧透明度归零（松手恢复），彻底消除"缝隙呼吸"
+    /// （放大时主窗右缘是"需重绘内容"的边、已完成窗左缘是"纯移动"的边，合成落在不同帧 → 缝宽瞬时变化）。
+    /// 位移与尺寸无论开关如何都每帧照常计算，隐蔽期间不会影响松手后的归位。
     /// </summary>
+    private const bool HideSideWindowsDuringResize = false;
+
     private void SetResizeVisual(bool resizing)
     {
-        var opacity = resizing ? 0d : 1d;
+        var opacity = HideSideWindowsDuringResize && resizing ? 0d : 1d;
         _quick.Opacity = opacity;
         _done.Opacity = opacity;
     }
