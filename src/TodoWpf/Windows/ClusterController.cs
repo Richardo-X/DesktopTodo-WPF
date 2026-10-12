@@ -168,9 +168,10 @@ public sealed class ClusterController : IDisposable
         var workArea = WorkArea();
         var frame = ClusterLayout.Arrange(workArea, _anchor, _scale, ui.QuickVisible, ui.DoneVisible);
 
-        Place(_main, frame.Main.Rect);
-        Place(_quick, frame.Quick.Rect, frame.Quick.Visible);
-        Place(_done, frame.Done.Rect, frame.Done.Visible);
+        PlaceBatch(
+            (frame.Main.Rect, _main, true),
+            (frame.Quick.Rect, _quick, frame.Quick.Visible),
+            (frame.Done.Rect, _done, frame.Done.Visible));
 
         _main.SetContentScale(_scale);
         _quick.SetContentScale(_scale);
@@ -201,9 +202,10 @@ public sealed class ClusterController : IDisposable
         var ui = _data.UiState;
         var frame = ClusterLayout.Arrange(WorkArea(), _anchor, _scale, ui.QuickVisible, ui.DoneVisible);
 
-        Move(_main, frame.Main.Rect);
-        if (frame.Quick.Visible) { Move(_quick, frame.Quick.Rect); }
-        if (frame.Done.Visible) { Move(_done, frame.Done.Rect); }
+        PlaceBatch(
+            (frame.Main.Rect, _main, true),
+            (frame.Quick.Rect, _quick, frame.Quick.Visible),
+            (frame.Done.Rect, _done, frame.Done.Visible));
 
         var left = frame.Quick.Visible ? frame.Quick.Rect.X : frame.Main.Rect.X;
         var right = frame.Done.Visible ? frame.Done.Rect.Right : frame.Main.Rect.Right;
@@ -211,16 +213,30 @@ public sealed class ClusterController : IDisposable
         if (_tuckBar.IsVisible && _tuckBar.Left != barLeft) { _tuckBar.Left = barLeft; }
     }
 
-    private static void Move(Window window, WinRect rect) =>
-        WindowPlacement.SetBounds(window, rect.X, rect.Y, rect.Width, rect.Height);
-
-    private static void Place(Window window, WinRect rect, bool visible = true)
+    /// <summary>
+    /// 三窗几何同批提交（DeferWindowPos）：避免逐窗提交被系统在两窗之间插入呈现，
+    /// 造成"同一帧里三窗位置/尺寸不同步"；显隐状态另行处理（仅变化时切换）。
+    /// </summary>
+    private static void PlaceBatch(params (WinRect Rect, Window Window, bool Visible)[] panels)
     {
-        // 原子一次性提交（原子性=避免"新宽度+旧位置"的中间帧错位；位置/尺寸均在内部取整到物理像素）
-        WindowPlacement.SetBounds(window, rect.X, rect.Y, rect.Width, rect.Height);
+        var batch = new List<(Window Window, WinRect Rect)>(panels.Length);
+        foreach (var (rect, window, visible) in panels)
+        {
+            if (visible)
+            {
+                batch.Add((window, rect));
+                if (!window.IsVisible)
+                {
+                    window.Show();
+                }
+            }
+            else if (window.IsVisible)
+            {
+                window.Hide();
+            }
+        }
 
-        if (visible && !window.IsVisible) { window.Show(); }
-        else if (!visible && window.IsVisible) { window.Hide(); }
+        WindowPlacement.SetBoundsBatch(batch);
     }
 
     // ---------- 整簇拖动（手写：MouseCapture 下同步三窗，DragMove 无法联动） ----------

@@ -2,15 +2,26 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
+using TodoWpf.Core.Windows;
 
 namespace TodoWpf.Windows;
 
 /// <summary>
-/// 原子窗口定位：一次 <c>SetWindowPos</c> 同时提交 (x, y, 宽, 高)。
-/// 逐帧场景（拖动/缩放）必须用它——WPF 的 Left/Width 是两笔独立写入，
-/// 中间那一帧会呈现"新宽度 + 旧位置"的错位；右缘固定的快捷窗尤其明显
-/// （宽度先变、位置后变 → 渲染上像往右弹一下再回来，即用户观察到的"抖动"）。
-/// 坐标为逻辑像素（DIP），内部按窗口 DPI 换算为物理像素并取整。
+/// 原子窗口定位：把窗口几何（x, y, 宽, 高）作为**一次提交**交给系统。
+///
+/// 为什么必须"一次"：
+///  WPF 的 <c>Window.Left</c> / <c>Width</c> 是两个独立属性，写入会各自触发一次 SetWindowPos。
+///  逐帧缩放时先写宽度、后写位置，两者之间存在真实中间态——"已是新宽度、仍在旧位置"。
+///  主窗（位置=锚点，不动）只有宽度变化，所以看不出问题；但**右缘钉在主窗左缘的快捷窗**
+///  宽度先变大、左坐标还没来，渲染上就像先往右弹了一格再被拉回去（用户观察到的抖动）。
+///  用一次提交就没有这个中间态。
+///
+/// 为什么用 DeferWindowPos 批量：
+///  三张卡片是三个独立 HWND，逐个 SetWindowPos 时系统可能在两窗之间插入一次呈现，
+///  造成"这一帧里三窗位置/尺寸不同步"。BeginDeferWindowPos/DeferWindowPos/EndDeferWindowPos
+///  把三窗几何放进同一个批处理、一次性生效，尽量让它们同帧落位。
+///
+/// 坐标：内部为逻辑像素（DIP），提交前按各窗口 DPI 换算为物理像素并取整（避免亚像素重采样）。
 /// </summary>
 internal static class WindowPlacement
 {
@@ -18,23 +29,54 @@ internal static class WindowPlacement
 
     private const uint SwpNoActivate = 0x0010;
 
-    public static void SetBounds(Window window, double x, double y, double width, double height)
+    /// <summary>一次提交单个窗口几何（非批量场景）。</summary>
+    public static void SetBounds(Window window, WinRect rect) => SetBoundsBatch([(window, rect)]);
+
+    /// <summary>把一批窗口的几何放到同一个批处理里一次性提交（尽量同帧落位）。</summary>
+    public static void SetBoundsBatch(IReadOnlyList<(Window Window, WinRect Rect)> targets)
     {
-        var hwnd = new WindowInteropHelper(window).Handle;
-        if (hwnd == IntPtr.Zero)
+        if (targets.Count == 0)
         {
             return;
         }
 
-        var dpi = VisualTreeHelper.GetDpi(window);
-        var px = (int)Math.Round(x * dpi.DpiScaleX);
-        var py = (int)Math.Round(y * dpi.DpiScaleY);
-        var pw = Math.Max(1, (int)Math.Round(width * dpi.DpiScaleX));
-        var ph = Math.Max(1, (int)Math.Round(height * dpi.DpiScaleY));
+        var batch = BeginDeferWindowPos(targets.Count);
+        if (batch == IntPtr.Zero)
+        {
+            return;
+        }
 
-        _ = SetWindowPos(hwnd, IntPtr.Zero, px, py, pw, ph, SwpNoZOrder | SwpNoActivate);
+        foreach (var (window, rect) in targets)
+        {
+            var hwnd = new WindowInteropHelper(window).Handle;
+            if (hwnd == IntPtr.Zero)
+            {
+                continue;
+            }
+
+            var dpi = VisualTreeHelper.GetDpi(window);
+            var x = (int)Math.Round(rect.X * dpi.DpiScaleX);
+            var y = (int)Math.Round(rect.Y * dpi.DpiScaleY);
+            var cx = Math.Max(1, (int)Math.Round(rect.Width * dpi.DpiScaleX));
+            var cy = Math.Max(1, (int)Math.Round(rect.Height * dpi.DpiScaleY));
+
+            batch = DeferWindowPos(batch, hwnd, IntPtr.Zero, x, y, cx, cy, SwpNoZOrder | SwpNoActivate);
+            if (batch == IntPtr.Zero)
+            {
+                return; // 失败时放弃本批；下一帧会重新请求
+            }
+        }
+
+        _ = EndDeferWindowPos(batch);
     }
 
     [DllImport("user32.dll", SetLastError = true)]
-    private static extern bool SetWindowPos(IntPtr hwnd, IntPtr insertAfter, int x, int y, int cx, int cy, uint flags);
+    private static extern IntPtr BeginDeferWindowPos(int windowCount);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr DeferWindowPos(
+        IntPtr windowPosInfo, IntPtr hwnd, IntPtr insertAfter, int x, int y, int cx, int cy, uint flags);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool EndDeferWindowPos(IntPtr windowPosInfo);
 }
