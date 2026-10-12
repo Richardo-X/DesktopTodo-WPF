@@ -9,16 +9,24 @@
 
     <!-- 快捷添加（模板库）壳：假数据；业务批次 04 接线 -->
 
-    <Border x:Name="CardRoot" Background="{DynamicResource Brush.WinBg}"
+    <!-- 卡面：固定设计尺寸 310×640（含底色+描边+内容整体），
+         缩放走**渲染层** RenderTransform，锚点＝右上角（1,0）——本窗钉住角。
+         为什么不用 LayoutTransform / 改 Width：那要走布局（测量+排列整棵子树）才会生效，
+         比主窗"窗口矩形变化（系统层即时）"慢半拍，观感就是"快捷窗缩放跟不上主窗"（用户 2026-10-13）。
+         渲染层变换不触发布局，和主窗的矩形变化同帧生效。
+         窗口矩形本身恒为"画布"（缩放上限尺寸，见 ClusterController.QuickCanvasRect），永不改变，
+         所以既无拖影、也无按下/松手闪动。 -->
+    <Border x:Name="CardRoot" Width="310" Height="640"
+            Background="{DynamicResource Brush.WinBg}"
             BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
+            HorizontalAlignment="Right" VerticalAlignment="Top"
+            RenderTransformOrigin="1,0"
             CornerRadius="{StaticResource Radius.Panel}">
+        <Border.RenderTransform>
+            <ScaleTransform x:Name="ContentScale" ScaleX="1" ScaleY="1"/>
+        </Border.RenderTransform>
 
-        <!-- 内容按设计尺寸（310×640）绘制一次，缩放走 LayoutTransform：布局尺寸＝设计尺寸×scale，
-             窗口按目标档逐帧摆位，两者一致（与主窗/已完成窗同一套）。 -->
-        <Grid x:Name="CardContent" Width="310" Height="640" HorizontalAlignment="Left" VerticalAlignment="Top">
-            <Grid.LayoutTransform>
-                <ScaleTransform x:Name="ContentScale" ScaleX="1" ScaleY="1"/>
-            </Grid.LayoutTransform>
+        <Grid x:Name="CardContent" Width="310" Height="640">
         <Grid.RowDefinitions>
             <RowDefinition Height="{StaticResource GridLength.Titlebar}"/>
             <RowDefinition Height="*"/>
