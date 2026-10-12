@@ -211,35 +211,16 @@ public sealed class ClusterController : IDisposable
         if (_tuckBar.IsVisible && _tuckBar.Left != barLeft) { _tuckBar.Left = barLeft; }
     }
 
-    private static void Move(Window window, WinRect rect)
-    {
-        var x = SnapToDevicePixel(window, rect.X);
-        var y = SnapToDevicePixel(window, rect.Y);
-        if (window.Left != x) { window.Left = x; }
-        if (window.Top != y) { window.Top = y; }
-    }
+    private static void Move(Window window, WinRect rect) =>
+        WindowPlacement.SetBounds(window, rect.X, rect.Y, rect.Width, rect.Height);
 
     private static void Place(Window window, WinRect rect, bool visible = true)
     {
-        // 仅在变化时写入：拖动/缩放期间每帧重设宽高会强制重排并引发抖动（批次 03 验收反馈）
-        var x = SnapToDevicePixel(window, rect.X);
-        var y = SnapToDevicePixel(window, rect.Y);
-        var w = SnapToDevicePixel(window, rect.Width);
-        var h = SnapToDevicePixel(window, rect.Height);
-        if (window.Width != w) { window.Width = w; }
-        if (window.Height != h) { window.Height = h; }
-        if (window.Left != x) { window.Left = x; }
-        if (window.Top != y) { window.Top = y; }
+        // 原子一次性提交（原子性=避免"新宽度+旧位置"的中间帧错位；位置/尺寸均在内部取整到物理像素）
+        WindowPlacement.SetBounds(window, rect.X, rect.Y, rect.Width, rect.Height);
 
         if (visible && !window.IsVisible) { window.Show(); }
         else if (!visible && window.IsVisible) { window.Hide(); }
-    }
-
-    /// <summary>把逻辑坐标对齐到整数物理像素（高 DPI 下避免亚像素重采样造成的画面抖动）。</summary>
-    private static double SnapToDevicePixel(Window window, double value)
-    {
-        var scale = VisualTreeHelper.GetDpi(window).DpiScaleX;
-        return scale <= 1 ? value : Math.Round(value * scale) / scale;
     }
 
     // ---------- 整簇拖动（手写：MouseCapture 下同步三窗，DragMove 无法联动） ----------
