@@ -48,7 +48,6 @@ public sealed class ClusterController : IDisposable
     /// 冻结值取"本次拖动可能达到的最大档"，保证放大时内容不会被截。
     /// 这样拖动全程不改快捷窗的窗口矩形 ⇒ 合成器没有"新矩形+旧表面"的机会 ⇒ 缝隙/残影不再出现。
     /// </summary>
-    private WinRect? _quickResizeFrozen;
     private WinPoint _dragStartAnchor;
     private Point _dragStartMouse;
 
@@ -193,21 +192,17 @@ public sealed class ClusterController : IDisposable
     }
 
     /// <summary>
-    /// 方案 D：算出快捷窗"冻结矩形"——按本次拖动能达到的最大档计算，右缘仍钉在主窗左缘减缝隙。
-    /// 拖动期间快捷窗就停在这个矩形上，内容另行缩放。
+    /// 快捷窗的"画布矩形"：按缩放上限（ClusterLayout.MaxScale）算出的最大矩形，右缘仍钉在主窗左缘减缝隙。
+    /// 快捷窗**恒定**停在这个矩形上，卡面尺寸另由 SetContentScale 决定（右上角对齐）。
+    /// 这样按下/拖动/松手全程都不改它的窗口矩形 ⇒ 合成器没有"新矩形 + 旧表面"的重贴机会
+    /// ⇒ 拖动无拖影，按下/松手也不再各闪一次（用户 2026-10-13 反馈）。
     /// </summary>
-    private WinRect? ComputeFrozenQuickRect()
+    private WinRect QuickCanvasRect()
     {
         var ui = _data.UiState;
-        if (!ui.QuickVisible)
-        {
-            return null;
-        }
-
         var workArea = WorkArea();
         var maxScale = ClusterLayout.MaxScale(workArea, ui.QuickVisible, ui.DoneVisible);
-        var frame = ClusterLayout.Arrange(workArea, SnappedAnchor(), maxScale, ui.QuickVisible, ui.DoneVisible);
-        return frame.Quick.Rect;
+        return ClusterLayout.Arrange(workArea, SnappedAnchor(), maxScale, ui.QuickVisible, ui.DoneVisible).Quick.Rect;
     }
 
     /// <summary>按锚点+缩放+开关重排三窗（隐藏窗同时就位但不出场）。</summary>
@@ -217,21 +212,12 @@ public sealed class ClusterController : IDisposable
         var workArea = WorkArea();
         var frame = ClusterLayout.Arrange(workArea, SnappedAnchor(), _scale, ui.QuickVisible, ui.DoneVisible);
 
-        // 方案 D：拖动期间完全不提交快捷窗的几何（矩形已在拖动开始时冻结），
-        // 只在渲染层改它的内容缩放 → 拖动全程零 SetWindowPos，缝隙/残影无从出现。
-        if (_resizing && _quickResizeFrozen is not null)
-        {
-            PlaceBatch(
-                (frame.Main.Rect, _main, true, PinEdge.Left),
-                (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
-        }
-        else
-        {
-            PlaceBatch(
-                (frame.Main.Rect, _main, true, PinEdge.Left),
-                (frame.Quick.Rect, _quick, frame.Quick.Visible, PinEdge.Right),
-                (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
-        }
+        // 快捷窗恒用"画布矩形"（= 上限档的尺寸，右缘与目标档同一条物理边）：窗口矩形全程不变，
+        // 只靠内容缩放表现大小变化 → 合成器无需重贴旧表面（无拖影、按下/松手也无闪动）。
+        PlaceBatch(
+            (frame.Main.Rect, _main, true, PinEdge.Left),
+            (QuickCanvasRect(), _quick, frame.Quick.Visible, PinEdge.Right),
+            (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
 
         // 内容缩放比不从 _scale 直接取，而是从"窗口矩形取整后的实际尺寸"反推：
         // 窗口宽度要落到整数物理像素（PlaceBatch 里 round），若内容仍按原始 _scale 排版，
@@ -436,14 +422,6 @@ public sealed class ClusterController : IDisposable
         _resizing = true;
         _resizeStartMouse = ToScreen(_main, e);
         _resizeStartMainWidth = _main.ActualWidth;
-        _quickResizeFrozen = ComputeFrozenQuickRect();
-        if (_quickResizeFrozen is { } frozen)
-        {
-            // 就这一次把快捷窗摆到冻结矩形（放大到本次上限）。之后整个拖动过程不再改它的矩形，
-            // 合成器因此没有"新矩形 + 旧表面"的重贴机会。透明区域内侧不外扩可见内容，观感无跳变。
-            WindowPlacement.SetBoundsBatch([(_quick, frozen, PinEdge.Right)]);
-        }
-
         _tuck.SetResizing(true);
         SetResizeVisual(resizing: true);
         _ = _main.CaptureMouse();
@@ -476,7 +454,6 @@ public sealed class ClusterController : IDisposable
         }
 
         _resizing = false;
-        _quickResizeFrozen = null;
         _main.MouseMove -= ScaleGrip_MouseMove;
         _main.MouseUp -= ScaleGrip_MouseUp;
         if (_main.IsMouseCaptured)
@@ -537,7 +514,7 @@ public sealed class ClusterController : IDisposable
                 {
                     System.IO.File.AppendAllText(
                         System.IO.Path.Combine(System.IO.Path.GetTempPath(), "resize-trace.log"),
-                        $"scale={_scale:F4} frozen={( _quickResizeFrozen is not null)} "
+                        $"scale={_scale:F4} "
                         + $"quickWinRightPhysical={winRight} quickCardRightDip={cardRight:F2} quickCardW={_quick.Card.Width:F1}"
                         + Environment.NewLine);
                 }
