@@ -161,12 +161,25 @@ public sealed class ClusterController : IDisposable
         return new WinRect(wa.Left, wa.Top, wa.Width, wa.Height);
     }
 
+    /// <summary>
+    /// 锚点对齐到整数物理像素后再派生三窗几何：
+    /// 主窗左缘=锚点、快捷窗右缘=锚点-缝隙、已完成窗左缘=锚点+主宽+缝隙 都从同一取整值推出，
+    /// 因此"钉住的边"与"缝隙宽度"逐帧都是稳定的整数像素（此前三条边各自取整会有 ±1px 波动）。
+    /// </summary>
+    private WinPoint SnappedAnchor()
+    {
+        var dpi = VisualTreeHelper.GetDpi(_main);
+        return new WinPoint(
+            Math.Round(_anchor.X * dpi.DpiScaleX) / dpi.DpiScaleX,
+            Math.Round(_anchor.Y * dpi.DpiScaleY) / dpi.DpiScaleY);
+    }
+
     /// <summary>按锚点+缩放+开关重排三窗（隐藏窗同时就位但不出场）。</summary>
     public void ApplyLayout(bool saveState = true)
     {
         var ui = _data.UiState;
         var workArea = WorkArea();
-        var frame = ClusterLayout.Arrange(workArea, _anchor, _scale, ui.QuickVisible, ui.DoneVisible);
+        var frame = ClusterLayout.Arrange(workArea, SnappedAnchor(), _scale, ui.QuickVisible, ui.DoneVisible);
 
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
@@ -200,7 +213,7 @@ public sealed class ClusterController : IDisposable
     private void MoveCluster()
     {
         var ui = _data.UiState;
-        var frame = ClusterLayout.Arrange(WorkArea(), _anchor, _scale, ui.QuickVisible, ui.DoneVisible);
+        var frame = ClusterLayout.Arrange(WorkArea(), SnappedAnchor(), _scale, ui.QuickVisible, ui.DoneVisible);
 
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
@@ -505,7 +518,7 @@ public sealed class ClusterController : IDisposable
     {
         var ui = _data.UiState;
         var workArea = WorkArea();
-        var frame = ClusterLayout.Arrange(workArea, _anchor, _scale, ui.QuickVisible, ui.DoneVisible);
+        var frame = ClusterLayout.Arrange(workArea, SnappedAnchor(), _scale, ui.QuickVisible, ui.DoneVisible);
 
         var targets = new List<(Window Window, double DockedTop, double HiddenTop)>();
         if (frame.Main.Visible)
