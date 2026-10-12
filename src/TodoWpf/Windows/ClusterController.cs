@@ -197,14 +197,13 @@ public sealed class ClusterController : IDisposable
     /// 尺寸取 max(设计尺寸, 设计尺寸×缩放上限)，保证卡面（固定设计尺寸+渲染层缩放）不被父级夹小。
     /// 锚定关系不变：主窗左上角＝锚点；快捷窗右缘＝主窗左缘−缝隙；已完成窗左缘＝主窗右缘+缝隙。
     /// </summary>
-    private (WinRect Main, WinRect Quick, WinRect Done) CanvasRects()
+    private (WinRect Main, WinRect Quick) CanvasRects()
     {
         var ui = _data.UiState;
         var workArea = WorkArea();
         var anchor = SnappedAnchor();
         var maxScale = ClusterLayout.MaxScale(workArea, ui.QuickVisible, ui.DoneVisible);
         var span = Math.Max(1, maxScale);
-        var minScale = Math.Min(ClusterLayout.MinScale, maxScale);
 
         var mainW = ClusterLayout.MainWidth * span;
         var mainH = ClusterLayout.MainHeight * span;
@@ -216,13 +215,7 @@ public sealed class ClusterController : IDisposable
         var quick = new WinRect(
             anchor.X - ClusterLayout.Gap - sideW, anchor.Y, sideW, sideH);
 
-        // 已完成窗的左缘跟着主窗右缘走（缩放时会平移），画布必须覆盖整段行程：
-        // 从"最小档时的左缘"到"最大档时的右缘"。
-        var doneLeft = anchor.X + (ClusterLayout.MainWidth * minScale) + ClusterLayout.Gap;
-        var doneRight = anchor.X + (ClusterLayout.MainWidth * maxScale) + ClusterLayout.Gap + sideW;
-        var done = new WinRect(doneLeft, anchor.Y, Math.Max(sideW, doneRight - doneLeft), sideH);
-
-        return (main, quick, done);
+        return (main, quick);
     }
 
     /// <summary>按锚点+缩放+开关重排三窗（隐藏窗同时就位但不出场）。</summary>
@@ -237,7 +230,7 @@ public sealed class ClusterController : IDisposable
         PlaceBatch(
             (canvas.Main, _main, true, PinEdge.Left),
             (canvas.Quick, _quick, frame.Quick.Visible, PinEdge.Right),
-            (canvas.Done, _done, frame.Done.Visible, PinEdge.Left));
+            (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
 
         // 内容缩放比不从 _scale 直接取，而是从"窗口矩形取整后的实际尺寸"反推：
         // 窗口宽度要落到整数物理像素（PlaceBatch 里 round），若内容仍按原始 _scale 排版，
@@ -247,10 +240,8 @@ public sealed class ClusterController : IDisposable
         _quick.SetContentVisible(!HideQuickContentForTest);
         _main.SetContentScale(NormalizedScale(frame.Main.Rect.Width, ClusterLayout.MainWidth));
         _quick.SetContentScale(NormalizedScale(frame.Quick.Rect.Width, ClusterLayout.SideWidth));
-        // 已完成窗：缩放 + 平移（左缘随主窗右缘走）
-        _done.SetContentTransform(
-            NormalizedScale(frame.Done.Rect.Width, ClusterLayout.SideWidth),
-            frame.Done.Rect.X - canvas.Done.X);
+        // 已完成窗维持在"逐帧改窗口矩形 + LayoutTransform"这条老路上（用户 2026-10-13 裁定回退）
+        _done.SetContentScale(NormalizedScale(frame.Done.Rect.Width, ClusterLayout.SideWidth));
 
         // 窗口矩形已在本帧落位；这里把内容布局也同步推完，避免"内容晚窗口一帧"
         // （内容若晚一帧，右对齐的快捷窗右缘与两窗缝隙就会被看见在动）。
