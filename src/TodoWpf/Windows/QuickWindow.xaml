@@ -52,7 +52,7 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="模板 · 3/10" FontSize="{StaticResource Size.PanelTitleFont}"
+                <TextBlock Grid.Column="0" x:Name="TemplateCount" Text="模板 · 3/10" FontSize="{StaticResource Size.PanelTitleFont}"
                            FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"
                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                 <Button Grid.Column="1" Style="{StaticResource SmallButton}" Tag="{StaticResource Icon.Trash}"
@@ -62,59 +62,31 @@
                         ToolTip="新建模板（批次 04 实装）" VerticalAlignment="Center"/>
             </Grid>
 
-            <StackPanel Grid.Row="1">  <!-- 模板行间距 6（原型快捷窗列表口径） -->
-                <Border Style="{StaticResource TodoRow}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <Path Data="{StaticResource Icon.Grip}" Fill="{DynamicResource Brush.Faint}"
-                              Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="每天站会前喝口水"
-                                   FontSize="{StaticResource Size.RowFont}"
-                                   Foreground="{DynamicResource Brush.Text}"
-                                   VerticalAlignment="Center" Margin="8,0,0,0"/>
-                        <Button Grid.Column="2" Style="{StaticResource PlusBox}"
-                                ToolTip="加入今日待办（批次 04 实装）" VerticalAlignment="Center"/>
-                    </Grid>
-                </Border>
-                <Border Style="{StaticResource TodoRow}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <Path Data="{StaticResource Icon.Grip}" Fill="{DynamicResource Brush.Faint}"
-                              Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="写周报并发给部门同步"
-                                   FontSize="{StaticResource Size.RowFont}"
-                                   Foreground="{DynamicResource Brush.Text}"
-                                   VerticalAlignment="Center" Margin="8,0,0,0"/>
-                        <Button Grid.Column="2" Style="{StaticResource PlusBox}"
-                                ToolTip="加入今日待办（批次 04 实装）" VerticalAlignment="Center"/>
-                    </Grid>
-                </Border>
-                <Border Style="{StaticResource TodoRow}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <Path Data="{StaticResource Icon.Grip}" Fill="{DynamicResource Brush.Faint}"
-                              Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="整理桌面文件归档"
-                                   FontSize="{StaticResource Size.RowFont}"
-                                   Foreground="{DynamicResource Brush.Text}"
-                                   VerticalAlignment="Center" Margin="8,0,0,0"/>
-                        <Button Grid.Column="2" Style="{StaticResource PlusBox}"
-                                ToolTip="加入今日待办（批次 04 实装）" VerticalAlignment="Center"/>
-                    </Grid>
-                </Border>
-            </StackPanel>
+            <!-- 真实模板列表（绑定 TemplateRows）；行间距 6（原型快捷窗列表口径） -->
+            <ItemsControl x:Name="TemplateList" Grid.Row="1" ItemsSource="{Binding TemplateRows}"
+                          AlternationCount="1000">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource TodoRow}" Margin="0,0,0,6">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Path Data="{StaticResource Icon.Grip}" Fill="{DynamicResource Brush.Faint}"
+                                      Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Content}"
+                                           FontSize="{StaticResource Size.RowFont}"
+                                           Foreground="{DynamicResource Brush.Text}"
+                                           VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                <Button Grid.Column="2" Style="{StaticResource PlusBox}"
+                                        ToolTip="加入今日待办" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
             <Border Grid.Row="2" Background="{DynamicResource Brush.Hover}"
                     CornerRadius="{StaticResource Radius.Control}" Padding="10,7">

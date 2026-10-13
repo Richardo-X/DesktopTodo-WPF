@@ -38,74 +38,61 @@
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0" Margin="0,0,0,10">
-                <TextBlock Text="已完成 · 3" FontSize="{StaticResource Size.PanelTitleFont}"
+                <TextBlock x:Name="DoneCount" Text="已完成 · 3" FontSize="{StaticResource Size.PanelTitleFont}"
                            FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"
                            VerticalAlignment="Center"/>
                 <Button Style="{StaticResource IconButton}" Tag="{StaticResource Icon.SortAsc}"
                         ToolTip="排序（批次 04 实装）" HorizontalAlignment="Right"/>
             </Grid>
 
-            <StackPanel Grid.Row="1">
-                <Border Style="{StaticResource TodoRow}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <CheckBox Style="{StaticResource Checkbox}" IsChecked="True"
-                                  IsHitTestVisible="False" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="给交好的同事补上周五落下的会议纪要"
-                                   FontSize="{StaticResource Size.RowFont}"
-                                   Foreground="{DynamicResource Brush.Text}"
-                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="8,0,0,0"/>
-                        <TextBlock Grid.Column="2" Text="14:02" FontSize="{StaticResource Size.MicroFont}"
-                                   Foreground="{DynamicResource Brush.Muted}"
-                                   VerticalAlignment="Center" Margin="8,0,0,0"/>
-                    </Grid>
-                </Border>
-                <Border Style="{StaticResource TodoRow}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <CheckBox Style="{StaticResource Checkbox}" IsChecked="True"
-                                  IsHitTestVisible="False" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="预约牙医复诊"
-                                   FontSize="{StaticResource Size.RowFont}"
-                                   Foreground="{DynamicResource Brush.Text}"
-                                   VerticalAlignment="Center" Margin="8,0,0,0"/>
-                        <TextBlock Grid.Column="2" Text="逾期"
-                                   FontSize="{StaticResource Size.TagFont}"
-                                   Foreground="{DynamicResource Brush.Overdue}"
-                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Grid.Column="3" Text="13:15" FontSize="{StaticResource Size.MicroFont}"
-                                   Foreground="{DynamicResource Brush.Muted}"
-                                   VerticalAlignment="Center"/>
-                    </Grid>
-                </Border>
-                <Border Style="{StaticResource TodoRow}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <CheckBox Style="{StaticResource Checkbox}" IsChecked="True"
-                                  IsHitTestVisible="False" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="整理桌面文件归档"
-                                   FontSize="{StaticResource Size.RowFont}"
-                                   Foreground="{DynamicResource Brush.Text}"
-                                   VerticalAlignment="Center" Margin="8,0,0,0"/>
-                        <TextBlock Grid.Column="2" Text="11:48" FontSize="{StaticResource Size.MicroFont}"
-                                   Foreground="{DynamicResource Brush.Muted}"
-                                   VerticalAlignment="Center" Margin="8,0,0,0"/>
-                    </Grid>
-                </Border>
-            </StackPanel>
+            <!-- 真实已完成列表（绑定 DoneRows，按 DoneSort 排序） -->
+            <Grid Grid.Row="1">
+                <ItemsControl x:Name="DoneList" ItemsSource="{Binding DoneRows}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource TodoRow}" Margin="0,0,0,6">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox Style="{StaticResource Checkbox}" IsChecked="True"
+                                              IsHitTestVisible="False" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Content}"
+                                               FontSize="{StaticResource Size.RowFont}"
+                                               Foreground="{DynamicResource Brush.Text}"
+                                               TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                    <TextBlock Grid.Column="2" Text="逾期"
+                                               FontSize="{StaticResource Size.TagFont}"
+                                               Foreground="{DynamicResource Brush.Overdue}"
+                                               VerticalAlignment="Center" Margin="0,0,8,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Overdue}" Value="False">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Grid.Column="3" Text="{Binding CompletedTimeText}"
+                                               FontSize="{StaticResource Size.MicroFont}"
+                                               Foreground="{DynamicResource Brush.Muted}"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock x:Name="DoneEmpty" Text="今天还没有完成的事项"
+                           FontSize="{StaticResource Size.MicroFont}"
+                           Foreground="{DynamicResource Brush.Faint}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Hidden"/>
+            </Grid>
 
             <Button Grid.Row="2" Style="{StaticResource BlockButton}" Tag="{StaticResource Icon.Clock}"
                     Content="历史记录"

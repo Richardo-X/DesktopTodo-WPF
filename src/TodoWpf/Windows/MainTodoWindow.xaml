@@ -111,87 +111,58 @@
                                 VerticalAlignment="Center"/>
                     </Grid>
 
-                    <ItemsControl Grid.Row="2">
-                        <ItemsControl.Items>
-                            <Border Style="{StaticResource TodoRow}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Path Grid.Column="0" Data="{StaticResource Icon.Grip}"
-                                          Fill="{DynamicResource Brush.Faint}" Width="13" Height="13"
-                                          Stretch="Uniform" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="写周报并发给部门同步"
-                                               FontSize="{StaticResource Size.RowFont}"
-                                               Foreground="{DynamicResource Brush.Text}"
-                                               VerticalAlignment="Center" Margin="8,0,0,0"/>
-                                    <TextBlock Grid.Column="2" Text="逾期"
-                                               FontSize="{StaticResource Size.TagFont}"
-                                               Foreground="{DynamicResource Brush.Overdue}"
-                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <CheckBox Grid.Column="3" Style="{StaticResource Checkbox}" IsChecked="False"
-                                              IsHitTestVisible="False" VerticalAlignment="Center"/>
-                                </Grid>
-                            </Border>
-                            <Border Style="{StaticResource TodoRow}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Path Grid.Column="0" Data="{StaticResource Icon.Grip}"
-                                          Fill="{DynamicResource Brush.Faint}" Width="13" Height="13"
-                                          Stretch="Uniform" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="整理下季度 OKR 草稿，拆成可执行的关键结果"
-                                               FontSize="{StaticResource Size.RowFont}"
-                                               Foreground="{DynamicResource Brush.Text}"
-                                               TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="8,0,0,0"/>
-                                    <CheckBox Grid.Column="2" Style="{StaticResource Checkbox}" IsChecked="False"
-                                              IsHitTestVisible="False" VerticalAlignment="Center"/>
-                                </Grid>
-                            </Border>
-                            <Border Style="{StaticResource TodoRow}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Path Grid.Column="0" Data="{StaticResource Icon.Grip}"
-                                          Fill="{DynamicResource Brush.Faint}" Width="13" Height="13"
-                                          Stretch="Uniform" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="买牛奶、鸡蛋和全麦面包"
-                                               FontSize="{StaticResource Size.RowFont}"
-                                               Foreground="{DynamicResource Brush.Text}"
-                                               VerticalAlignment="Center" Margin="8,0,0,0"/>
-                                    <CheckBox Grid.Column="2" Style="{StaticResource Checkbox}" IsChecked="False"
-                                              IsHitTestVisible="False" VerticalAlignment="Center"/>
-                                </Grid>
-                            </Border>
-                            <Border Style="{StaticResource TodoRow}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Path Grid.Column="0" Data="{StaticResource Icon.Grip}"
-                                          Fill="{DynamicResource Brush.Faint}" Width="13" Height="13"
-                                          Stretch="Uniform" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="每天站会前喝口水"
-                                               FontSize="{StaticResource Size.RowFont}"
-                                               Foreground="{DynamicResource Brush.Text}"
-                                               VerticalAlignment="Center" Margin="8,0,0,0"/>
-                                    <CheckBox Grid.Column="2" Style="{StaticResource Checkbox}" IsChecked="False"
-                                              IsHitTestVisible="False" VerticalAlignment="Center"/>
-                                </Grid>
-                            </Border>
-                        </ItemsControl.Items>
-                    </ItemsControl>
+                    <!-- 真实待办列表（绑定 MainTodoWindow.Rows）；空态文案 = 原型 .empty -->
+                    <Grid Grid.Row="2">
+                        <ItemsControl x:Name="TodoList" ItemsSource="{Binding Rows}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource TodoRow}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Path Data="{StaticResource Icon.Grip}"
+                                                  Fill="{DynamicResource Brush.Faint}" Width="13" Height="13"
+                                                  Stretch="Uniform" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Content}"
+                                                       FontSize="{StaticResource Size.RowFont}"
+                                                       Foreground="{DynamicResource Brush.Text}"
+                                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                            <TextBlock Grid.Column="2" Text="逾期"
+                                                       FontSize="{StaticResource Size.TagFont}"
+                                                       Foreground="{DynamicResource Brush.Overdue}"
+                                                       VerticalAlignment="Center" Margin="0,0,8,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Overdue}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <CheckBox Grid.Column="3" Style="{StaticResource Checkbox}"
+                                                      IsChecked="False" IsHitTestVisible="False"
+                                                      VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                    x:Name="TodoEmpty" Visibility="Hidden">
+                            <TextBlock Text="今日做点什么好呢" FontSize="{StaticResource Size.PanelTitleFont}"
+                                       Foreground="{DynamicResource Brush.Muted}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="点击右上角 ＋ 新建一条待办" FontSize="{StaticResource Size.MicroFont}"
+                                       Foreground="{DynamicResource Brush.Faint}" Margin="0,7,0,0"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
                 </Grid>
 
         </Grid>

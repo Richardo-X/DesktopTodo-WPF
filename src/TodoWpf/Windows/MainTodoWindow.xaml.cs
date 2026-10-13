@@ -1,17 +1,24 @@
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using TodoWpf.Core.Models;
+using TodoWpf.Core.Services;
 
 namespace TodoWpf.Windows;
 
-/// <summary>待办主窗（应用主页）：业务为假数据壳，窗口行为由 ClusterController 接管。</summary>
+/// <summary>待办主窗（应用主页）：列表绑定真实数据；窗口行为由 ClusterController 接管。</summary>
 public partial class MainTodoWindow : Window
 {
+    /// <summary>待办行（真实数据投影；ItemsSource 绑定）。</summary>
+    public ObservableCollection<TodoRowView> Rows { get; } = new();
+
     public MainTodoWindow()
     {
         InitializeComponent();
+        DataContext = this;
     }
 
     public event EventHandler<MouseButtonEventArgs>? TitlebarPressed;
@@ -22,7 +29,7 @@ public partial class MainTodoWindow : Window
     /// <summary>缩放柄命中区（自绘鼠标捕获，见控制器）。</summary>
     public FrameworkElement ScaleGripHandle => ScaleGrip;
 
-    /// <summary>卡面根（缩放期间切换为不透明底以抑制拖影）。</summary>
+    /// <summary>卡面根。</summary>
     public Border Card => CardRoot;
 
     /// <summary>
@@ -37,19 +44,22 @@ public partial class MainTodoWindow : Window
             transform.ScaleX = scale;
             transform.ScaleY = scale;
         }
-
-        // 角标在缩放内容之外，位置由对齐钉在右下角（不随内容重排跑位）；
-        // 大小另外用渲染层缩放跟档位走，锚点右下角，所以它只是"在角上变大变小"。
-        var grip = (ScaleTransform)GripScale;
-        if (grip.ScaleX != scale)
-        {
-            grip.ScaleX = scale;
-            grip.ScaleY = scale;
-        }
     }
 
-    /// <summary>卡面内容（缩放期间冻结，只留窗壳）。</summary>
+    /// <summary>卡面内容。</summary>
     public FrameworkElement CardBody => CardContent;
+
+    /// <summary>整批刷新待办行（替换式：行数少，整刷成本可忽略；避免逐条 diff 的复杂度）。</summary>
+    public void SetRows(IReadOnlyList<TodoRowView> rows)
+    {
+        Rows.Clear();
+        foreach (var row in rows)
+        {
+            Rows.Add(row);
+        }
+
+        TodoEmpty.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Hidden;
+    }
 
     public void SetCount(int current, int max) => CountText.Text = $"{current}/{max}";
 

@@ -1,16 +1,22 @@
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using TodoWpf.Core.Services;
 
 namespace TodoWpf.Windows;
 
-/// <summary>已完成（当天）壳窗口：假数据；拖动联动由 ClusterController 接管。</summary>
+/// <summary>已完成（当天）壳窗口：列表绑定真实数据；窗口行为由 ClusterController 接管。</summary>
 public partial class DoneWindow : Window
 {
+    /// <summary>已完成行（真实数据投影）。</summary>
+    public ObservableCollection<DoneRowView> DoneRows { get; } = new();
+
     public DoneWindow()
     {
         InitializeComponent();
+        DataContext = this;
     }
 
     public event EventHandler<MouseButtonEventArgs>? TitlebarPressed;
@@ -18,7 +24,7 @@ public partial class DoneWindow : Window
     private void Titlebar_MouseDown(object sender, MouseButtonEventArgs e) =>
         TitlebarPressed?.Invoke(this, e);
 
-    /// <summary>卡面根（缩放期间切换为不透明底）。</summary>
+    /// <summary>卡面根。</summary>
     public Border Card => CardRoot;
 
     /// <summary>
@@ -35,7 +41,20 @@ public partial class DoneWindow : Window
         }
     }
 
-    /// <summary>卡面内容（缩放期间冻结）。</summary>
+    /// <summary>整批刷新已完成行 + 标题计数 + 空态。</summary>
+    public void SetDoneRows(IReadOnlyList<DoneRowView> rows, int count)
+    {
+        DoneRows.Clear();
+        foreach (var row in rows)
+        {
+            DoneRows.Add(row);
+        }
+
+        DoneCount.Text = $"已完成 · {count}";
+        DoneEmpty.Visibility = count == 0 ? Visibility.Visible : Visibility.Hidden;
+    }
+
+    /// <summary>卡面内容。</summary>
     public FrameworkElement CardBody => CardContent;
 
     public ClusterController? Controller { get; set; }

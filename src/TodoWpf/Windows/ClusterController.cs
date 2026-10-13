@@ -6,6 +6,8 @@ using System.Windows.Threading;
 using Microsoft.Win32;
 using TodoWpf.Core.Models;
 using TodoWpf.Core.Persistence;
+using TodoWpf.Core.Services;
+using TodoWpf.Core.Utils;
 using TodoWpf.Core.Windows;
 
 namespace TodoWpf.Windows;
@@ -137,6 +139,7 @@ public sealed class ClusterController : IDisposable
         _main.SetTopMost(_data.UiState.TopMost);
 
         ApplyTopMost(_data.UiState.TopMost);
+        RefreshAllViews();
         UpdateClock();
         ApplyLayout();
 
@@ -144,6 +147,21 @@ public sealed class ClusterController : IDisposable
         // 会把"已关闭"的面板以 WPF 默认尺寸（1536×844）显示出来（Viewbox 又把内容放大填满）= 启动巨窗 bug。
         _main.SetPanelToggles(_data.UiState.QuickVisible, _data.UiState.DoneVisible);
 
+    }
+
+    /// <summary>
+    /// 三窗真实数据刷新（批次04）：待办行/计数/空态、已完成行（含排序与标题计数）、模板行与标题计数。
+    /// 数据变化的入口统一走这里（后续 CRUD/批量/结算都只改 _data 再调它），避免多处各自维护 UI。
+    /// </summary>
+    public void RefreshAllViews()
+    {
+        var todayKey = LocalDate.Key(DateTimeOffset.Now);
+        _main.SetRows(MainViewService.TodoRows(_data, todayKey));
+        _main.SetCount(_data.Todos.Count, _data.Settings.MaxItems);
+        _done.SetDoneRows(
+            MainViewService.DoneRows(_data, _data.Settings.DoneSort),
+            _data.Completed.Count);
+        _quick.SetTemplateRows(MainViewService.TemplateRows(_data), Core.Models.TemplateLimit.Max);
     }
 
     // ---------- 布局 ----------
@@ -228,7 +246,6 @@ public sealed class ClusterController : IDisposable
         // 两者会差零点几像素——内容比窗口宽 ⇒ 右对齐的卡面被裁掉一条；比窗口窄 ⇒
         // 卡面右缘缩进窗内，肉眼就是"两窗缝隙在缩放中变宽/变窄"（用户视频慢放实证：缝隙 13→17→13）。
         // 反推后 内容布局尺寸 ≡ 窗口客户区尺寸，卡面边缘逐帧与窗口边缘重合。
-        _quick.SetContentVisible(!HideQuickContentForTest);
         _main.SetContentScale(NormalizedScale(frame.Main.Rect.Width, ClusterLayout.MainWidth));
         _quick.SetContentScale(NormalizedScale(frame.Quick.Rect.Width, ClusterLayout.SideWidth));
         // 已完成窗维持在"逐帧改窗口矩形 + LayoutTransform"这条老路上（用户 2026-10-13 裁定回退）
@@ -483,12 +500,6 @@ public sealed class ClusterController : IDisposable
     /// </summary>
     private const bool HideSideWindowsDuringResize = false;
 
-    /// <summary>
-    /// 【临时测试开关】屏蔽快捷添加窗的内容层——只留卡面底色 + 1px 描边，用来对照
-    /// "内容重绘"对拖缩放时观感的影响。测完改回 false（或改为"仅拖动期间"）。
-    /// </summary>
-    private const bool HideQuickContentForTest = false;
-
     private void SetResizeVisual(bool resizing)
     {
         var opacity = HideSideWindowsDuringResize && resizing ? 0d : 1d;
@@ -515,20 +526,6 @@ public sealed class ClusterController : IDisposable
             _resizeLayoutQueued = false;
             ApplyLayout(saveState: false);
 
-            if (TraceResize)
-            {
-                var winRight = WindowPlacement.PhysicalRight(_quick);
-                var cardRight = _quick.CardRightInWindowDip();
-                try
-                {
-                    System.IO.File.AppendAllText(
-                        System.IO.Path.Combine(System.IO.Path.GetTempPath(), "resize-trace.log"),
-                        $"scale={_scale:F4} "
-                        + $"quickWinRightPhysical={winRight} quickCardRightDip={cardRight:F2} quickCardW={_quick.Card.Width:F1}"
-                        + Environment.NewLine);
-                }
-                catch { }
-            }
         };
         CompositionTarget.Rendering += handler;
     }
@@ -732,8 +729,10 @@ public sealed class ClusterController : IDisposable
 
     private void UpdateClock()
     {
-        var now = DateTime.Now;
-        _main.SetClock(now.ToString(App.TimeFormat), $"{now.Year}年{now.Month}月{now.Day}日 星期{Weekdays[(int)now.DayOfWeek]}");
+        var now = DateTimeOffset.Now;
+        _main.SetClock(
+            MainViewService.ClockText(now, _data.Settings.Hour12),
+            $"{now.Year}年{now.Month}月{now.Day}日 星期{Weekdays[(int)now.DayOfWeek]}");
     }
 
     // ---------- 托盘显隐 / 退出 ----------
