@@ -63,11 +63,11 @@
                                     <TextBlock Grid.Column="1" Text="{Binding Content}"
                                                FontSize="{StaticResource Size.RowFont}"
                                                Foreground="{DynamicResource Brush.Text}"
-                                               TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                               TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="8,0,10,0"/>
                                     <TextBlock Grid.Column="2" Text="逾期"
                                                FontSize="{StaticResource Size.TagFont}"
                                                Foreground="{DynamicResource Brush.Overdue}"
-                                               VerticalAlignment="Center" Margin="0,0,8,0">
+                                               VerticalAlignment="Center" Margin="0,0,10,0">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Visible"/>
@@ -82,7 +82,8 @@
                                     <TextBlock Grid.Column="3" Text="{Binding CompletedTimeText}"
                                                FontSize="{StaticResource Size.MicroFont}"
                                                Foreground="{DynamicResource Brush.Muted}"
-                                               VerticalAlignment="Center"/>
+                                               VerticalAlignment="Center" MinWidth="34"
+                                               TextAlignment="Right"/>
                                 </Grid>
                             </Border>
                         </DataTemplate>

@@ -141,11 +141,12 @@
                                             <TextBlock Grid.Column="1" Text="{Binding Content}"
                                                        FontSize="{StaticResource Size.RowFont}"
                                                        Foreground="{DynamicResource Brush.Text}"
-                                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center" Margin="8,0,10,0"/>
                                             <TextBlock Grid.Column="2" Text="逾期"
                                                        FontSize="{StaticResource Size.TagFont}"
                                                        Foreground="{DynamicResource Brush.Overdue}"
-                                                       VerticalAlignment="Center" Margin="0,0,8,0">
+                                                       VerticalAlignment="Center" Margin="0,0,10,0">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Visibility" Value="Visible"/>
