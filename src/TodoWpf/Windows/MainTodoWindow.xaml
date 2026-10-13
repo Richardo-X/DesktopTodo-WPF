@@ -104,12 +104,23 @@
                                        Typography.NumeralAlignment="Tabular"/>
                         </Border>
                         <Button Grid.Column="1" Style="{StaticResource SmallButton}" Tag="{StaticResource Icon.Trash}"
-                                Content="批量删除" ToolTip="批量删除（批次 04 实装）" Margin="0,0,8,0"
+                                Content="批量删除" ToolTip="批量删除" Click="BatchToggle_Click" Margin="0,0,8,0"
                                 Width="92" VerticalAlignment="Center"/>
                         <Button Grid.Column="2" Style="{StaticResource AddButton}"
                                 Tag="{StaticResource Icon.Plus}" ToolTip="新建待办" Click="AddBtn_Click"
                                 VerticalAlignment="Center"/>
                     </Grid>
+
+                    <!-- 批量条（进入批量才显示；原型 .batch-bar） -->
+                    <StackPanel x:Name="BatchBar" Grid.Row="1" Orientation="Horizontal"
+                                Visibility="Hidden" Margin="2,0,2,0">
+                        <TextBlock x:Name="BatchCount" Text="已选 0 项" FontSize="{StaticResource Size.MicroFont}"
+                                   Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Center"/>
+                        <Button x:Name="BatchExitBtn" Style="{StaticResource SmallButton}" Content="返回"
+                                Click="BatchExit_Click" Margin="10,0,0,0"/>
+                        <Button x:Name="BatchDeleteBtn" Style="{StaticResource SmallButton}" Content="删除所选"
+                                IsEnabled="False" Click="BatchDelete_Click" Margin="6,0,0,0"/>
+                    </StackPanel>
 
                     <!-- 真实待办列表（绑定 MainTodoWindow.Rows）；空态文案 = 原型 .empty -->
                     <Grid Grid.Row="2">

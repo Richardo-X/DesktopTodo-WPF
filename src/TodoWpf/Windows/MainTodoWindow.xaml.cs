@@ -64,13 +64,40 @@ public partial class MainTodoWindow : Window
 
     private void AddBtn_Click(object sender, RoutedEventArgs e) => Controller?.OpenNewTodo();
 
+    private void BatchToggle_Click(object sender, RoutedEventArgs e) => Controller?.ToggleBatch();
+
     private void RowComplete_Checked(object sender, RoutedEventArgs e)
     {
-        if ((sender as System.Windows.Controls.CheckBox)?.DataContext is TodoRowView row)
+        if ((sender as System.Windows.Controls.CheckBox)?.DataContext is not TodoRowView row)
         {
-            Controller?.CompleteRow(row.Id);
+            return;
+        }
+
+        if (InBatch)
+        {
+            Controller?.ToggleBatchSelection(row.Id); // 批量中：勾选=多选
+        }
+        else
+        {
+            Controller?.CompleteRow(row.Id);          // 常态：勾选=完成
         }
     }
+
+    /// <summary>批量条可见/计数/删除可用性由控制器推送。</summary>
+    public void SetBatchBar(bool visible, int selected, bool canDelete)
+    {
+        InBatch = visible;
+        BatchBar.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+        BatchCount.Text = $"已选 {selected} 项";
+        BatchDeleteBtn.IsEnabled = canDelete;
+    }
+
+    /// <summary>是否处于批量模式（勾选行为分支用）。</summary>
+    public bool InBatch { get; private set; }
+
+    private void BatchExit_Click(object sender, RoutedEventArgs e) => Controller?.ExitBatch();
+
+    private void BatchDelete_Click(object sender, RoutedEventArgs e) => Controller?.DeleteSelected();
 
     /// <summary>双击行 → 编辑（XAML MouseBinding 绑到此命令；构造器注入自身）。</summary>
     public System.Windows.Input.ICommand EditRowCommand { get; }

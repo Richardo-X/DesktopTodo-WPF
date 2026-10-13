@@ -862,6 +862,68 @@ public sealed class ClusterController : IDisposable
         }
     }
 
+    // ---------- 批次04：批量删除（主窗待办；跨窗冻结由缩进门槛+模态承担） ----------
+
+    /// <summary>批量删除状态机（目标=待办；选择集与置灰口径）。</summary>
+    private readonly BatchState _batch = new();
+
+    /// <summary>进入/退出 批量删除（主窗「批量删除」按钮）。</summary>
+    public void ToggleBatch()
+    {
+        if (_batch.IsActive)
+        {
+            _batch.Exit();
+            PushBatchBar();
+            return;
+        }
+
+        _batch.Enter("todos");
+        PushBatchBar();
+    }
+
+    /// <summary>批量中：切换某行选中态。</summary>
+    public void ToggleBatchSelection(string id)
+    {
+        _batch.Toggle(id);
+        PushBatchBar();
+    }
+
+    /// <summary>「删除所选」：确认框 → 永久删除 → 退出批量。</summary>
+    public void DeleteSelected()
+    {
+        if (!_batch.CanDelete)
+        {
+            return;
+        }
+
+        if (!ConfirmDialog.Confirm(
+                "删除所选待办",
+                $"确定删除所选的 {_batch.SelectedCount} 项吗？删除后无法恢复。",
+                "删除"))
+        {
+            return;
+        }
+
+        var r = TodoOpsService.DeleteTodos(_data, _batch.SelectedIds);
+        if (r.Ok)
+        {
+            ApplyOps(r);
+        }
+
+        _batch.Exit();
+        PushBatchBar();
+    }
+
+    /// <summary>退出批量（批量条「返回」）。</summary>
+    public void ExitBatch()
+    {
+        _batch.Exit();
+        PushBatchBar();
+    }
+
+    private void PushBatchBar() =>
+        _main.SetBatchBar(_batch.IsActive, _batch.SelectedCount, _batch.CanDelete);
+
     /// <summary>模板一键加入今日待办（快捷窗行；上限已满时提示；模板保留）。</summary>
     public void ApplyTemplateRow(string templateId)
     {
