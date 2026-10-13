@@ -19,6 +19,7 @@ public partial class MainTodoWindow : Window
     {
         InitializeComponent();
         DataContext = this;
+        EditRowCommand = new RelayCommand<TodoRowView>(row => row is not null, row => Controller?.OpenEditTodo(row.Id));
     }
 
     public event EventHandler<MouseButtonEventArgs>? TitlebarPressed;
@@ -59,6 +60,30 @@ public partial class MainTodoWindow : Window
         }
 
         TodoEmpty.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Hidden;
+    }
+
+    private void AddBtn_Click(object sender, RoutedEventArgs e) => Controller?.OpenNewTodo();
+
+    private void RowComplete_Checked(object sender, RoutedEventArgs e)
+    {
+        if ((sender as System.Windows.Controls.CheckBox)?.DataContext is TodoRowView row)
+        {
+            Controller?.CompleteRow(row.Id);
+        }
+    }
+
+    /// <summary>双击行 → 编辑（XAML MouseBinding 绑到此命令；构造器注入自身）。</summary>
+    public System.Windows.Input.ICommand EditRowCommand { get; }
+
+    private sealed class RelayCommand<T> : System.Windows.Input.ICommand
+        where T : class
+    {
+        private readonly Func<T?, bool> _can;
+        private readonly Action<T?> _run;
+        public RelayCommand(Func<T?, bool> can, Action<T?> run) { _can = can; _run = run; }
+        public event EventHandler? CanExecuteChanged { add { } remove { } }
+        public bool CanExecute(object? p) => _can(p as T);
+        public void Execute(object? p) => _run(p as T);
     }
 
     public void SetCount(int current, int max) => CountText.Text = $"{current}/{max}";

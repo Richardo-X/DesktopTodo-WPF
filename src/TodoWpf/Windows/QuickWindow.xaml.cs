@@ -53,6 +53,14 @@ public partial class QuickWindow : Window
         TemplateCount.Text = $"模板 · {rows.Count}/{maxTemplates}";
     }
 
+    private void ApplyTemplate_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as System.Windows.Controls.Button)?.DataContext is TemplateRowView row)
+        {
+            Controller?.ApplyTemplateRow(row.Id);
+        }
+    }
+
     /// <summary>卡面内容。</summary>
     public FrameworkElement CardBody => CardContent;
 

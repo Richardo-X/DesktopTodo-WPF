@@ -4,7 +4,7 @@ using TodoWpf.Core.Utils;
 namespace TodoWpf.Core.Services;
 
 /// <summary>主窗一行待办/已完成/模板的展示投影（纯数据，UI 层直接绑定）。</summary>
-public sealed record TodoRowView(string Id, string Content, bool Overdue);
+public sealed record TodoRowView(string Id, string Content, bool Overdue, bool Completed = false);
 
 public sealed record DoneRowView(string Id, string Content, bool Overdue, string CompletedTimeText);
 

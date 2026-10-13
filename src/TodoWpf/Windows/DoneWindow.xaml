@@ -59,7 +59,7 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <CheckBox Style="{StaticResource Checkbox}" IsChecked="True"
-                                              IsHitTestVisible="False" VerticalAlignment="Center"/>
+                                              Unchecked="RowReturn_Unchecked" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="1" Text="{Binding Content}"
                                                FontSize="{StaticResource Size.RowFont}"
                                                Foreground="{DynamicResource Brush.Text}"

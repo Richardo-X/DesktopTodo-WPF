@@ -107,7 +107,7 @@
                                 Content="批量删除" ToolTip="批量删除（批次 04 实装）" Margin="0,0,8,0"
                                 Width="92" VerticalAlignment="Center"/>
                         <Button Grid.Column="2" Style="{StaticResource AddButton}"
-                                Tag="{StaticResource Icon.Plus}" ToolTip="新建待办（批次 04 实装）"
+                                Tag="{StaticResource Icon.Plus}" ToolTip="新建待办" Click="AddBtn_Click"
                                 VerticalAlignment="Center"/>
                     </Grid>
 
@@ -147,8 +147,11 @@
                                                 </TextBlock.Style>
                                             </TextBlock>
                                             <CheckBox Grid.Column="3" Style="{StaticResource Checkbox}"
-                                                      IsChecked="False" IsHitTestVisible="False"
-                                                      VerticalAlignment="Center"/>
+                                                      IsChecked="{Binding Completed, Mode=OneWay}"
+                                                      Checked="RowComplete_Checked" VerticalAlignment="Center"/>
+                                            <Grid.InputBindings>
+                                                <MouseBinding Gesture="LeftDoubleClick" Command="{Binding DataContext.EditRowCommand, ElementName=TodoList}"/>
+                                            </Grid.InputBindings>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

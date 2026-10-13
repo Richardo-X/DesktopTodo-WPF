@@ -81,7 +81,7 @@
                                            Foreground="{DynamicResource Brush.Text}"
                                            VerticalAlignment="Center" Margin="8,0,0,0"/>
                                 <Button Grid.Column="2" Style="{StaticResource PlusBox}"
-                                        ToolTip="加入今日待办" VerticalAlignment="Center"/>
+                                        ToolTip="加入今日待办" Click="ApplyTemplate_Click" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
                     </DataTemplate>

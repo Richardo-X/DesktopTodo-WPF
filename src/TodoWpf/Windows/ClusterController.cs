@@ -735,6 +735,178 @@ public sealed class ClusterController : IDisposable
             $"{now.Year}年{now.Month}月{now.Day}日 星期{Weekdays[(int)now.DayOfWeek]}");
     }
 
+    // ---------- 批次04：待办 CRUD（二级窗 + 原子数据操作） ----------
+
+    /// <summary>有二级窗打开（组件保持弹出；缩进门槛由 TuckStateMachine 承担）。</summary>
+    public bool IsModalOpen { get; private set; }
+
+    private void BeginModal()
+    {
+        IsModalOpen = true;
+        _tuck.SetChildOpen(true);
+    }
+
+    private void EndModal()
+    {
+        IsModalOpen = false;
+        _tuck.SetChildOpen(false);
+    }
+
+    /// <summary>CRUD 成功后统一走这里：替换数据 → 刷新三窗 → 防抖落盘。</summary>
+    private void ApplyOps(TodoOpsResult result)
+    {
+        if (!result.Ok)
+        {
+            return;
+        }
+
+        _data = result.Data;
+        RefreshAllViews();
+        _ = _repository.SaveAsync(_data);
+    }
+
+    /// <summary>勾选完成（主窗行）。</summary>
+    public void CompleteRow(string id)
+    {
+        var r = TodoOpsService.CompleteTodo(_data, id, DateTimeOffset.Now);
+        if (r.Ok)
+        {
+            ApplyOps(r);
+        }
+    }
+
+    /// <summary>模板一键加入今日待办（快捷窗行；上限已满时提示；模板保留）。</summary>
+    public void ApplyTemplateRow(string templateId)
+    {
+        var r = TodoOpsService.ApplyTemplate(_data, templateId, DateTimeOffset.Now);
+        if (r.Ok)
+        {
+            ApplyOps(r);
+        }
+        else
+        {
+            ShowOpsError(r.Reason);
+        }
+    }
+
+    /// <summary>已完成退回（已完成窗行；上限已满时提示）。</summary>
+    public void ReturnRow(string id)
+    {
+        var r = TodoOpsService.ReturnTodo(_data, id, LocalDate.Key(DateTimeOffset.Now), DateTimeOffset.Now);
+        if (r.Ok)
+        {
+            ApplyOps(r);
+        }
+        else
+        {
+            ShowOpsError(r.Reason);
+        }
+    }
+
+    /// <summary>操作失败提示（机器可读 Reason → 用户文案；批次05 换原型 toast）。</summary>
+    private static void ShowOpsError(string? reason) =>
+        System.Windows.MessageBox.Show(
+            reason switch
+            {
+                TodoOpsService.ReasonLimitReached => $"待办数量已达上限（{TemplateLimit.Max} 条），无法添加",
+                TodoOpsService.ReasonTemplateLimitReached => "模板数量已达上限（10 个）",
+                TodoOpsService.ReasonDuplicateTemplate => "已存在相同内容的模板",
+                TodoOpsService.ReasonEmptyContent => "内容不能为空",
+                TodoOpsService.ReasonTooLong => "内容超过 300 字",
+                _ => "操作失败",
+            },
+            "桌面待办", MessageBoxButton.OK, MessageBoxImage.Information);
+
+    /// <summary>＋ 新建待办（主窗右上角 ＋；空内容时新建置灰）。</summary>
+    public void OpenNewTodo()
+    {
+        if (_data.Todos.Count >= _data.Settings.MaxItems)
+        {
+            ShowOpsError(TodoOpsService.ReasonLimitReached);
+            return;
+        }
+
+        BeginModal();
+        TextEditDialog.Open(b =>
+        {
+            b.Title("新建待办").CounterTotal(ContentRules.MaxLength)
+             .Action("save", "新建", primary: true, enabled: false, onClick: d =>
+             {
+                 var r = TodoOpsService.AddTodo(_data, d.Editor.Text, DateTimeOffset.Now);
+                 if (r.Ok)
+                 {
+                     ApplyOps(r);
+                 }
+                 else
+                 {
+                     ShowOpsError(r.Reason);
+                 }
+             })
+             .OnTextChanged(d =>
+             {
+                 var ok = ContentRules.Validate(d.Editor.Text).Ok;
+                 ((System.Windows.Controls.Button)((System.Windows.Controls.Panel)d.ActionsPanel).Children[0]).IsEnabled = ok;
+             });
+        });
+        EndModal();
+    }
+
+    /// <summary>编辑待办（双击行；返回时已改询问）。</summary>
+    public void OpenEditTodo(string id)
+    {
+        var item = _data.Todos.Find(t => t.Id == id);
+        if (item is null)
+        {
+            return;
+        }
+
+        var saved = false;
+        var dirty = false;
+        var latestText = item.Content;
+
+        BeginModal();
+        TextEditDialog.Open(b =>
+        {
+            b.Title("编辑待办")
+             .StateBadge(item.Overdue ? "已逾期" : "进行中",
+                         $"创建于 {LocalDate.KeyOfIso(item.CreatedAt)}", item.Overdue)
+             .Text(item.Content)
+             .CounterTotal(ContentRules.MaxLength)
+             .Action("delete", "删除", onClick: _ =>
+             {
+                 if (ConfirmDialog.Confirm("删除待办", "确定删除这条待办吗？删除后无法恢复。", "删除"))
+                 {
+                     saved = true;
+                     ApplyOps(TodoOpsService.DeleteTodo(_data, id));
+                 }
+             })
+             .Action("save", "保存", primary: true, onClick: d =>
+             {
+                 var r = TodoOpsService.EditTodo(_data, id, d.Editor.Text);
+                 if (!r.Ok)
+                 {
+                     ShowOpsError(r.Reason); // 保存失败（空内容等）：提示且不关闭
+                     return;
+                 }
+
+                 saved = true;
+                 ApplyOps(r);
+                 d.Close();
+             })
+             .OnTextChanged(d =>
+             {
+                 latestText = d.Editor.Text;
+                 dirty = latestText.Trim() != item.Content;
+             });
+        });
+        EndModal();
+
+        if (!saved && dirty && ConfirmDialog.Confirm("未保存的修改", "内容已修改，保存吗？", "保存"))
+        {
+            ApplyOps(TodoOpsService.EditTodo(_data, id, latestText));
+        }
+    }
+
     // ---------- 托盘显隐 / 退出 ----------
 
     public void HideClusterToTray()

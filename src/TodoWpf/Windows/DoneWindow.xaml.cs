@@ -54,6 +54,14 @@ public partial class DoneWindow : Window
         DoneEmpty.Visibility = count == 0 ? Visibility.Visible : Visibility.Hidden;
     }
 
+    private void RowReturn_Unchecked(object sender, RoutedEventArgs e)
+    {
+        if ((sender as System.Windows.Controls.CheckBox)?.DataContext is DoneRowView row)
+        {
+            Controller?.ReturnRow(row.Id);
+        }
+    }
+
     /// <summary>卡面内容。</summary>
     public FrameworkElement CardBody => CardContent;
 
