@@ -13,6 +13,7 @@
     <Border x:Name="CardRoot" Background="{DynamicResource Brush.WinBg}"
             BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
             CornerRadius="{StaticResource Radius.Panel}">
+    <Grid>
 
         <!-- 内容按设计尺寸（470×640）绘制一次，缩放走 LayoutTransform：布局尺寸＝设计尺寸×scale，
              窗口就是按这个尺寸摆的，两者一致。左上角＝本窗钉住角（缩放锚点＝主窗左上角）。 -->
@@ -193,15 +194,24 @@
                     </ItemsControl>
                 </Grid>
 
-                <Grid x:Name="ScaleGrip" Grid.Row="1" Width="24" Height="24"
-                      HorizontalAlignment="Right" VerticalAlignment="Bottom" Cursor="SizeNWSE"
-                      Background="Transparent">
-                    <Border Width="13" Height="13" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                            Margin="0,0,3,3" Opacity="0.7"
-                            BorderBrush="{DynamicResource Brush.Muted}" BorderThickness="0,0,2,2"
-                            CornerRadius="0,0,9,0"/>
-                </Grid>
         </Grid>
+
+        <!-- 缩放角标：**放在被缩放的 CardContent 之外**，直接钉在窗口右下角。
+             若把它留在缩放内容里，内容重排晚一拍时角标会跟着晚，观感就是"角标相对边框跑位"
+             （用户 2026-10-13 反馈：缩放过程中角标与边框的相对位置必须不变）。
+             它自己的大小仍随档位变化——用渲染层缩放、锚点右下角，位置恒在角上。 -->
+        <Grid x:Name="ScaleGrip" Width="24" Height="24"
+              HorizontalAlignment="Right" VerticalAlignment="Bottom"
+              RenderTransformOrigin="1,1" Cursor="SizeNWSE" Background="Transparent">
+            <Grid.RenderTransform>
+                <ScaleTransform x:Name="GripScale" ScaleX="1" ScaleY="1"/>
+            </Grid.RenderTransform>
+            <Border Width="13" Height="13" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Margin="0,0,3,3" Opacity="0.7"
+                    BorderBrush="{DynamicResource Brush.Muted}" BorderThickness="0,0,2,2"
+                    CornerRadius="0,0,9,0"/>
+        </Grid>
+    </Grid>
     </Border>
 
 </Window>

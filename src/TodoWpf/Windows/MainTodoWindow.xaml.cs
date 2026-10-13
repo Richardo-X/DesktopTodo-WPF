@@ -37,6 +37,15 @@ public partial class MainTodoWindow : Window
             transform.ScaleX = scale;
             transform.ScaleY = scale;
         }
+
+        // 角标在缩放内容之外，位置由对齐钉在右下角（不随内容重排跑位）；
+        // 大小另外用渲染层缩放跟档位走，锚点右下角，所以它只是"在角上变大变小"。
+        var grip = (ScaleTransform)GripScale;
+        if (grip.ScaleX != scale)
+        {
+            grip.ScaleX = scale;
+            grip.ScaleY = scale;
+        }
     }
 
     /// <summary>卡面内容（缩放期间冻结，只留窗壳）。</summary>
