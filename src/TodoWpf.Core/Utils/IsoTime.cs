@@ -32,4 +32,7 @@ public static class IsoTime
         TryParse(text, out var instant)
             ? instant
             : throw new FormatException($"invalid ISO 8601 time: {text}");
+
+    /// <summary>解析为本地时区的 DateTimeOffset（显示侧用：完成时间 HH:mm 等）。</summary>
+    public static DateTimeOffset ParseLocal(string text) => Parse(text).ToLocalTime();
 }
