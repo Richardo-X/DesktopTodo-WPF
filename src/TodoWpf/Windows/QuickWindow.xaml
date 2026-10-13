@@ -79,7 +79,8 @@
                                 <TextBlock Grid.Column="1" Text="{Binding Content}"
                                            FontSize="{StaticResource Size.RowFont}"
                                            Foreground="{DynamicResource Brush.Text}"
-                                           VerticalAlignment="Center" Margin="8,0,0,0">
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center" Margin="8,0,10,0">
                                     <TextBlock.InputBindings>
                                         <MouseBinding Gesture="LeftDoubleClick"
                                                       Command="{Binding DataContext.EditTemplateCommand, ElementName=TemplateList}"/>
