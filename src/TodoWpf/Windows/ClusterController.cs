@@ -775,6 +775,93 @@ public sealed class ClusterController : IDisposable
         }
     }
 
+    /// <summary>＋ 新建模板（快捷窗；上限 10、同内容查重）。</summary>
+    public void OpenNewTemplate()
+    {
+        if (_data.Templates.Count >= TemplateLimit.Max)
+        {
+            ShowOpsError(TodoOpsService.ReasonTemplateLimitReached);
+            return;
+        }
+
+        BeginModal();
+        TextEditDialog.Open(b =>
+        {
+            b.Title("新建模板").CounterTotal(ContentRules.MaxLength)
+             .Action("save", "新建", primary: true, enabled: false, onClick: d =>
+             {
+                 var r = TodoOpsService.AddTemplate(_data, d.Editor.Text, DateTimeOffset.Now);
+                 if (r.Ok)
+                 {
+                     ApplyOps(r);
+                     d.Close();
+                 }
+                 else
+                 {
+                     ShowOpsError(r.Reason); // 查重/超长：提示且不关闭
+                 }
+             })
+             .OnTextChanged(d =>
+             {
+                 var ok = ContentRules.Validate(d.Editor.Text).Ok;
+                 ((System.Windows.Controls.Button)((System.Windows.Controls.Panel)d.ActionsPanel).Children[0]).IsEnabled = ok;
+             });
+        });
+        EndModal();
+    }
+
+    /// <summary>编辑模板（双击模板行；返回时已改询问）。</summary>
+    public void OpenEditTemplate(string id)
+    {
+        var item = _data.Templates.Find(t => t.Id == id);
+        if (item is null)
+        {
+            return;
+        }
+
+        var saved = false;
+        var dirty = false;
+        var latestText = item.Content;
+
+        BeginModal();
+        TextEditDialog.Open(b =>
+        {
+            b.Title("编辑模板").Text(item.Content).CounterTotal(ContentRules.MaxLength)
+             .Action("delete", "删除", onClick: _ =>
+             {
+                 if (ConfirmDialog.Confirm("删除模板", "确定删除这个模板吗？", "删除"))
+                 {
+                     saved = true;
+                     ApplyOps(TodoOpsService.DeleteTemplate(_data, id));
+                 }
+             })
+             .Action("save", "保存", primary: true, onClick: d =>
+             {
+                 var r = TodoOpsService.EditTemplate(_data, id, d.Editor.Text);
+                 if (!r.Ok)
+                 {
+                     ShowOpsError(r.Reason);
+                     return;
+                 }
+
+                 saved = true;
+                 ApplyOps(r);
+                 d.Close();
+             })
+             .OnTextChanged(d =>
+             {
+                 latestText = d.Editor.Text;
+                 dirty = latestText.Trim() != item.Content;
+             });
+        });
+        EndModal();
+
+        if (!saved && dirty && ConfirmDialog.Confirm("未保存的修改", "内容已修改，保存吗？", "保存"))
+        {
+            ApplyOps(TodoOpsService.EditTemplate(_data, id, latestText));
+        }
+    }
+
     /// <summary>模板一键加入今日待办（快捷窗行；上限已满时提示；模板保留）。</summary>
     public void ApplyTemplateRow(string templateId)
     {

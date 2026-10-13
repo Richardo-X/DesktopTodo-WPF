@@ -59,7 +59,7 @@
                         Content="批量删除" ToolTip="批量删除（批次 04 实装）" Margin="0,0,6,0"
                         Width="92" VerticalAlignment="Center"/>
                 <Button Grid.Column="2" Style="{StaticResource AddButton}" Tag="{StaticResource Icon.Plus}"
-                        ToolTip="新建模板（批次 04 实装）" VerticalAlignment="Center"/>
+                        ToolTip="新建模板" Click="AddTemplate_Click" VerticalAlignment="Center"/>
             </Grid>
 
             <!-- 真实模板列表（绑定 TemplateRows）；行间距 6（原型快捷窗列表口径） -->
@@ -79,7 +79,12 @@
                                 <TextBlock Grid.Column="1" Text="{Binding Content}"
                                            FontSize="{StaticResource Size.RowFont}"
                                            Foreground="{DynamicResource Brush.Text}"
-                                           VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                           VerticalAlignment="Center" Margin="8,0,0,0">
+                                    <TextBlock.InputBindings>
+                                        <MouseBinding Gesture="LeftDoubleClick"
+                                                      Command="{Binding DataContext.EditTemplateCommand, ElementName=TemplateList}"/>
+                                    </TextBlock.InputBindings>
+                                </TextBlock>
                                 <Button Grid.Column="2" Style="{StaticResource PlusBox}"
                                         ToolTip="加入今日待办" Click="ApplyTemplate_Click" VerticalAlignment="Center"/>
                             </Grid>
