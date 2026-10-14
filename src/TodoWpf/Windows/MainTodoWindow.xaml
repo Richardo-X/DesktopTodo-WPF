@@ -143,8 +143,21 @@
                                                        Foreground="{DynamicResource Brush.Text}"
                                                        TextTrimming="CharacterEllipsis"
                                                        VerticalAlignment="Center" Margin="8,0,10,0"/>
-                                            <Border Grid.Column="2" Style="{StaticResource OverdueTag}"
-                                                    Margin="0,0,10,0" Visibility="{Binding OverdueVisibility}"/>
+                                            <TextBlock Grid.Column="2" Text="逾期"
+                                                       FontSize="{StaticResource Size.TagFont}"
+                                                       Foreground="{DynamicResource Brush.Overdue}"
+                                                       VerticalAlignment="Center" Margin="0,0,10,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Overdue}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
                                             <CheckBox Grid.Column="3" Style="{StaticResource Checkbox}"
                                                       IsChecked="{Binding Completed, Mode=OneWay}"
                                                       Checked="RowComplete_Checked" VerticalAlignment="Center"/>
