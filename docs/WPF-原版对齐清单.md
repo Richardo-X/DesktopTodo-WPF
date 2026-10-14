@@ -36,7 +36,7 @@
 | ⏳ 气泡 | 04 | 截断内容悬停气泡未实装 |
 | ⏳ 空状态文案 | 04 | "今日做点什么好呢 / 点击右上角 ＋ 新建一条待办"等未接入（当前为示例数据不显示空态） |
 | ⏳ 批量模式 | 04 | 多选/置灰/跨窗冻结未实装 |
-| ⚠️ 逾期标不可见 | 04（缺陷·根因已定位） | **更正 2026-10-14：逾期标不是"恒显示"，而是完全不可见。** 根因：`OverdueTag` 样式里 `<Setter Property="Child">` —— `Border.Child` 不是依赖属性（`Border.ChildProperty` 反射为 null），而 Setter 只能设 DP → 整条样式解析失败（ArgumentNullException）→ 元素无样式（0 高、无描边）→ 什么都不画。隔离探针复现 + 反射证实；**修法已验证**：改用 ContentControl+ControlTemplate（实测解析通过），或行模板自带 TextBlock 子元素；字符串 "Visible/Collapsed" 绑定实测可用，显隐逻辑本身无需改 |
+| ⚠️ 逾期标不可见 | 04（缺陷·回归） | **更正 2026-10-14：逾期标不是"恒显示"，而是完全不可见，且这是我 6b19b5c 引入的回归。** 6b19b5c 之前（eacc930）的写法是**可用**的：红色"逾期"字 + 内联 DataTrigger 绑 `Overdue` 布尔 → 起止正确；6b19b5c 改成 `OverdueTag` 样式后，样式里 `<Setter Property="Child">` —— `Border.Child` 不是依赖属性（`Border.ChildProperty` 反射为 null），而 Setter 只能设 DP → 整条样式解析失败（ArgumentNullException）→ 元素无样式（0 高、无描边）→ 什么都不画（失败被静默吞掉，不报错不崩溃）。隔离探针复现 + 反射证实；全量扫描整个主题 159 键仅此 1 个坏。**修法（已验证）**：先回退 6b19b5c 恢复可用态，再用 ContentControl+ControlTemplate 重做胶囊外观（实测解析通过），显隐沿用已验证可用的 DataTrigger/字符串绑定 |
 | ⚠️ ＋新建待办崩溃 | 04（缺陷·阻断） | 点主窗 ＋ → 应用直接退出（无提示）：`TextEditDialog.xaml` 引用从未定义的 `BackButton` 样式（全仓扫描确认是唯一"引用未定义"的键）→ 二级窗构造抛 XamlParseException。事件日志 12:54:18、01:26:15 两次，调用栈 AddBtn_Click→OpenNewTodo→TextEditDialog。**二级窗（新建/编辑/模板）全线不可用** |
 | ⏳ 设置四项 + 历史页 + CSV + 0 点结算 | 05 | 未实装 |
 | ⏳ 打包（安装版 + Velopack） | 06 | 未实装 |
