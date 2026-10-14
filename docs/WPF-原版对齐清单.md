@@ -36,7 +36,8 @@
 | ⏳ 气泡 | 04 | 截断内容悬停气泡未实装 |
 | ⏳ 空状态文案 | 04 | "今日做点什么好呢 / 点击右上角 ＋ 新建一条待办"等未接入（当前为示例数据不显示空态） |
 | ⏳ 批量模式 | 04 | 多选/置灰/跨窗冻结未实装 |
-| ⏳ 逾期标显隐核验 | 04（待核验） | 胶囊样式已交付（红描边 OverdueTag）；**显隐绑定两种写法均引发行渲染异常已回退**，当前胶囊恒显示；待整体落地后核验（正确方向：OverdueTag 样式内置 DataTrigger） |
+| ⚠️ 逾期标不可见 | 04（缺陷·根因已定位） | **更正 2026-10-14：逾期标不是"恒显示"，而是完全不可见。** 根因：`OverdueTag` 样式里 `<Setter Property="Child">` —— `Border.Child` 不是依赖属性（`Border.ChildProperty` 反射为 null），而 Setter 只能设 DP → 整条样式解析失败（ArgumentNullException）→ 元素无样式（0 高、无描边）→ 什么都不画。隔离探针复现 + 反射证实；**修法已验证**：改用 ContentControl+ControlTemplate（实测解析通过），或行模板自带 TextBlock 子元素；字符串 "Visible/Collapsed" 绑定实测可用，显隐逻辑本身无需改 |
+| ⚠️ ＋新建待办崩溃 | 04（缺陷·阻断） | 点主窗 ＋ → 应用直接退出（无提示）：`TextEditDialog.xaml` 引用从未定义的 `BackButton` 样式（全仓扫描确认是唯一"引用未定义"的键）→ 二级窗构造抛 XamlParseException。事件日志 12:54:18、01:26:15 两次，调用栈 AddBtn_Click→OpenNewTodo→TextEditDialog。**二级窗（新建/编辑/模板）全线不可用** |
 | ⏳ 设置四项 + 历史页 + CSV + 0 点结算 | 05 | 未实装 |
 | ⏳ 打包（安装版 + Velopack） | 06 | 未实装 |
 
