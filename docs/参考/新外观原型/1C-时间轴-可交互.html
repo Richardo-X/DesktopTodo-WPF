@@ -679,6 +679,7 @@ document.getElementById('tl').addEventListener('click', e => {
   if (!it) return;
   const act = e.target.closest('[data-act]');
   if (state.batch.on) {
+    // 批量态：行首/行尾整个可点=切换选中；勾选框只承担"选中"，不触发完成/退回
     if (kind !== 'p') return;
     if (state.batch.sel.has(id)) state.batch.sel.delete(id); else state.batch.sel.add(id);
     renderMain();
@@ -812,7 +813,7 @@ document.getElementById('strip').onmouseenter = () => tuck(false);
 /* ---------- 拖动排序 ---------- */
 document.getElementById('tl').addEventListener('mousedown', e => {
   const grip = e.target.closest('.grip');
-  if (!grip || state.batch.on) return;
+  if (!grip || state.batch.on) return; // 批量态屏蔽拖拽（批量模板里也不渲染 grip）
   const row = grip.closest('.trow');
   if (!row) return;
   const from = pending().findIndex(i => i.id === row.dataset.id);
