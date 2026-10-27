@@ -76,10 +76,8 @@ body[data-theme="night"]{
 
 /* 时钟单独一块；动作（计数 / ⚡ / 批量删除 / 新建）整体落到时间下方 */
 .clockzone{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 16px 14px;flex:none}
-.actionzone{display:grid;grid-template-columns:1fr auto;grid-auto-rows:28px;row-gap:10px;
-  align-items:center;padding:2px 16px 12px;flex:none}
-.actionzone .cell-l{justify-self:start;display:flex;align-items:center}
-.actionzone .cell-r{justify-self:end;display:flex;align-items:center}
+.actionzone{display:flex;align-items:center;gap:8px;padding:2px 16px 12px;flex:none}
+.actionzone .spacer{flex:1}
 .bigclock{font-size:28px;font-weight:500;letter-spacing:.4px;font-variant-numeric:tabular-nums;line-height:1.15}
 .bigdate{font-size:11px;color:var(--faint);letter-spacing:.2px}
 .sidebtn{width:28px;height:28px;border:1px solid var(--card-border);border-radius:6px;background:var(--card);
@@ -298,22 +296,17 @@ body[data-theme="night"]{
           <span class="bigdate" id="date">--</span>
         </div>
 
-        <!-- 动作整体在时间下方，2×2 对称：左列＝计数 / 批量删除；右列＝模板窗(⚡) / 新建 -->
+        <!-- 动作一行四件：计数 → 删除 ‖ 新建 → 模板窗；全部水平对齐 -->
         <div class="actionzone">
-          <span class="cell-l"><span class="cntchip" id="cnt">0/10</span></span>
-          <span class="cell-r">
-            <button class="sidebtn" id="btnTpl" title="显示 / 隐藏模板窗（在右侧展开）" aria-label="模板窗">
-              <svg class="ic" viewBox="0 0 24 24"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
-            </button>
-          </span>
-          <span class="cell-l">
-            <button class="sidebtn" id="btnBatch" title="批量删除待办" aria-label="批量删除待办">
-              <svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
-            </button>
-          </span>
-          <span class="cell-r">
-            <button class="addbtn" id="btnAdd" title="新建待办" aria-label="新建待办"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
-          </span>
+          <span class="cntchip" id="cnt">0/10</span>
+          <button class="sidebtn" id="btnBatch" title="批量删除待办" aria-label="批量删除待办">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
+          </button>
+          <span class="spacer"></span>
+          <button class="addbtn" id="btnAdd" title="新建待办" aria-label="新建待办"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button class="sidebtn" id="btnTpl" title="显示 / 隐藏模板窗（在右侧展开）" aria-label="模板窗">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+          </button>
         </div>
 
         <div class="batchbar" id="batchbar">
