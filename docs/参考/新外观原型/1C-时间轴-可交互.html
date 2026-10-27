@@ -160,13 +160,10 @@ body[data-theme="night"]{
 .trow .cb.disabled:hover{border-color:var(--line)}
 .trow.done .tx{color:var(--muted)}
 .trow.done .tt{color:var(--faint)}
-.trow .sel{width:15px;height:15px;flex:none;border:1px solid var(--line);border-radius:4px;background:var(--card);
-  display:flex;align-items:center;justify-content:center;color:transparent;cursor:pointer;position:relative;
-  margin:0 4px 0 0}
-.trow .sel::after{content:"";position:absolute;inset:-9px}
+/* 批量选中态：同一颗行尾勾选框变实心（选中）+ 行淡底 */
 .trow.picked{background:var(--accent-soft)}
-.trow.picked .sel{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
-.trow.picked .tx,.trow.picked .tt{color:var(--muted)}
+.trow.picked .cb{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.trow.picked .tx{color:var(--muted)}
 .trow.flash{animation:flash .9s ease-out}
 @keyframes flash{0%{background:var(--accent-soft)}100%{background:transparent}}
 .sect{display:flex;align-items:center;gap:8px;height:34px;margin-top:6px;position:relative;z-index:1}
@@ -469,7 +466,6 @@ function renderMain() {
     html += '<div class="trow' + (picked ? ' picked' : '') + (state.flashId === it.id ? ' flash' : '') +
       '" data-id="' + it.id + '" data-kind="p">' +
       '<span class="grip' + (inBatch ? ' disabled' : '') + '" title="' + (inBatch ? '批量中不可拖动' : '拖动排序') + '">' + GRIP + '</span>' +
-      (inBatch ? '<span class="sel">' + CHECK + '</span>' : '') +
       '<span class="tx" title="' + esc(it.text) + '">' + esc(it.text) + '</span>' +
       (pendingOverdue(it) ? '<span class="tag">逾期</span>' : '') +
       (inBatch ? '' : '<button class="rowact" data-act="edit" title="编辑">' + PENCIL + '</button>') +
