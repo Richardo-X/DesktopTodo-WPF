@@ -66,7 +66,7 @@ body[data-theme="night"]{
 .tb svg{width:11px;height:11px;stroke-width:2.4}
 .head .brand{font-size:13px;font-weight:600;letter-spacing:.4px}
 .wicons{margin-left:auto;display:flex;align-items:center;gap:2px}
-.ib{width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:var(--faint);
+.ib{width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:var(--faint);
   border-radius:6px;cursor:pointer;border:none;background:transparent;position:relative;
   transition:background .15s,color .15s}
 .ib:hover{background:var(--row-hover);color:var(--text)}
@@ -76,11 +76,13 @@ body[data-theme="night"]{
 
 /* 时钟单独一块；动作（计数 / ⚡ / 批量删除 / 新建）整体落到时间下方 */
 .clockzone{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 16px 14px;flex:none}
-.actionzone{display:flex;align-items:center;justify-content:space-between;padding:0 16px 12px;flex:none}
-.rightstack{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.actionzone{display:grid;grid-template-columns:1fr auto;grid-auto-rows:28px;row-gap:10px;
+  align-items:center;padding:2px 16px 12px;flex:none}
+.actionzone .cell-l{justify-self:start;display:flex;align-items:center}
+.actionzone .cell-r{justify-self:end;display:flex;align-items:center}
 .bigclock{font-size:28px;font-weight:500;letter-spacing:.4px;font-variant-numeric:tabular-nums;line-height:1.15}
 .bigdate{font-size:11px;color:var(--faint);letter-spacing:.2px}
-.sidebtn{width:26px;height:26px;border:1px solid var(--card-border);border-radius:6px;background:var(--card);
+.sidebtn{width:28px;height:28px;border:1px solid var(--card-border);border-radius:6px;background:var(--card);
   display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;
   position:relative;transition:border-color .15s,color .15s,background .15s}
 .sidebtn:hover{border-color:var(--line);color:var(--text);background:var(--row-hover)}
@@ -88,7 +90,7 @@ body[data-theme="night"]{
 .sidebtn.on{border-color:var(--accent);color:var(--accent)}
 .sidebtn svg{width:14px;height:14px}
 .cntchip{font-size:11px;color:var(--muted);background:var(--chip);border-radius:99px;
-  padding:3px 8px;font-variant-numeric:tabular-nums}
+  padding:3px 9px;font-variant-numeric:tabular-nums;line-height:18px}
 .cntchip.full{color:var(--accent);background:var(--accent-soft)}
 .endbtns{display:flex;align-items:center;gap:8px}
 .fdel{padding:5px 10px;border:1px solid var(--card-border);border-radius:6px;font-size:11px;
@@ -296,20 +298,22 @@ body[data-theme="night"]{
           <span class="bigdate" id="date">--</span>
         </div>
 
-        <!-- 动作整体在时间下方：左＝计数；右＝⚡（模板窗，贴在新建上方、右对齐）＋ 批量删除 ＋ 新建 -->
+        <!-- 动作整体在时间下方，2×2 对称：左列＝计数 / 批量删除；右列＝模板窗(⚡) / 新建 -->
         <div class="actionzone">
-          <span class="cntchip" id="cnt">0/10</span>
-          <div class="rightstack">
+          <span class="cell-l"><span class="cntchip" id="cnt">0/10</span></span>
+          <span class="cell-r">
             <button class="sidebtn" id="btnTpl" title="显示 / 隐藏模板窗（在右侧展开）" aria-label="模板窗">
               <svg class="ic" viewBox="0 0 24 24"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
             </button>
-            <div class="endbtns">
-              <button class="sidebtn" id="btnBatch" title="批量删除待办" aria-label="批量删除待办">
-                <svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
-              </button>
-              <button class="addbtn" id="btnAdd" title="新建待办" aria-label="新建待办"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
-            </div>
-          </div>
+          </span>
+          <span class="cell-l">
+            <button class="sidebtn" id="btnBatch" title="批量删除待办" aria-label="批量删除待办">
+              <svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
+            </button>
+          </span>
+          <span class="cell-r">
+            <button class="addbtn" id="btnAdd" title="新建待办" aria-label="新建待办"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          </span>
         </div>
 
         <div class="batchbar" id="batchbar">
