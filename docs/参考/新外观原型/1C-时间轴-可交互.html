@@ -143,12 +143,6 @@ body[data-theme="night"]{
   padding:0 8px 0 6px}
 .trow.done .tx{padding-left:9px}
 .trow .tag{flex:none;font-size:11px;color:var(--overdue);padding-right:8px}
-.trow .rowact{width:22px;height:22px;flex:none;border:none;background:transparent;color:var(--faint);
-  border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;
-  opacity:0;transition:opacity .12s,background .15s,color .15s}
-.trow:hover .rowact,.trow:focus-within .rowact{opacity:1}
-.trow .rowact:hover{background:var(--chip);color:var(--text)}
-.trow .rowact svg{width:13px;height:13px}
 .cb{width:16px;height:16px;flex:none;border:1px solid var(--line);border-radius:4px;background:var(--card);
   display:flex;align-items:center;justify-content:center;color:transparent;cursor:pointer;
   position:relative;transition:border-color .15s,background .15s}
@@ -183,12 +177,6 @@ body[data-theme="night"]{
 .tplrow{display:flex;align-items:center;gap:8px;height:36px;padding:0 8px;border-radius:var(--radius-row)}
 .tplrow:hover{background:var(--row-hover)}
 .tplrow .tx{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tplrow .rowact{width:22px;height:22px;flex:none;border:none;background:transparent;color:var(--faint);
-  border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;
-  opacity:0;transition:opacity .12s}
-.tplrow:hover .rowact,.tplrow:focus-within .rowact{opacity:1}
-.tplrow .rowact:hover{background:var(--chip);color:var(--text)}
-.tplrow .rowact svg{width:13px;height:13px}
 .tplrow .plus{width:22px;height:22px;flex:none;border:none;background:transparent;color:var(--faint);
   border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .tplrow .plus:hover{background:var(--accent-soft);color:var(--accent)}
@@ -232,6 +220,18 @@ body[data-theme="night"]{
 .dlg textarea::placeholder{color:var(--faint)}
 .dlg .counter{flex:none;text-align:right;font-size:11px;color:var(--faint);padding:8px 0 0}
 .dlg .counter.near{color:var(--overdue)}
+.dlg .dview{flex:1;min-height:0;overflow:auto;font-size:13px;line-height:1.8;color:var(--text);
+  padding:4px 0;white-space:pre-wrap;word-break:break-word}
+.dlg .detailrows{flex:none;border-top:1px solid var(--card-border);padding:10px 0 4px}
+.dlg .drow2{display:flex;gap:12px;padding:5px 0;font-size:12px}
+.dlg .drow2 .k{flex:none;width:60px;color:var(--faint)}
+.dlg .drow2 .v{color:var(--muted);font-variant-numeric:tabular-nums}
+.dlg .dview{flex:1;min-height:0;overflow:auto;font-size:13px;line-height:1.8;color:var(--text);
+  padding:4px 0;white-space:pre-wrap;word-break:break-word}
+.dlg .detailrows{flex:none;border-top:1px solid var(--card-border);padding:10px 0 4px}
+.dlg .drow2{display:flex;gap:12px;padding:5px 0;font-size:12px}
+.dlg .drow2 .k{flex:none;width:60px;color:var(--faint)}
+.dlg .drow2 .v{color:var(--muted);font-variant-numeric:tabular-nums}
 .dlg .dactions{flex:none;display:flex;align-items:center;gap:8px;padding:12px 20px 16px}
 .dlg .sp{margin-left:auto}
 .btn{height:32px;padding:0 14px;border-radius:6px;border:1px solid var(--card-border);background:var(--card);
@@ -353,7 +353,6 @@ body[data-theme="night"]{
 'use strict';
 const CHECK = '<svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const GRIP = '<svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>';
-const PENCIL = '<svg class="ic" viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>';
 const MAX_ITEMS = 10, MAX_TPL = 10, MAX_CHARS = 300;
 
 const state = {
@@ -458,8 +457,8 @@ function renderMain() {
   const tl = document.getElementById('tl');
   const p = pending(), dn = completed();
   let html = '';
-  // 批量态与正常态共用一套行模板：控件都保留，批量只是"屏蔽交互"——
-  // 点阵禁用（不可拖）、行尾勾选框禁用（不触发完成）、悬停 ✎ 不出现；行首勾选框只承担"选中"。
+  // 批量态与正常态共用一套行模板：批量=屏蔽交互——点阵禁用（不可拖）、
+  // 行尾勾选框变为"选中"（不触发完成）；✎ 编辑按钮已移除，编辑只走双击。
   const inBatch = state.batch.on;
   for (const it of p) {
     const picked = inBatch && state.batch.sel.has(it.id);
@@ -468,8 +467,8 @@ function renderMain() {
       '<span class="grip' + (inBatch ? ' disabled' : '') + '" title="' + (inBatch ? '批量中不可拖动' : '拖动排序') + '">' + GRIP + '</span>' +
       '<span class="tx" title="' + esc(it.text) + '">' + esc(it.text) + '</span>' +
       (pendingOverdue(it) ? '<span class="tag">逾期</span>' : '') +
-      (inBatch ? '' : '<button class="rowact" data-act="edit" title="编辑">' + PENCIL + '</button>') +
-      '<span class="cb' + (inBatch ? ' disabled' : '') + '" ' + (inBatch ? '' : 'data-act="complete" title="完成"') + '>' + CHECK + '</span>' +
+      '<span class="cb' + (inBatch ? ' selecting' : '') + '" data-act="' + (inBatch ? 'select' : 'complete') +
+      '" title="' + (inBatch ? (picked ? '取消选中' : '选中') : '完成') + '">' + CHECK + '</span>' +
       '</div>';
   }
   if (!p.length) {
@@ -488,7 +487,6 @@ function renderMain() {
       '<span class="node"><span class="dot solid"></span></span>' +
       '<span class="tx" title="' + esc(it.text) + '">' + esc(it.text) + '</span>' +
       (doneOverdue(it) ? '<span class="tag">逾期</span>' : '') +
-      '<button class="rowact" data-act="edit" title="编辑">' + PENCIL + '</button>' +
       '<span class="cb done" data-act="return" title="退回待办">' + CHECK + '</span>' +
       '</div>';
   }
@@ -524,9 +522,7 @@ function renderTpl() {
   for (const t of state.templates) {
     const picked = state.tplBatch.sel.has(t.id);
     html += '<div class="tplrow' + (picked ? ' picked' : '') + '" data-tid="' + t.id + '">' +
-      (state.tplBatch.on
-        ? '<span class="sel">' + CHECK + '</span>'
-        : '<button class="rowact" data-act="edit" title="编辑模板">' + PENCIL + '</button>') +
+      (state.tplBatch.on ? '<span class="sel">' + CHECK + '</span>' : '') +
       '<span class="tx" title="' + esc(t.text) + '">' + esc(t.text) + '</span>' +
       (state.tplBatch.on ? '' : '<button class="plus" data-act="apply" title="加入今日待办">' +
         '<svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>') +
@@ -678,8 +674,6 @@ document.getElementById('tl').addEventListener('click', e => {
     renderMain();
     return;
   }
-  if (state.batch.on && (e.target.closest('.grip.disabled') || e.target.closest('.cb.disabled'))) return;
-  if (act && act.dataset.act === 'edit') { openEditor({ mode: 'edit', item: it, target: 'todo' }); return; }
   if (act && act.dataset.act === 'complete') {
     it.completedAt = +nowDate();
     state.flashId = it.id;
@@ -696,8 +690,48 @@ document.getElementById('tl').addEventListener('dblclick', e => {
   const row = e.target.closest('.trow');
   if (!row || state.batch.on) return;
   const it = state.items.find(i => i.id === row.dataset.id);
-  if (it) openEditor({ mode: 'edit', item: it, target: 'todo' });
+  if (!it) return;
+  if (it.completedAt) return openDetail(it);   // 已完成=只读详情
+  openEditor({ mode: 'edit', item: it, target: 'todo' });
 });
+
+// 只读详情（已完成）：内容 / 创建时间 / 完成时间，均不可编辑；可退回
+function openDetail(it) {
+  const host = document.getElementById('modal');
+  const created = new Date(it.createdAt), doneAt = new Date(it.completedAt);
+  const od = doneOverdue(it);
+  host.innerHTML =
+    '<div class="dlg">' +
+      '<div class="dhead"><button class="backbtn" id="dBack" title="返回">' +
+        '<svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>' +
+        '<span class="dtitle">详情</span></div>' +
+      '<div class="dbody">' +
+        '<div class="state"><span class="badge' + (od ? ' od' : '') + '">' + (od ? '已逾期' : '已完成') +
+        '</span><span>创建于 ' + fmtDate(created) + ' ' + fmtHM(created) + '</span></div>' +
+        '<div class="dview">' + esc(it.text) + '</div>' +
+        '<div class="detailrows">' +
+          '<div class="drow2"><span class="k">创建时间</span><span class="v">' + fmtDate(created) + ' ' + fmtHM(created) + '</span></div>' +
+          '<div class="drow2"><span class="k">完成时间</span><span class="v">' + fmtDate(doneAt) + ' ' + fmtHM(doneAt) + '</span></div>' +
+        '</div>' +
+        '<div class="dactions"><span class="sp"></span>' +
+          '<button class="btn" id="dReturn">退回待办</button>' +
+          '<button class="btn primary" id="dClose">关闭</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  host.classList.add('on');
+  const mainRect = document.getElementById('mainWin').getBoundingClientRect();
+  const dlg = host.querySelector('.dlg');
+  dlg.style.left = Math.round(mainRect.left + (mainRect.width - 420) / 2) + 'px';
+  dlg.style.top = Math.round(mainRect.top + (mainRect.height - 560) / 2) + 'px';
+  const close = () => { host.classList.remove('on'); host.innerHTML = ''; };
+  document.getElementById('dBack').onclick = close;
+  document.getElementById('dClose').onclick = close;
+  document.getElementById('dReturn').onclick = () => {
+    it.completedAt = null; save(); renderAll(); close(); toast('已退回待办');
+  };
+  host.onclick = e => { if (e.target === host) close(); };
+}
 
 document.getElementById('btnAdd').onclick = () => {
   if (!canAdd()) return toast('已达上限（' + MAX_ITEMS + ' 条），先完成或删除一条');
@@ -750,7 +784,6 @@ document.getElementById('tplRows').addEventListener('click', e => {
     return;
   }
   const act = e.target.closest('[data-act]');
-  if (act && act.dataset.act === 'edit') { openEditor({ mode: 'edit', item: t, target: 'tpl' }); return; }
   if (act && act.dataset.act === 'apply') {
     if (!canAdd()) return toast('待办已达上限（' + MAX_ITEMS + ' 条）');
     state.items.push({ id: uid(), text: t.text, createdAt: +nowDate(), completedAt: null });
