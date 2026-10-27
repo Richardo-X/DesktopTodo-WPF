@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8">
+<title>桌面待办 · 交互原型 v4 · 时间线 6 版</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif;color:#e9edf2;
+  background:radial-gradient(1180px 760px at 78% 12%, rgba(126,151,173,.12), transparent 62%),
+    radial-gradient(920px 640px at 10% 88%, rgba(110,124,142,.10), transparent 60%),
+    linear-gradient(160deg,#0d1116,#141a21 55%,#0d1116);min-height:100%;padding:44px 40px 60px}
+h1{font-size:22px;letter-spacing:.6px;color:#f5f7fa}
+.sub{margin-top:7px;font-size:12.5px;line-height:1.9;color:rgba(233,237,242,.62);max-width:980px}
+.sub b{color:#e9edf2}
+.grid{margin-top:22px;display:flex;flex-direction:column;gap:12px;max-width:980px}
+.card{display:block;position:relative;text-decoration:none;color:inherit;border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;padding:14px 15px;background:rgba(255,255,255,.028);transition:background .15s,border-color .15s}
+.card:hover{background:rgba(255,255,255,.055);border-color:rgba(126,151,173,.45)}
+.top{display:flex;align-items:baseline;gap:8px}
+.num{font-size:11px;letter-spacing:1px;color:rgba(233,237,242,.46);border:1px solid rgba(255,255,255,.16);
+  border-radius:99px;padding:2px 8px}
+.nm{font-size:14px;font-weight:600;color:#f5f7fa}
+.go{margin-left:auto;font-size:11px;color:rgba(126,151,173,.95)}
+.desc{margin-top:8px;font-size:12px;line-height:1.75;color:rgba(233,237,242,.72)}
+.gram{margin-top:7px;font-size:11px;line-height:1.7;color:rgba(233,237,242,.45)}
+.note{margin-top:22px;max-width:980px;font-size:11.5px;line-height:1.85;color:rgba(233,237,242,.46)}
+.note b{color:rgba(233,237,242,.72)}
+</style></head>
+<body>
+<h1>时间线 6 版 · 以时间线概念为主</h1>
+<div class="sub">同一批数据、同一套"极简克制"令牌、同一套动作区（品牌＋五枚窗口图标 / 中部大号时钟＋日期 / 左柱 ⚡＋计数 / 右柱 批量删除＋新建，已完成不设开关；模板独立成窗），
+<b>只换时间线的表达语法</b>：已完成（有完成时刻）／现在／待办（无计划时刻）这三段信息，六种不同画法。</div>
+<div class="grid">
+<a class="card" href="T1-中轴双挂.html"><div class="top"><span class="num">T1</span><span class="nm">中轴双挂</span><span class="go">打开原型 →</span></div><div class="desc">一条中轴，待办挂左、已完成挂右</div><div class="gram">居中的一条竖轴，"现在"横断；上段＝待办区、下段＝已完成区。</div></a>
+<a class="card" href="T2-横轴24小时.html"><div class="top"><span class="num">T2</span><span class="nm">横轴 24 小时</span><span class="go">打开原型 →</span></div><div class="desc">顶部一条 24 小时带，完成时刻落成点</div><div class="gram">顶部横向 24 小时轴（0/6/12/18/24 刻度），"现在"＝虚线游标。</div></a>
+<a class="card" href="T3-时间卡片流.html"><div class="top"><span class="num">T3</span><span class="nm">时间卡片流</span><span class="go">打开原型 →</span></div><div class="desc">一件事一张卡，左列时间戳</div><div class="gram">没有画出来的轴线；用卡片之间的间距和"现在"虚线卡表达时间流。</div></a>
+<a class="card" href="T4-折叠时间带.html"><div class="top"><span class="num">T4</span><span class="nm">折叠时间带</span><span class="go">打开原型 →</span></div><div class="desc">已完成折成一条点串带，主区留给待办</div><div class="gram">已完成压缩成顶部一条点串带（点＝完成时刻，可展开），"现在"横线在待办下方。</div></a>
+<a class="card" href="T5-圆环日晷.html"><div class="top"><span class="num">T5</span><span class="nm">圆环日晷</span><span class="go">打开原型 →</span></div><div class="desc">24 小时一圈，完成时刻落在环上</div><div class="gram">24 小时圆环（顶＝0 点，顺时针一整圈），每 2 小时一个外圈刻度。</div></a>
+<a class="card" href="T6-今日进度条.html"><div class="top"><span class="num">T6</span><span class="nm">今日进度条</span><span class="go">打开原型 →</span></div><div class="desc">顶部一条今日进度，完成时刻打标</div><div class="gram">顶部横向进度条（占一天的比例），完成时刻打标，竖线＝现在。</div></a>
+</div>
+<div class="note"><b>怎么看</b>：每页可切白天/夜间；左栏写明该版的"轴 / 已完成 / 待办"各自怎么画，以及和别的版本差在哪。
+六版都是静态演示，不含业务逻辑——先选语法方向，再谈实现。<br>
+<b>共同前提</b>：待办没有计划时刻（数据模型里只有创建与完成时间），所以"待办"只出现在"现在"之后/下方的无时刻区；时间轴承载的是<b>完成时刻</b>与<b>现在</b>。</div>
+</body></html>
