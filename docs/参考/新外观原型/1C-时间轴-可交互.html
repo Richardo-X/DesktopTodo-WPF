@@ -135,6 +135,8 @@ body[data-theme="night"]{
 .dot{width:7px;height:7px;border-radius:50%}
 .dot.solid{background:var(--accent)}
 .trow .grip:active{cursor:grabbing}
+.trow .grip.disabled{cursor:not-allowed;opacity:.4}
+.trow .grip.disabled:active{cursor:not-allowed}
 .trow .grip svg{width:12px;height:12px}
 /* 待办行无时间列：内容从左侧起（已完成行仍带 HH:mm 时间列） */
 .trow .tx{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -154,6 +156,8 @@ body[data-theme="night"]{
 .cb:hover{border-color:var(--accent)}
 .cb svg{width:12px;height:12px}
 .cb.done{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.trow .cb.disabled{cursor:not-allowed;opacity:.4}
+.trow .cb.disabled:hover{border-color:var(--line)}
 .trow.done .tx{color:var(--muted)}
 .trow.done .tt{color:var(--faint)}
 .trow .sel{width:15px;height:15px;flex:none;border:1px solid var(--line);border-radius:4px;background:var(--card);
@@ -457,31 +461,25 @@ function renderMain() {
   const tl = document.getElementById('tl');
   const p = pending(), dn = completed();
   let html = '';
-  if (state.batch.on) {
-    for (const it of p) {
-      const picked = state.batch.sel.has(it.id);
-      html += '<div class="trow' + (picked ? ' picked' : '') + '" data-id="' + it.id + '" data-kind="p">' +
-        '<span class="sel">' + CHECK + '</span>' +
-        '<span class="tx" title="' + esc(it.text) + '">' + esc(it.text) + '</span>' +
-        (pendingOverdue(it) ? '<span class="tag">逾期</span>' : '') +
-        '</div>';
-    }
-    if (!p.length) {
-      html += '<div class="empty"><div class="a">没有可批量删除的待办</div><div class="b">点「返回」退出批量</div></div>';
-    }
-  } else {
-    for (const it of p) {
-      html += '<div class="trow' + (state.flashId === it.id ? ' flash' : '') + '" data-id="' + it.id + '" data-kind="p">' +
-        '<span class="grip" title="拖动排序">' + GRIP + '</span>' +
-        '<span class="tx" title="' + esc(it.text) + '">' + esc(it.text) + '</span>' +
-        (pendingOverdue(it) ? '<span class="tag">逾期</span>' : '') +
-        '<button class="rowact" data-act="edit" title="编辑">' + PENCIL + '</button>' +
-        '<span class="cb" data-act="complete" title="完成">' + CHECK + '</span>' +
-        '</div>';
-    }
-    if (!p.length) {
-      html += '<div class="empty"><div class="a">今天还没有待办</div><div class="b">点 ＋ 新建一条</div></div>';
-    }
+  // 批量态与正常态共用一套行模板：控件都保留，批量只是"屏蔽交互"——
+  // 点阵禁用（不可拖）、行尾勾选框禁用（不触发完成）、悬停 ✎ 不出现；行首勾选框只承担"选中"。
+  const inBatch = state.batch.on;
+  for (const it of p) {
+    const picked = inBatch && state.batch.sel.has(it.id);
+    html += '<div class="trow' + (picked ? ' picked' : '') + (state.flashId === it.id ? ' flash' : '') +
+      '" data-id="' + it.id + '" data-kind="p">' +
+      '<span class="grip' + (inBatch ? ' disabled' : '') + '" title="' + (inBatch ? '批量中不可拖动' : '拖动排序') + '">' + GRIP + '</span>' +
+      (inBatch ? '<span class="sel">' + CHECK + '</span>' : '') +
+      '<span class="tx" title="' + esc(it.text) + '">' + esc(it.text) + '</span>' +
+      (pendingOverdue(it) ? '<span class="tag">逾期</span>' : '') +
+      (inBatch ? '' : '<button class="rowact" data-act="edit" title="编辑">' + PENCIL + '</button>') +
+      '<span class="cb' + (inBatch ? ' disabled' : '') + '" ' + (inBatch ? '' : 'data-act="complete" title="完成"') + '>' + CHECK + '</span>' +
+      '</div>';
+  }
+  if (!p.length) {
+    html += inBatch
+      ? '<div class="empty"><div class="a">没有可批量删除的待办</div><div class="b">点「返回」退出批量</div></div>'
+      : '<div class="empty"><div class="a">今天还没有待办</div><div class="b">点 ＋ 新建一条</div></div>';
   }
   html += '<div class="doneblock">';
   html += '<div class="sect"><span class="t">已完成 · ' + dn.length + '</span><span class="l"></span></div>';
@@ -684,6 +682,7 @@ document.getElementById('tl').addEventListener('click', e => {
     renderMain();
     return;
   }
+  if (state.batch.on && (e.target.closest('.grip.disabled') || e.target.closest('.cb.disabled'))) return;
   if (act && act.dataset.act === 'edit') { openEditor({ mode: 'edit', item: it, target: 'todo' }); return; }
   if (act && act.dataset.act === 'complete') {
     it.completedAt = +nowDate();
