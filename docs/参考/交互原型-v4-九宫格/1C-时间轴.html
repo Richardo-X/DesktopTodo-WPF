@@ -8,7 +8,8 @@
 /* 交互原型 v4 · 九宫格 E1 · 风格一「极简克制」变体 1C：时间轴
    静态演示，无业务逻辑。令牌沿用 交互原型-v4-方向样板.html 的 body[data-dir="1"] 日/夜两套。
    形态：待办在上（空心点，还没落笔）、已完成在下（实心点，已经过去），中间以"现在"分隔；
-   五枚窗口图标收右上角，时间与日期缩到操作区右端小号。 */
+   顶区压成两行（品牌＋小号时间/日期＋五枚窗口图标 / 待办标签＋模板入口＋新建），
+   模板系统独立成窗（右侧 mock），由行2「模板」入口显隐。 */
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{
@@ -97,6 +98,20 @@ body[data-theme="night"]{
 .wicons{margin-left:auto;display:flex;align-items:center;gap:0}
 .wicons .ib{width:20px;height:20px}
 .wicons .ib svg{width:13.5px;height:13.5px}
+/* 时间/日期：收在品牌与窗口图标之间的小号灰字（1C：读时重心交给轴，顶行只留一行） */
+.head .meta{margin-left:auto;display:flex;align-items:baseline;gap:6px;padding:0 10px 0 0}
+.head .meta .t{font-size:13px;font-weight:var(--clock-weight);color:var(--muted);
+  font-variant-numeric:tabular-nums;letter-spacing:.4px}
+.head .meta .d{font-size:10px;color:var(--faint)}
+.head .wicons{margin-left:0}
+/* 待办分区标签（计数并入）+ 模板入口 */
+.actionbar .sectlabel{font-size:11px;letter-spacing:.6px;color:var(--muted);
+  font-variant-numeric:tabular-nums}
+.actionbar .sectlabel .num{color:var(--faint)}
+.ghost{font-size:11px;color:var(--muted);cursor:pointer;padding:3px 8px;border-radius:5px;
+  transition:background .15s,color .15s}
+.ghost:hover{background:var(--row-hover);color:var(--text)}
+.actionbar .ghost{margin-left:auto}
 
 /* 时间轴本体 */
 .tl{position:relative;padding:9px 14px 4px}
@@ -126,7 +141,8 @@ body[data-theme="night"]{
 .nowtick{width:9px;height:1px;background:var(--accent)}
 .nowline{flex:1;margin-left:9px;height:0;border-top:1px dashed var(--card-border)}
 /* 段落小标签 */
-.sect{padding:3px 0 2px;font-size:10px;letter-spacing:1px;color:var(--faint)}
+.sect{display:inline-block;position:relative;z-index:1;padding:3px 8px 2px 0;
+  font-size:10px;letter-spacing:1px;color:var(--faint);background:var(--card)}
 
 /* 底部：模板 2/10 + 批量删除 */
 .foot{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:9px 14px 11px;
@@ -146,6 +162,26 @@ body[data-theme="night"]{
 .fdel{margin-left:auto;flex:none;padding:3px 5px;border-radius:5px;font-size:10.5px;color:var(--faint);
   cursor:pointer;transition:background .15s,color .15s}
 .fdel:hover{background:var(--row-hover);color:var(--text)}
+
+/* ---------- 模板窗（独立成窗，由主窗「模板」入口显隐） ---------- */
+.tplvisual{width:280px}
+.tplwin{width:260px;background:var(--card);border:1px solid var(--card-border);
+  border-radius:var(--radius-win);box-shadow:var(--win-shadow);overflow:hidden;color:var(--text)}
+.tplwin .head{display:flex;align-items:center;gap:8px;padding:12px 12px 6px}
+.tplwin .brand{font-size:12.5px;font-weight:600;letter-spacing:.5px}
+.tplwin .cnt{margin-left:auto;font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+.tplwin .x{width:20px;height:20px;display:flex;align-items:center;justify-content:center;
+  color:var(--faint);border-radius:4px;margin-left:2px}
+.tplwin .x:hover{background:var(--row-hover);color:var(--text)}
+.tplwin .x svg{width:12px;height:12px}
+.tplrows{padding:0 8px 6px}
+.tplrow{display:flex;align-items:center;gap:8px;padding:7px 6px;border-radius:var(--radius-row)}
+.tplrow:hover{background:var(--row-hover)}
+.tplrow .tx{flex:1;min-width:0;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tplrow .plus{width:16px;height:16px}
+.tplrow .plus svg{width:9px;height:9px}
+.tplfoot{display:flex;align-items:center;gap:2px;padding:8px 10px 10px;border-top:1px solid var(--card-border)}
+.tplfoot .fdel{margin-left:auto}
 .mock-label{margin-top:10px;font-size:11px;letter-spacing:.6px;color:rgba(255,255,255,.42);text-align:center}
 .mock-sub{margin-top:5px;width:360px;font-size:10.5px;line-height:1.7;color:rgba(255,255,255,.38);
   text-align:center}
@@ -194,22 +230,22 @@ body[data-theme="night"]{
   <aside class="brief">
     <h1>风格一 · 极简克制</h1>
     <div class="sub">变体 1C · 时间轴</div>
-    <p class="tagline">让一天有一条骨架：左列一条竖直点线，<b>待办挂在上面</b>（空心点，还没落笔），<b>已完成收在下面</b>（实心点，已经过去），中间用"现在"分隔——先看还没做的，再看今天已经做完的。五枚窗口图标收在右上角，时间与日期缩成操作区右端的小号字，把读时的重心交给轴本身。</p>
+    <p class="tagline">让一天有一条骨架：左列一条竖直点线，<b>待办挂在上面</b>（空心点，还没落笔），<b>已完成收在下面</b>（实心点，已经过去），中间用"现在"分隔——先看还没做的，再看今天已经做完的。<b>模板系统独立成窗</b>，由行2「模板」入口显隐，不再占主窗高度；时间与日期缩成顶行的小号灰字，把读时的重心交给轴本身。</p>
     <div class="dials"><span class="dial">VARIANCE 4</span><span class="dial">MOTION 2</span><span class="dial">DENSITY 4</span></div>
     <div class="mech">
       <h3>三项机制 · 新旧对照</h3>
       <table>
         <tr><td>收纳</td><td>新：整组淡出后，屏顶只留一条<b>横向细线</b>（宽 48 × 高 3，贴着屏幕顶边、居中于组件原位）；平时几乎不可见，悬停变主题色并整组滑回。<br>只做 48px 一小段而不是整条屏幕边：比竖线好点中，同时不会"鼠标扫到屏幕顶部就误弹"（必须正好落在这段上才算碰到）。<br><span class="old">可改回旧版：贴顶缩成 160×12 白条（更宽、更显眼的横向白条）。</span></td></tr>
-        <tr><td>显隐</td><td>新：托盘三途径不变，另加 Esc 快速收纳（键盘向，不替代托盘）。<br><span class="old">可改回旧版：仅托盘三途径（× / 双击 / 右键）。</span></td></tr>
+        <tr><td>显隐</td><td>新：托盘三途径不变，另加 Esc 快速收纳（键盘向，不替代托盘）；<b>模板窗</b>由主窗行2「模板」入口独立显隐，与主窗显隐互不牵连。<br><span class="old">可改回旧版：仅托盘三途径；模板塞在主窗底部。</span></td></tr>
         <tr><td>质感</td><td>新：实心卡面；轴线、点、方框都用 1px 细线，彩度只留给实心点与勾选框。<br><span class="old">可改回旧版：半透明不模糊。</span></td></tr>
       </table>
     </div>
     <div class="mech">
       <h3>怎么用 · 添加待办与模板</h3>
       <table>
-        <tr><td>加待办</td><td>点操作区高亮的 ＋ → 弹出「新建待办」窗：输入 300 字内（带字数计数）→ 确认，新条进列表末尾；空内容不可确认。受上限约束（当前 3/10）。</td></tr>
-        <tr><td>从模板加</td><td>点底部胶囊右端的 ＋（如「写周报 ＋」）→ 内容原样加入待办末尾，模板保留；待办已满会先提示。</td></tr>
-        <tr><td>加模板</td><td>点底部「模板 · 2/10」这几个字 → 打开模板管理：＋ 新建模板（上限 10、同内容查重）、双击改文字、拖手柄排序、批量删除。</td></tr>
+        <tr><td>加待办</td><td>点行2 右端高亮的 ＋ → 弹出「新建待办」窗：输入 300 字内（带字数计数）→ 确认，新条进列表末尾；空内容不可确认。受上限约束（当前 5/10）。</td></tr>
+        <tr><td>从模板加</td><td>点行2「模板」→ 模板窗出现 → 点某行右端 ＋ → 内容原样加入待办末尾，模板保留；待办已满会先提示。</td></tr>
+        <tr><td>加模板</td><td>模板窗底部「＋ 新建模板」→ 输入（上限 10、同内容查重）→ 确认，落在末尾；双击行改文字，底部「批量删除」进多选。</td></tr>
       </table>
     </div>
     <div class="foot-note">二级窗（新建/编辑/设置/历史）沿用本风格令牌，本样板未展开。</div>
@@ -221,6 +257,8 @@ body[data-theme="night"]{
       <!-- 标题区：品牌 + 右上角五枚窗口图标 -->
       <div class="head">
         <span class="brand">桌面待办</span>
+        <!-- 小号时间/日期：顶行右端（品牌与窗口图标之间） -->
+        <span class="meta" title="时间随系统 12/24 制"><span class="t">14:32</span><span class="d">10月12日 星期一</span></span>
         <!-- 五枚窗口图标（主题/置顶/缩进锁/设置/关闭）收在右上角 -->
         <span class="wicons">
           <span class="ib" title="主题"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
@@ -231,20 +269,14 @@ body[data-theme="night"]{
         
         </span>
       </div>
+      <!-- 行2：待办分区标签（计数并入）＋ 右端「模板」入口（显隐模板窗）与「新建」 -->
       <div class="actionbar">
-<span class="ib" title="快捷添加（模板）"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>
-        <span class="ib" title="已完成"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M14.5 4v16"/><path d="M6.5 12.5l2 2 3.5-4.5"/></svg></span>
+        <span class="sectlabel">待办 · <span class="num">5/10</span></span>
+        <span class="ghost" title="显示 / 隐藏模板窗（独立成窗）">模板</span>
         <span class="ib primary" title="新建待办"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
-                <span class="cnt">3/10</span>
-        <!-- 小号时间与日期移到操作区右端 -->
-        <span class="clockbox">
-          <span class="t">14:32</span>
-          <span class="d">10月12日 星期一</span>
-        </span>
       </div>
       <!-- 时间轴：待办（空心点，还没落笔）在上 → 现在 → 已完成（实心点，已经过去）收在下面 -->
       <div class="tl">
-        <div class="sect">待办 · 5</div>
         <div class="trow">
           <span class="tt"></span><span class="node"><span class="dot hollow"></span></span>
           <span class="tx">写周报并发给部门同步<span class="tag">逾期</span></span>
@@ -291,16 +323,10 @@ body[data-theme="night"]{
           <span class="cb done"><svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
         </div>
       </div>
-      <!-- 底部：模板 2/10 + 批量删除 -->
-      <div class="foot">
-        <span class="flabel" title="打开模板管理：新建模板 / 编辑 / 拖动排序 / 批量删除">模板 · 2/10</span>
-        <span class="chip" title="点击右端 ＋ 把这条加入今日待办（模板保留）">每天站会前喝口水<span class="plus"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></span>
-        <span class="chip" title="点击右端 ＋ 把这条加入今日待办（模板保留）">写周报<span class="plus"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></span>
-        <span class="fdel">批量删除</span>
-      </div>
+      <!-- 模板系统已独立成窗（见右侧模板窗 mock），主窗不再保留模板区 -->
     </div>
     <div class="mock-label">1C 主窗 · 左列点线为轴，待办在上（空心）、已完成在下（实心）（静态演示）</div>
-    <div class="mock-sub">右上角五枚＝主题/置顶/缩进锁/设置/关闭；操作区三枚＝闪电（模板开关）、面板勾（已完成开关）、＋（新建待办），右端小号字＝时间与日期。</div>
+    <div class="mock-sub">行1＝品牌 ＋ 小号时间/日期 ＋ 五枚窗口图标（主题/置顶/缩进锁/设置/关闭）；行2＝「待办 · 5/10」＋「模板」入口（显隐模板窗）＋「＋ 新建待办」。已完成在本窗内分行，不再需要开关图标。</div>
 
     <!-- 收纳态示意 -->
     <div class="caprow">
@@ -319,6 +345,33 @@ body[data-theme="night"]{
         整组淡出后，屏顶只留一条<b>横向细线</b>（宽 48 × 高 3，沿屏幕顶边、居中于组件原位；常态近乎透明，只有仔细看才认得出）。鼠标碰到即弹出，悬停时细线变主题色作为回应。
       </div>
     </div>
+  </div>
+
+  <!-- ---------- 模板窗（独立成窗，显隐由主窗「模板」入口控制） ---------- -->
+  <div class="visual tplvisual">
+    <div class="tplwin">
+      <div class="head">
+        <span class="brand">模板</span>
+        <span class="cnt">2/10</span>
+        <span class="x" title="隐藏模板窗（主窗「模板」入口再次点击可再显示）"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+      </div>
+      <div class="tplrows">
+        <div class="tplrow" title="点右端 ＋ 加入今日待办（模板保留）；双击改文字">
+          <span class="tx">每天站会前喝口水</span>
+          <span class="plus"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+        </div>
+        <div class="tplrow" title="点右端 ＋ 加入今日待办（模板保留）；双击改文字">
+          <span class="tx">写周报</span>
+          <span class="plus"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+        </div>
+      </div>
+      <div class="tplfoot">
+        <span class="ghost">＋ 新建模板</span>
+        <span class="fdel">批量删除</span>
+      </div>
+    </div>
+    <div class="mock-label">模板窗 · 独立成窗</div>
+    <div class="mock-sub">由主窗行2 的「模板」入口显隐；点行右端 ＋ 加入今日待办（模板保留），双击改文字，上限 10、同内容查重。不再占主窗高度。</div>
   </div>
 </div>
 
