@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="day">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1C 时间轴 · 可交互原型（新外观）</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  --accent:#5b7a99;--accent-hover:#6d8cab;--accent-fg:#f6f8fa;--accent-soft:rgba(91,122,153,.15);
+  --text:#3a3f46;--muted:#6d737b;--faint:#9aa0a8;
+  --card:#f7f8f9;--card-border:rgba(30,35,42,.10);--row-hover:rgba(30,35,42,.045);
+  --chip:rgba(30,35,42,.055);--line:rgba(30,35,42,.22);--overdue:#b3403a;--done-time:#9aa0a8;
+  --radius-win:8px;--radius-row:6px;--win-shadow:0 6px 24px rgba(16,24,34,.16);
+  --clock-weight:450;--mask:rgba(13,17,22,.55);
+  font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif;
+  overflow:hidden;color:var(--text);
+  background:
+    radial-gradient(1180px 760px at 78% 12%, rgba(126,151,173,.12), transparent 62%),
+    radial-gradient(920px 640px at 10% 88%, rgba(110,124,142,.10), transparent 60%),
+    linear-gradient(160deg,#0d1116,#141a21 55%,#0d1116);
+}
+body[data-theme="night"]{
+  --accent:#7e97ad;--accent-hover:#92a9bd;--accent-fg:#10151b;--accent-soft:rgba(126,151,173,.20);
+  --text:#d9dde2;--muted:#9aa2ac;--faint:#767d86;
+  --card:#1d2127;--card-border:rgba(255,255,255,.08);--row-hover:rgba(255,255,255,.05);
+  --chip:rgba(255,255,255,.07);--line:rgba(255,255,255,.18);--overdue:#d4706a;--done-time:#767d86;
+  --win-shadow:0 6px 24px rgba(0,0,0,.45);--mask:rgba(0,0,0,.55);
+}
+.ic{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.chk{stroke-width:2.2}
+
+/* ---------- 原型工具条 ---------- */
+.pbar{position:fixed;top:0;left:0;right:0;height:38px;z-index:200;display:flex;align-items:center;gap:8px;
+  padding:0 14px;background:rgba(13,17,22,.9);border-bottom:1px solid rgba(255,255,255,.08);
+  font-size:12px;color:#cfd6e2}
+.pbar .b{font-weight:600;color:#eef3fa;letter-spacing:.3px}
+.pbar .sep{width:1px;height:16px;background:rgba(255,255,255,.14)}
+.pbar button{height:24px;padding:0 10px;border-radius:6px;border:1px solid rgba(255,255,255,.16);
+  background:transparent;color:#cfd6e2;font-size:11.5px;cursor:pointer;font-family:inherit}
+.pbar button:hover{background:rgba(255,255,255,.08);color:#f5f7fa}
+.pbar button.on{background:rgba(255,255,255,.14);border-color:transparent;color:#f5f7fa}
+.pbar .hint{margin-left:auto;font-size:11px;color:rgba(255,255,255,.42);white-space:nowrap}
+
+/* ---------- 桌面 + 组件簇 ---------- */
+.desk{position:absolute;inset:38px 0 0;display:flex;align-items:center;justify-content:center;
+  overflow:hidden}
+.cluster{display:flex;align-items:flex-start;gap:4px;transition:transform .28s cubic-bezier(.22,.61,.36,1)}
+.cluster.tucked{transform:translateY(-760px)}
+.win{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-win);
+  box-shadow:var(--win-shadow);color:var(--text);display:flex;flex-direction:column;overflow:hidden}
+.win.main{width:360px;height:640px}
+.win.tpl{width:260px;height:420px;display:none}
+.win.tpl.open{display:flex}
+
+/* 主窗：标题行 */
+.head{display:flex;align-items:center;gap:8px;padding:12px 14px 2px;flex:none}
+.tb{width:16px;height:16px;flex:none;border-radius:5px;background:var(--accent);color:var(--accent-fg);
+  display:flex;align-items:center;justify-content:center}
+.tb svg{width:11px;height:11px;stroke-width:2.4}
+.head .brand{font-size:12.5px;font-weight:600;letter-spacing:.5px}
+.wicons{margin-left:auto;display:flex;align-items:center}
+.ib{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--faint);
+  border-radius:5px;cursor:pointer;transition:background .15s,color .15s}
+.ib:hover{background:var(--row-hover);color:var(--text)}
+.ib svg{width:13.5px;height:13.5px}
+.ib.on{color:var(--accent)}
+
+/* 主窗：动作区（⚡+计数 | 时钟 | 批量删除+＋） */
+.topgrid{display:grid;grid-template-columns:1fr auto 1fr;align-items:start;padding:4px 12px 8px;flex:none}
+.col{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding-top:2px}
+.col.right{align-items:flex-end}
+.clockzone{display:flex;flex-direction:column;align-items:center;gap:1px;padding:0 8px}
+.bigclock{font-size:29px;font-weight:500;letter-spacing:.6px;font-variant-numeric:tabular-nums;line-height:1.15}
+.bigdate{font-size:10.5px;color:var(--faint);letter-spacing:.3px}
+.sidebtn{width:26px;height:26px;border:1px solid var(--card-border);border-radius:6px;background:var(--card);
+  display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;
+  transition:border-color .15s,color .15s,background .15s}
+.sidebtn:hover{border-color:var(--line);color:var(--text);background:var(--row-hover)}
+.sidebtn.on{border-color:var(--accent);color:var(--accent)}
+.sidebtn svg{width:14px;height:14px}
+.cntchip{font-size:10.5px;color:var(--faint);background:var(--chip);border-radius:999px;
+  padding:3px 8px;font-variant-numeric:tabular-nums}
+.cntchip.full{color:var(--accent);background:var(--accent-soft)}
+.endbtns{display:flex;align-items:center;gap:6px}
+.fdel{padding:4px 9px;border:1px solid var(--card-border);border-radius:6px;font-size:10.5px;
+  color:var(--muted);display:inline-flex;align-items:center;gap:5px;cursor:pointer;background:transparent;
+  font-family:inherit}
+.fdel:hover{background:var(--row-hover);color:var(--text)}
+.fdel svg{width:12px;height:12px}
+.addbtn{width:26px;height:26px;border-radius:6px;background:var(--accent);color:var(--accent-fg);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;border:none}
+.addbtn:hover{background:var(--accent-hover)}
+.addbtn svg{width:14px;height:14px;stroke-width:2.2}
+
+/* 批量条 */
+.batchbar{display:none;align-items:center;gap:8px;padding:0 14px 8px;flex:none}
+.batchbar.on{display:flex}
+.batchbar .n{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.batchbar .sp{margin-left:auto}
+.sbtn{padding:3px 9px;border:1px solid var(--card-border);border-radius:5px;background:transparent;
+  font-size:10.5px;color:var(--muted);cursor:pointer;font-family:inherit}
+.sbtn:hover{background:var(--row-hover);color:var(--text)}
+.sbtn:disabled{opacity:.45;cursor:default}
+.sbtn.danger{color:var(--overdue);border-color:rgba(179,64,58,.35)}
+
+/* 时间轴区 */
+.tl{flex:1;min-height:0;overflow:auto;padding:2px 14px 14px;position:relative}
+.tl::-webkit-scrollbar{width:8px}
+.tl::-webkit-scrollbar-thumb{background:var(--card-border);border-radius:99px}
+.trow{display:flex;align-items:center;gap:0;padding:7px 0;border-radius:var(--radius-row);cursor:default}
+.trow:hover{background:var(--row-hover)}
+.trow .grip{width:14px;flex:none;color:var(--faint);display:flex;align-items:center;justify-content:center;
+  cursor:grab}
+.trow .grip svg{width:12px;height:12px}
+.trow .tx{flex:1;min-width:0;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  padding:0 8px}
+.trow .tag{flex:none;font-size:10px;color:var(--overdue);padding-right:6px}
+.cb{width:16px;height:16px;flex:none;border:1px solid var(--line);border-radius:4px;background:var(--card);
+  display:flex;align-items:center;justify-content:center;color:transparent;cursor:pointer}
+.cb:hover{border-color:var(--accent)}
+.cb svg{width:12px;height:12px}
+.cb.done{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.trow.done .tx{color:var(--muted)}
+.trow .tt{flex:none;width:36px;font-size:10px;color:var(--done-time);font-variant-numeric:tabular-nums}
+.trow .sel{width:16px;height:16px;flex:none;border:1px solid var(--line);border-radius:4px;margin-right:8px;
+  display:flex;align-items:center;justify-content:center;color:transparent;cursor:pointer}
+.trow.picked{background:var(--accent-soft)}
+.trow.picked .sel{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.trow.picked .tx,.trow.picked .tt{color:var(--muted)}
+.nowrow{display:flex;align-items:center;gap:8px;padding:7px 0 5px}
+.nowrow .t{flex:none;width:36px;font-size:10px;color:var(--faint);text-align:right}
+.nowrow .tick{width:9px;height:1px;background:var(--accent);flex:none}
+.nowrow .line{flex:1;height:0;border-top:1px dashed var(--card-border)}
+.sect{display:flex;align-items:center;gap:8px;padding:4px 0 2px;position:relative;z-index:1}
+.sect .t{font-size:10px;letter-spacing:1px;color:var(--faint);background:var(--card);padding-right:6px}
+.sect .l{flex:1;height:1px;background:var(--card-border)}
+.empty{padding:26px 0 6px;text-align:center}
+.empty .a{font-size:12.5px;color:var(--muted)}
+.empty .b{margin-top:6px;font-size:10.5px;color:var(--faint)}
+.trow .drag-hint{display:none}
+.trow.dragging{opacity:.4}
+
+/* 模板窗 */
+.tplhead{display:flex;align-items:center;gap:8px;padding:12px 12px 6px;flex:none}
+.tplhead .brand{font-size:12.5px;font-weight:600;letter-spacing:.5px}
+.tplhead .cnt{margin-left:auto;font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+.tplrows{flex:1;min-height:0;overflow:auto;padding:0 8px 6px;position:relative}
+.tplrow{display:flex;align-items:center;gap:8px;padding:7px 6px;border-radius:var(--radius-row);cursor:default}
+.tplrow:hover{background:var(--row-hover)}
+.tplrow .tx{flex:1;min-width:0;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tplrow .plus{width:16px;height:16px;flex:none;border:1px solid var(--line);border-radius:4px;
+  display:flex;align-items:center;justify-content:center;color:var(--faint);cursor:pointer}
+.tplrow .plus:hover{border-color:var(--accent);color:var(--accent)}
+.tplrow .plus svg{width:9px;height:9px;stroke-width:2}
+.tplrow .sel{width:16px;height:16px;flex:none;border:1px solid var(--line);border-radius:4px;
+  display:flex;align-items:center;justify-content:center;color:transparent;cursor:pointer}
+.tplrow.picked{background:var(--accent-soft)}
+.tplrow.picked .sel{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.tplrow .sel svg{width:11px;height:11px}
+.tplfoot{display:flex;align-items:center;gap:2px;padding:8px 10px 10px;border-top:1px solid var(--card-border);flex:none}
+.ghost{font-size:11px;color:var(--muted);cursor:pointer;padding:3px 8px;border-radius:5px;border:none;
+  background:transparent;font-family:inherit}
+.ghost:hover{background:var(--row-hover);color:var(--text)}
+.tplfoot .sp{margin-left:auto}
+
+/* 收纳细线 */
+.strip{position:absolute;top:0;left:50%;transform:translate(-50%,-100%);width:48px;height:3px;
+  background:var(--accent);border-radius:0 0 2px 2px;cursor:pointer;z-index:60}
+.strip.on{transform:translate(-50%,0)}
+
+/* 二级窗（3:4 420×560） */
+.modal{position:fixed;inset:0;z-index:300;display:none;background:rgba(0,0,0,.18)}
+.modal.on{display:block}
+.dlg{position:absolute;width:420px;height:560px;background:var(--card);border:1px solid var(--card-border);
+  border-radius:10px;box-shadow:0 24px 56px -12px rgba(10,20,40,.5);display:flex;flex-direction:column;
+  overflow:hidden}
+.dlg .dhead{display:flex;align-items:center;height:36px;padding:0 12px;flex:none}
+.dlg .backbtn{width:34px;height:36px;display:flex;align-items:center;justify-content:center;
+  color:var(--muted);cursor:pointer;border:none;background:transparent;margin-left:-12px}
+.dlg .backbtn svg{width:13px;height:13px}
+.dlg .backbtn:hover{background:var(--row-hover);color:var(--text)}
+.dlg .dtitle{position:absolute;left:0;right:0;text-align:center;font-size:13px;font-weight:600;
+  pointer-events:none}
+.dlg .dbody{flex:1;min-height:0;display:flex;flex-direction:column;padding:4px 18px 0}
+.dlg .state{display:flex;gap:12px;align-items:baseline;font-size:10.5px;color:var(--muted);
+  padding:2px 0 8px;flex:none}
+.dlg .state .badge{color:var(--muted)}
+.dlg .state .badge.od{color:var(--overdue)}
+.dlg textarea{flex:1;min-height:0;width:100%;resize:none;border:none;outline:none;background:transparent;
+  color:var(--text);font-family:inherit;font-size:12.5px;line-height:1.9;padding:6px 0}
+.dlg .counter{flex:none;text-align:right;font-size:10.5px;color:var(--faint);padding:6px 0 0}
+.dlg .counter.near{color:var(--overdue)}
+.dlg .dactions{flex:none;display:flex;align-items:center;gap:8px;padding:12px 18px 16px}
+.dlg .sp{margin-left:auto}
+.btn{height:30px;padding:0 14px;border-radius:6px;border:1px solid var(--card-border);background:var(--card);
+  color:var(--text);font-size:12px;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--row-hover)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn.primary:disabled{opacity:.45;cursor:default;background:var(--accent)}
+.btn.sm{height:26px;font-size:11px;padding:0 10px}
+.btn.danger{color:var(--overdue);border-color:rgba(179,64,58,.35)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{background:var(--row-hover);color:var(--text)}
+
+/* 确认对话框 */
+.cmodal{position:fixed;inset:0;z-index:350;display:none;background:rgba(0,0,0,.28)}
+.cmodal.on{display:flex;align-items:center;justify-content:center}
+.cbox{width:340px;background:var(--card);border:1px solid var(--card-border);border-radius:10px;
+  box-shadow:0 24px 56px -12px rgba(10,20,40,.5);padding:18px 20px}
+.cbox .t{font-size:13.5px;font-weight:600}
+.cbox .b{margin-top:8px;font-size:12px;line-height:1.8;color:var(--muted);word-break:break-all}
+.cbox .acts{margin-top:16px;display:flex;justify-content:flex-end;gap:8px}
+
+/* toast */
+.toasts{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:400;display:flex;
+  flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:rgba(20,24,30,.92);color:#eef3fa;font-size:12px;padding:8px 14px;border-radius:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);animation:tin .18s ease-out}
+@keyframes tin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<div class="pbar">
+  <span class="b">1C 时间轴 · 可交互原型</span>
+  <span class="sep"></span>
+  <button id="btnTheme">夜间</button>
+  <button id="btnHour">24 小时制</button>
+  <button id="btnTuck">收纳示意</button>
+  <span class="sep"></span>
+  <button id="btnReset">重置演示数据</button>
+  <span class="hint">点 ＋ 新建 · 双击行编辑 · 点框完成 · ⚡ 模板窗 · 已完成点框退回 · 数据存本机 localStorage</span>
+</div>
+
+<div class="desk">
+  <div class="cluster" id="cluster">
+    <!-- 主窗 -->
+    <div class="win main" id="mainWin">
+      <div class="head">
+        <span class="tb"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+        <span class="brand">桌面待办</span>
+        <span class="wicons">
+          <span class="ib" title="切换日/夜主题" id="btnMoon"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+          <span class="ib" title="置顶（原型示意）"><svg class="ic" viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l1 7 3 3H5l3-3 1-7z"/></svg></span>
+          <span class="ib" title="缩进锁定（原型示意）"><svg class="ic" viewBox="0 0 24 24"><path d="M3 4h18"/><rect x="7" y="11.5" width="10" height="8" rx="1.6"/><path d="M9.6 11.5V9a2.4 2.4 0 0 1 4.8 0v2.5"/></svg></span>
+          <span class="ib" title="设置（后续批次）"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+          <span class="ib" title="收纳（示意）" id="btnHide"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+        </span>
+      </div>
+
+      <div class="topgrid">
+        <div class="col">
+          <span class="sidebtn" id="btnTpl" title="显示 / 隐藏模板窗"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>
+          <span class="cntchip" id="cnt">0/10</span>
+        </div>
+        <div class="clockzone">
+          <span class="bigclock" id="clock">--:--</span>
+          <span class="bigdate" id="date">--</span>
+        </div>
+        <div class="col right">
+          <div class="endbtns">
+            <button class="fdel" id="btnBatch"><svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>批量删除</button>
+            <button class="addbtn" id="btnAdd" title="新建待办"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="batchbar" id="batchbar">
+        <span class="n" id="batchCount">已选 0 项</span>
+        <span class="sp"></span>
+        <button class="sbtn" id="batchExit">返回</button>
+        <button class="sbtn danger" id="batchDel" disabled>删除所选</button>
+      </div>
+
+      <div class="tl" id="tl"></div>
+    </div>
+
+    <!-- 模板窗 -->
+    <div class="win tpl" id="tplWin">
+      <div class="tplhead">
+        <span class="brand">模板</span>
+        <span class="cnt" id="tplCnt">0/10</span>
+        <button class="ib" id="btnTplClose" title="收起模板窗" style="margin-left:2px"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <div class="tplrows" id="tplRows"></div>
+      <div class="tplfoot">
+        <button class="ghost" id="btnTplNew">＋ 新建模板</button>
+        <span class="sp"></span>
+        <button class="ghost" id="btnTplBatch">批量删除</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="strip" id="strip" title="鼠标碰到细线，整组滑回"></div>
+</div>
+
+<div class="modal" id="modal"></div>
+<div class="cmodal" id="cmodal"></div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+'use strict';
+const CHECK = '<svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const GRIP = '<svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>';
+const MAX_ITEMS = 10, MAX_TPL = 10, MAX_CHARS = 300;
+
+const state = {
+  theme: 'day', hour12: false,
+  items: [], templates: [],
+  tplOpen: false, tucked: false,
+  batch: { on: false, sel: new Set() },
+  tplBatch: { on: false, sel: new Set() },
+  drag: null,
+};
+
+/* ---------- 时间与工具 ---------- */
+const pad = n => String(n).padStart(2, '0');
+function nowDate() { return new Date(); }
+function localKey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function todayKey() { return localKey(nowDate()); }
+function fmtClock(d) {
+  if (!state.hour12) return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  const h24 = d.getHours(), h = h24 % 12 === 0 ? 12 : h24 % 12;
+  return h + ':' + pad(d.getMinutes()) + ' ' + (h24 < 12 ? 'AM' : 'PM');
+}
+function fmtHM(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function fmtDate(d) {
+  const wd = '日一二三四五六'[d.getDay()];
+  return (d.getMonth() + 1) + '月' + d.getDate() + '日 星期' + wd;
+}
+function uid() { return Math.random().toString(16).slice(2, 10); }
+function pendingOverdue(it) { return localKey(new Date(it.createdAt)) !== todayKey(); }
+function doneOverdue(it) {
+  return localKey(new Date(it.createdAt)) !== localKey(new Date(it.completedAt));
+}
+const pending = () => state.items.filter(i => !i.completedAt);
+const completed = () => state.items.filter(i => i.completedAt)
+  .sort((a, b) => a.completedAt - b.completedAt);
+
+/* ---------- 持久化 ---------- */
+const KEY = 'proto-1c-state-v1';
+function save() {
+  localStorage.setItem(KEY, JSON.stringify({
+    theme: state.theme, hour12: state.hour12,
+    items: state.items, templates: state.templates, tplOpen: state.tplOpen
+  }));
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    state.theme = d.theme === 'night' ? 'night' : 'day';
+    state.hour12 = !!d.hour12;
+    state.items = Array.isArray(d.items) ? d.items : [];
+    state.templates = Array.isArray(d.templates) ? d.templates : [];
+    state.tplOpen = !!d.tplOpen;
+    return true;
+  } catch (e) { return false; }
+}
+function seed() {
+  const now = new Date();
+  const at = (h, m) => { const d = new Date(now); d.setHours(h, m, 0, 0); return +d; };
+  const yest = (h, m) => { const d = new Date(now); d.setDate(d.getDate() - 1); d.setHours(h, m, 0, 0); return +d; };
+  state.items = [
+    { id: uid(), text: '写周报并发给部门同步', createdAt: yest(17, 20), completedAt: null },
+    { id: uid(), text: '整理下季度 OKR 草稿，拆成可执行的关键结果', createdAt: at(9, 10), completedAt: null },
+    { id: uid(), text: '买牛奶、鸡蛋和全麦面包', createdAt: at(9, 40), completedAt: null },
+    { id: uid(), text: '每天站会前喝口水', createdAt: at(9, 45), completedAt: null },
+    { id: uid(), text: '预约牙医复诊', createdAt: at(10, 5), completedAt: null },
+    { id: uid(), text: '整理桌面文件归档', createdAt: at(9, 0), completedAt: at(11, 48) },
+    { id: uid(), text: '回复合作方邮件', createdAt: at(9, 0), completedAt: at(13, 2) },
+    { id: uid(), text: '午前饮水打卡', createdAt: at(9, 0), completedAt: at(13, 15) },
+  ];
+  state.templates = [
+    { id: uid(), text: '每天站会前喝口水' },
+    { id: uid(), text: '写周报' },
+  ];
+  state.tplOpen = false;
+  state.theme = 'day'; state.hour12 = false;
+}
+
+/* ---------- toast / 确认 ---------- */
+function toast(msg) {
+  const host = document.getElementById('toasts');
+  const d = document.createElement('div');
+  d.className = 'toast'; d.textContent = msg;
+  host.appendChild(d);
+  setTimeout(() => d.remove(), 2200);
+}
+function confirmBox({ title, body, okText = '确定', danger = false, onOk }) {
+  const host = document.getElementById('cmodal');
+  host.innerHTML = '<div class="cbox"><div class="t">' + title + '</div>' +
+    (body ? '<div class="b">' + body + '</div>' : '') +
+    '<div class="acts"><button class="btn ghost" data-no>取消</button>' +
+    '<button class="btn ' + (danger ? 'danger' : 'primary') + '" data-yes>' + okText + '</button></div></div>';
+  host.classList.add('on');
+  host.querySelector('[data-no]').onclick = () => host.classList.remove('on');
+  host.querySelector('[data-yes]').onclick = () => { host.classList.remove('on'); onOk && onOk(); };
+  host.onclick = e => { if (e.target === host) host.classList.remove('on'); };
+}
+
+/* ---------- 渲染 ---------- */
+function renderClock() {
+  const d = nowDate();
+  document.getElementById('clock').textContent = fmtClock(d);
+  document.getElementById('date').textContent = fmtDate(d);
+}
+function renderMain() {
+  const tl = document.getElementById('tl');
+  const p = pending(), dn = completed();
+  let html = '';
+  if (state.batch.on) {
+    html += p.length ? '' : '';
+    for (const it of p) {
+      const picked = state.batch.sel.has(it.id);
+      html += '<div class="trow' + (picked ? ' picked' : '') + '" data-id="' + it.id + '" data-kind="p">' +
+        '<span class="sel">' + CHECK + '</span>' +
+        '<span class="tx">' + esc(it.text) + '</span>' +
+        (pendingOverdue(it) ? '<span class="tag">逾期</span>' : '') +
+        '</div>';
+    }
+  } else {
+    for (const it of p) {
+      html += '<div class="trow" data-id="' + it.id + '" data-kind="p">' +
+        '<span class="grip" title="拖动排序">' + GRIP + '</span>' +
+        '<span class="tx">' + esc(it.text) + '</span>' +
+        (pendingOverdue(it) ? '<span class="tag">逾期</span>' : '') +
+        '<span class="cb" data-act="complete" title="完成">' + CHECK + '</span>' +
+        '</div>';
+    }
+    if (!p.length) {
+      html += '<div class="empty"><div class="a">今天还没有待办</div><div class="b">点右侧 ＋ 新建一条</div></div>';
+    }
+  }
+  html += '<div class="nowrow"><span class="t">现在</span><span class="tick"></span><span class="line"></span></div>';
+  html += '<div class="sect"><span class="t">已完成 · ' + dn.length + '</span><span class="l"></span></div>';
+  if (!dn.length) {
+    html += '<div class="empty" style="padding:16px 0 6px"><div class="a" style="color:var(--faint)">今天还没有完成的事项</div></div>';
+  }
+  for (const it of dn) {
+    html += '<div class="trow done" data-id="' + it.id + '" data-kind="d">' +
+      '<span class="tt">' + fmtHM(new Date(it.completedAt)) + '</span>' +
+      '<span class="tx">' + esc(it.text) + '</span>' +
+      (doneOverdue(it) ? '<span class="tag">逾期</span>' : '') +
+      '<span class="cb done" data-act="return" title="退回待办">' + CHECK + '</span>' +
+      '</div>';
+  }
+  tl.innerHTML = html;
+
+  const cnt = document.getElementById('cnt');
+  cnt.textContent = p.length + '/' + MAX_ITEMS;
+  cnt.classList.toggle('full', p.length >= MAX_ITEMS);
+
+  document.getElementById('batchbar').classList.toggle('on', state.batch.on);
+  document.getElementById('batchCount').textContent = '已选 ' + state.batch.sel.size + ' 项';
+  document.getElementById('batchDel').disabled = state.batch.sel.size === 0;
+  document.getElementById('btnBatch').classList.toggle('on', state.batch.on);
+}
+function renderTpl() {
+  const win = document.getElementById('tplWin');
+  win.classList.toggle('open', state.tplOpen);
+  document.getElementById('btnTpl').classList.toggle('on', state.tplOpen);
+  document.getElementById('tplCnt').textContent = state.templates.length + '/' + MAX_TPL;
+  const rows = document.getElementById('tplRows');
+  let html = '';
+  if (!state.templates.length) {
+    html = '<div class="empty"><div class="a">还没有模板</div><div class="b">点下面 ＋ 新建模板</div></div>';
+  }
+  for (const t of state.templates) {
+    const picked = state.tplBatch.sel.has(t.id);
+    html += '<div class="tplrow' + (picked ? ' picked' : '') + '" data-tid="' + t.id + '">' +
+      (state.tplBatch.on ? '<span class="sel">' + CHECK + '</span>' : '') +
+      '<span class="tx">' + esc(t.text) + '</span>' +
+      (state.tplBatch.on ? '' : '<span class="plus" data-act="apply" title="加入今日待办">' +
+        '<svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>') +
+      '</div>';
+  }
+  rows.innerHTML = html;
+  document.getElementById('btnTplBatch').textContent = state.tplBatch.on
+    ? (state.tplBatch.sel.size ? '删除所选 (' + state.tplBatch.sel.size + ')' : '删除所选')
+    : '批量删除';
+}
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+function renderAll() { renderClock(); renderMain(); renderTpl(); }
+
+/* ---------- 待办操作 ---------- */
+function openEditor({ mode, item, target }) {
+  const host = document.getElementById('modal');
+  const isTpl = target === 'tpl';
+  const isEdit = mode === 'edit';
+  const title = isTpl ? (isEdit ? '编辑模板' : '新建模板') : (isEdit ? '编辑待办' : '新建待办');
+  const initText = item ? item.text : '';
+  const created = item && !isTpl ? new Date(item.createdAt) : null;
+  const od = item && !isTpl
+    ? (item.completedAt ? doneOverdue(item) : pendingOverdue(item))
+    : false;
+
+  host.innerHTML =
+    '<div class="dlg">' +
+      '<div class="dhead"><button class="backbtn" id="dBack" title="返回">' +
+        '<svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>' +
+        '<span class="dtitle">' + title + '</span></div>' +
+      '<div class="dbody">' +
+        (isEdit && !isTpl
+          ? '<div class="state"><span class="badge' + (od ? ' od' : '') + '">' +
+            (item.completedAt ? (od ? '已逾期' : '已完成') : (od ? '已逾期' : '进行中')) +
+            '</span><span>创建于 ' + fmtDate(created) + ' ' + fmtHM(created) + '</span></div>'
+          : '') +
+        '<textarea id="dText" maxlength="300" placeholder="' + (isTpl ? '模板内容（≤300 字）' : '写点什么（≤300 字）') + '"></textarea>' +
+        '<div class="counter" id="dCounter">0/300</div>' +
+        '<div class="dactions">' +
+          (isEdit ? '' : '<button class="btn ghost sm" id="dClear">清空</button>') +
+          (isEdit ? '<button class="btn ghost sm" id="dRestore">还原</button>' : '') +
+          (isEdit && !isTpl ? '<button class="btn ghost sm" id="dToTpl">添加到模板</button>' : '') +
+          (isEdit && !isTpl ? '<button class="btn sm danger" id="dDel">删除</button>' : '') +
+          (isEdit && isTpl ? '<button class="btn sm danger" id="dDelTpl">删除</button>' : '') +
+          '<span class="sp"></span>' +
+          '<button class="btn primary" id="dSave">' + (isEdit ? '保存' : (isTpl ? '新建模板' : '新建')) + '</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  host.classList.add('on');
+
+  const ta = document.getElementById('dText');
+  const counter = document.getElementById('dCounter');
+  const saveBtn = document.getElementById('dSave');
+  let dirty = false;
+
+  function sync() {
+    const len = ta.value.length;
+    counter.textContent = len + '/' + MAX_CHARS;
+    counter.classList.toggle('near', len > MAX_CHARS - 30);
+    saveBtn.disabled = ta.value.trim().length === 0 || len > MAX_CHARS;
+  }
+  ta.value = initText;
+  sync();
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+  ta.oninput = () => { dirty = ta.value !== initText; sync(); };
+
+  // 二级窗与主窗中心对齐
+  const mainRect = document.getElementById('mainWin').getBoundingClientRect();
+  const dlg = host.querySelector('.dlg');
+  dlg.style.left = Math.round(mainRect.left + (mainRect.width - 420) / 2) + 'px';
+  dlg.style.top = Math.round(mainRect.top + (mainRect.height - 560) / 2) + 'px';
+
+  const close = () => { host.classList.remove('on'); host.innerHTML = ''; };
+  function back() {
+    if (dirty && ta.value.trim() !== initText) {
+      confirmBox({
+        title: '有未保存的修改', body: '返回将丢失刚才的修改。', okText: '放弃修改',
+        onOk: close
+      });
+    } else close();
+  }
+  document.getElementById('dBack').onclick = back;
+
+  const restoreBtn = document.getElementById('dRestore');
+  if (restoreBtn) restoreBtn.onclick = () => { ta.value = initText; dirty = false; sync(); ta.focus(); };
+  const clearBtn = document.getElementById('dClear');
+  if (clearBtn) clearBtn.onclick = () => { ta.value = ''; dirty = true; sync(); ta.focus(); };
+
+  const toTpl = document.getElementById('dToTpl');
+  if (toTpl) toTpl.onclick = () => {
+    const text = ta.value.trim();
+    if (!text) return toast('内容为空，先写点什么');
+    if (state.templates.length >= MAX_TPL) return toast('模板已达上限（' + MAX_TPL + ' 条）');
+    if (state.templates.some(t => t.text === text && t.id !== (item && item.id))) return toast('已存在相同内容');
+    state.templates.push({ id: uid(), text });
+    save(); renderTpl();
+    toast('已添加到模板');
+  };
+
+  const del = document.getElementById('dDel');
+  if (del) del.onclick = () => confirmBox({
+    title: '删除这条待办？', body: esc(item.text), okText: '删除', danger: true,
+    onOk: () => {
+      state.items = state.items.filter(i => i.id !== item.id);
+      save(); renderAll(); close(); toast('已删除');
+    }
+  });
+  const delTpl = document.getElementById('dDelTpl');
+  if (delTpl) delTpl.onclick = () => confirmBox({
+    title: '删除这个模板？', body: esc(item.text), okText: '删除', danger: true,
+    onOk: () => {
+      state.templates = state.templates.filter(t => t.id !== item.id);
+      save(); renderTpl(); close(); toast('已删除模板');
+    }
+  });
+
+  saveBtn.onclick = () => {
+    const text = ta.value.trim();
+    if (!text) return;
+    if (text.length > MAX_CHARS) return toast('超过 300 字');
+    if (isTpl) {
+      if (state.templates.some(t => t.text === text && (!item || t.id !== item.id))) return toast('已存在相同内容');
+      if (isEdit) {
+        const t = state.templates.find(t => t.id === item.id);
+        if (t) t.text = text;
+      } else {
+        if (state.templates.length >= MAX_TPL) return toast('模板已达上限（' + MAX_TPL + ' 条）');
+        state.templates.push({ id: uid(), text });
+      }
+      save(); renderTpl(); close(); toast(isEdit ? '模板已保存' : '模板已新建');
+      return;
+    }
+    if (isEdit) {
+      const it = state.items.find(i => i.id === item.id);
+      if (it) it.text = text;
+      save(); renderAll(); close(); toast('已保存');
+    } else {
+      if (!canAdd()) return toast('已达上限（' + MAX_ITEMS + ' 条），先完成或删除一条');
+      state.items.push({ id: uid(), text, createdAt: +nowDate(), completedAt: null });
+      save(); renderAll(); close(); toast('已新建');
+    }
+  };
+  host.onclick = e => { if (e.target === host) back(); };
+}
+function canAdd() { return pending().length < MAX_ITEMS; }
+
+/* ---------- 事件：主窗 ---------- */
+document.getElementById('tl').addEventListener('click', e => {
+  const row = e.target.closest('.trow');
+  if (!row) return;
+  const id = row.dataset.id;
+  const kind = row.dataset.kind;
+  const it = state.items.find(i => i.id === id);
+  if (!it) return;
+  const act = e.target.closest('[data-act]');
+  if (state.batch.on) {
+    if (kind !== 'p') return;
+    if (state.batch.sel.has(id)) state.batch.sel.delete(id);
+    else state.batch.sel.add(id);
+    renderMain();
+    return;
+  }
+  if (act && act.dataset.act === 'complete') {
+    it.completedAt = +nowDate();
+    save(); renderAll();
+    toast('已完成');
+    return;
+  }
+  if (act && act.dataset.act === 'return') {
+    it.completedAt = null;
+    save(); renderAll();
+    toast('已退回待办');
+  }
+});
+document.getElementById('tl').addEventListener('dblclick', e => {
+  const row = e.target.closest('.trow');
+  if (!row || state.batch.on) return;
+  const it = state.items.find(i => i.id === row.dataset.id);
+  if (it) openEditor({ mode: 'edit', item: it, target: 'todo' });
+});
+
+document.getElementById('btnAdd').onclick = () => {
+  if (!canAdd()) return toast('已达上限（' + MAX_ITEMS + ' 条），先完成或删除一条');
+  openEditor({ mode: 'new', target: 'todo' });
+};
+document.getElementById('btnBatch').onclick = () => {
+  if (state.batch.on) {
+    state.batch.on = false; state.batch.sel.clear();
+  } else {
+    if (!pending().length) return toast('没有可批量删除的待办');
+    state.batch.on = true; state.batch.sel.clear();
+    state.tplBatch.on = false; state.tplBatch.sel.clear();
+  }
+  renderAll();
+};
+document.getElementById('batchExit').onclick = () => {
+  state.batch.on = false; state.batch.sel.clear(); renderAll();
+};
+document.getElementById('batchDel').onclick = () => {
+  const n = state.batch.sel.size;
+  if (!n) return;
+  confirmBox({
+    title: '删除所选 ' + n + ' 条待办？', body: '删除后不可恢复（演示数据可重置）。',
+    okText: '删除', danger: true,
+    onOk: () => {
+      state.items = state.items.filter(i => !state.batch.sel.has(i.id));
+      state.batch.on = false; state.batch.sel.clear();
+      save(); renderAll(); toast('已删除 ' + n + ' 条');
+    }
+  });
+};
+
+/* ---------- 事件：模板窗 ---------- */
+document.getElementById('btnTpl').onclick = () => { state.tplOpen = !state.tplOpen; save(); renderTpl(); };
+document.getElementById('btnTplClose').onclick = () => { state.tplOpen = false; save(); renderTpl(); };
+document.getElementById('btnTplNew').onclick = () => {
+  if (state.templates.length >= MAX_TPL) return toast('模板已达上限（' + MAX_TPL + ' 条）');
+  openEditor({ mode: 'new', target: 'tpl' });
+};
+document.getElementById('tplRows').addEventListener('click', e => {
+  const row = e.target.closest('.tplrow');
+  if (!row) return;
+  const t = state.templates.find(x => x.id === row.dataset.tid);
+  if (!t) return;
+  if (state.tplBatch.on) {
+    if (state.tplBatch.sel.has(t.id)) state.tplBatch.sel.delete(t.id);
+    else state.tplBatch.sel.add(t.id);
+    renderTpl();
+    return;
+  }
+  if (e.target.closest('[data-act="apply"]')) {
+    if (!canAdd()) return toast('待办已达上限（' + MAX_ITEMS + ' 条）');
+    state.items.push({ id: uid(), text: t.text, createdAt: +nowDate(), completedAt: null });
+    save(); renderAll(); toast('已加入今日待办');
+  }
+});
+document.getElementById('tplRows').addEventListener('dblclick', e => {
+  const row = e.target.closest('.tplrow');
+  if (!row || state.tplBatch.on) return;
+  const t = state.templates.find(x => x.id === row.dataset.tid);
+  if (t) openEditor({ mode: 'edit', item: t, target: 'tpl' });
+});
+document.getElementById('btnTplBatch').onclick = () => {
+  if (!state.templates.length) return toast('还没有模板');
+  if (state.tplBatch.on) {
+    const n = state.tplBatch.sel.size;
+    if (!n) { state.tplBatch.on = false; renderTpl(); return; }
+    confirmBox({
+      title: '删除所选 ' + n + ' 个模板？', body: '模板删除后不可恢复。', okText: '删除', danger: true,
+      onOk: () => {
+        state.templates = state.templates.filter(t => !state.tplBatch.sel.has(t.id));
+        state.tplBatch.on = false; state.tplBatch.sel.clear();
+        save(); renderTpl(); toast('已删除 ' + n + ' 个模板');
+      }
+    });
+  } else {
+    state.tplBatch.on = true; state.tplBatch.sel.clear(); renderTpl();
+  }
+};
+
+/* ---------- 主题 / 12-24 / 收纳 ---------- */
+function applyTheme() {
+  document.body.dataset.theme = state.theme;
+  document.getElementById('btnTheme').textContent = state.theme === 'day' ? '夜间' : '白天';
+  document.getElementById('btnMoon').classList.toggle('on', state.theme === 'night');
+}
+document.getElementById('btnTheme').onclick = () => {
+  state.theme = state.theme === 'day' ? 'night' : 'day'; applyTheme(); save();
+};
+document.getElementById('btnMoon').onclick = () => document.getElementById('btnTheme').click();
+
+document.getElementById('btnHour').onclick = function () {
+  state.hour12 = !state.hour12;
+  this.textContent = state.hour12 ? '12 小时制' : '24 小时制';
+  renderClock(); save();
+};
+
+function tuck(on) {
+  state.tucked = on;
+  document.getElementById('cluster').classList.toggle('tucked', on);
+  const strip = document.getElementById('strip');
+  if (on) setTimeout(() => strip.classList.add('on'), 260);
+  else strip.classList.remove('on');
+}
+document.getElementById('btnTuck').onclick = () => tuck(!state.tucked);
+document.getElementById('btnHide').onclick = () => tuck(true);
+document.getElementById('strip').onmouseenter = () => tuck(false);
+
+/* ---------- 拖动排序（原型级：拖动行换位） ---------- */
+document.getElementById('tl').addEventListener('mousedown', e => {
+  const grip = e.target.closest('.grip');
+  if (!grip || state.batch.on) return;
+  const row = grip.closest('.trow');
+  if (!row) return;
+  const p = pending();
+  const from = p.findIndex(i => i.id === row.dataset.id);
+  if (from < 0) return;
+  state.drag = { from, y: e.clientY };
+  row.classList.add('dragging');
+  const onMove = ev => {
+    const rows = Array.from(document.querySelectorAll('#tl .trow[data-kind="p"]'));
+    const idx = rows.findIndex(r => {
+      const b = r.getBoundingClientRect();
+      return ev.clientY < b.top + b.height / 2;
+    });
+    rows.forEach(r => r.classList.remove('dragging'));
+    row.classList.add('dragging');
+    state.drag.to = idx < 0 ? pending().length - 1 : idx;
+  };
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    const drag = state.drag;
+    row.classList.remove('dragging');
+    if (drag && drag.to != null && drag.to !== drag.from) {
+      const arr = pending().slice();
+      const item = arr.splice(drag.from, 1)[0];
+      arr.splice(Math.max(0, Math.min(drag.to, arr.length)), 0, item);
+      const comp = state.items.filter(i => i.completedAt).sort((a, b) => a.completedAt - b.completedAt);
+      state.items = arr.concat(comp);
+      save(); renderMain();
+    }
+    state.drag = null;
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+});
+
+/* ---------- 启动 ---------- */
+if (!load()) { seed(); save(); }
+applyTheme();
+document.getElementById('btnHour').textContent = state.hour12 ? '12 小时制' : '24 小时制';
+renderAll();
+setInterval(renderClock, 1000);
+document.getElementById('btnReset').onclick = () => confirmBox({
+  title: '重置演示数据？', body: '会清掉你在这里新建的所有待办与模板。', okText: '重置', danger: true,
+  onOk: () => { seed(); save(); state.batch.on = false; state.batch.sel.clear();
+    state.tplBatch.on = false; state.tplBatch.sel.clear(); tuck(false); applyTheme(); renderAll();
+    document.getElementById('btnHour').textContent = '24 小时制'; toast('已重置'); }
+});
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('modal');
+    if (modal.classList.contains('on')) return;
+    if (state.batch.on) { state.batch.on = false; state.batch.sel.clear(); renderAll(); return; }
+    if (state.tplBatch.on) { state.tplBatch.on = false; state.tplBatch.sel.clear(); renderTpl(); return; }
+    tuck(true);
+  }
+});
+</script>
+</body>
+</html>
