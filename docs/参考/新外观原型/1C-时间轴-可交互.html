@@ -105,11 +105,12 @@ body[data-theme="night"]{
 .addbtn svg{width:15px;height:15px;stroke-width:2.2}
 
 /* 批量条 */
-.batchbar{display:none;align-items:center;gap:8px;padding:0 16px 10px;flex:none}
+.batchbar{display:none;align-items:center;gap:8px;padding:2px 16px 12px;flex:none}
 .batchbar.on{display:flex}
-.batchbar .n{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.batchbar .n{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:18px}
+.batchbar .sbtn{height:24px}
 .batchbar .sp{margin-left:auto}
-.sbtn{padding:4px 10px;border:1px solid var(--card-border);border-radius:6px;background:transparent;
+.sbtn{padding:0 10px;border:1px solid var(--card-border);border-radius:6px;background:transparent;
   font-size:11px;color:var(--muted);cursor:pointer;font-family:inherit;transition:background .15s,color .15s}
 .sbtn:hover{background:var(--row-hover);color:var(--text)}
 .sbtn:active{transform:translateY(1px)}
@@ -296,8 +297,9 @@ body[data-theme="night"]{
           <span class="bigdate" id="date">--</span>
         </div>
 
-        <!-- 动作一行四件：计数 → 删除 ‖ 新建 → 模板窗；全部水平对齐 -->
-        <div class="actionzone">
+        <!-- 动作一行四件：计数 → 删除 ‖ 新建 → 模板窗；全部水平对齐。
+             批量态：本行整体让位给批量条（同一行几何，等高切换不跳动） -->
+        <div class="actionzone" id="actionzone">
           <span class="cntchip" id="cnt">0/10</span>
           <button class="sidebtn" id="btnBatch" title="批量删除待办" aria-label="批量删除待办">
             <svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
@@ -311,9 +313,9 @@ body[data-theme="night"]{
 
         <div class="batchbar" id="batchbar">
           <span class="n" id="batchCount">已选 0 项</span>
-          <button class="sbtn" id="batchAll">全选</button>
-          <span class="sp"></span>
           <button class="sbtn" id="batchExit">返回</button>
+          <span class="sp"></span>
+          <button class="sbtn" id="batchAll">全选</button>
           <button class="sbtn danger" id="batchDel" disabled>删除所选</button>
         </div>
 
@@ -505,6 +507,7 @@ function renderMain() {
   cnt.classList.toggle('full', p.length >= MAX_ITEMS);
 
   document.getElementById('batchbar').classList.toggle('on', state.batch.on);
+  document.getElementById('actionzone').style.display = state.batch.on ? 'none' : 'flex';
   document.getElementById('batchCount').textContent = '已选 ' + state.batch.sel.size + ' 项';
   document.getElementById('batchDel').disabled = state.batch.sel.size === 0;
   document.getElementById('batchAll').textContent =
