@@ -118,19 +118,20 @@ body[data-theme="night"]{
 
 /* ---------- 时间轴：轴 + 点（1C 的身份，必须保留） ---------- */
 .tl{flex:1;min-height:0;overflow:auto;padding:0 16px 16px;position:relative}
-.tl::before{content:"";position:absolute;left:57px;top:14px;bottom:18px;width:1px;background:var(--card-border)}
 .tl::-webkit-scrollbar{width:8px}
 .tl::-webkit-scrollbar-thumb{background:var(--card-border);border-radius:99px}
 .trow{display:flex;align-items:center;height:36px;border-radius:var(--radius-row);position:relative}
 .trow:hover{background:var(--row-hover)}
 .trow .tt{flex:none;width:34px;text-align:right;font-size:11px;color:var(--done-time);
   font-variant-numeric:tabular-nums;padding-right:8px}
-.trow .node{flex:none;width:15px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
-.dot{width:7px;height:7px;border-radius:50%}
-.dot.hollow{border:1px solid var(--line);background:var(--card)}
-.dot.solid{background:var(--accent)}
+.trow .grip{width:14px;flex:none;color:var(--faint);display:flex;align-items:center;justify-content:center;
+  cursor:grab}
+.trow .grip:active{cursor:grabbing}
+.trow .grip svg{width:12px;height:12px}
+/* 待办行无时间列：内容从左侧起（已完成行仍带 HH:mm 时间列） */
 .trow .tx{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  padding:0 8px 0 9px}
+  padding:0 8px 0 6px}
+.trow.done .tx{padding-left:9px}
 .trow .tag{flex:none;font-size:11px;color:var(--overdue);padding-right:8px}
 .trow .rowact{width:22px;height:22px;flex:none;border:none;background:transparent;color:var(--faint);
   border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;
@@ -148,20 +149,15 @@ body[data-theme="night"]{
 .trow.done .tx{color:var(--muted)}
 .trow.done .tt{color:var(--faint)}
 .trow .sel{width:15px;height:15px;flex:none;border:1px solid var(--line);border-radius:4px;background:var(--card);
-  display:flex;align-items:center;justify-content:center;color:transparent;cursor:pointer;position:relative}
+  display:flex;align-items:center;justify-content:center;color:transparent;cursor:pointer;position:relative;
+  margin:0 4px 0 0}
 .trow .sel::after{content:"";position:absolute;inset:-9px}
 .trow.picked{background:var(--accent-soft)}
 .trow.picked .sel{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
 .trow.picked .tx,.trow.picked .tt{color:var(--muted)}
 .trow.flash{animation:flash .9s ease-out}
 @keyframes flash{0%{background:var(--accent-soft)}100%{background:transparent}}
-.nowrow{display:flex;align-items:center;height:30px}
-.nowrow .t{flex:none;width:34px;text-align:right;padding-right:8px;font-size:10px;color:var(--faint);
-  letter-spacing:.5px}
-.nowrow .node{flex:none;width:15px;display:flex;align-items:center;justify-content:center}
-.nowrow .tick{width:11px;height:1px;background:var(--accent)}
-.nowrow .line{flex:1;height:0;border-top:1px dashed var(--card-border);margin-left:9px;margin-right:16px}
-.sect{display:flex;align-items:center;gap:8px;height:26px;position:relative;z-index:1}
+.sect{display:flex;align-items:center;gap:8px;height:34px;margin-top:6px;position:relative;z-index:1}
 .sect .t{font-size:10px;letter-spacing:1px;color:var(--faint);background:var(--card);padding-right:8px}
 .sect .l{flex:1;height:1px;background:var(--card-border)}
 .tl.dimdone .sect,.tl.dimdone .trow.done{opacity:.4;pointer-events:none}
@@ -459,8 +455,7 @@ function renderMain() {
     for (const it of p) {
       const picked = state.batch.sel.has(it.id);
       html += '<div class="trow' + (picked ? ' picked' : '') + '" data-id="' + it.id + '" data-kind="p">' +
-        '<span class="tt"></span>' +
-        '<span class="node"><span class="sel">' + CHECK + '</span></span>' +
+        '<span class="sel">' + CHECK + '</span>' +
         '<span class="tx" title="' + esc(it.text) + '">' + esc(it.text) + '</span>' +
         (pendingOverdue(it) ? '<span class="tag">逾期</span>' : '') +
         '</div>';
@@ -471,8 +466,7 @@ function renderMain() {
   } else {
     for (const it of p) {
       html += '<div class="trow' + (state.flashId === it.id ? ' flash' : '') + '" data-id="' + it.id + '" data-kind="p">' +
-        '<span class="tt"></span>' +
-        '<span class="node"><span class="dot hollow"></span></span>' +
+        '<span class="grip" title="拖动排序">' + GRIP + '</span>' +
         '<span class="tx" title="' + esc(it.text) + '">' + esc(it.text) + '</span>' +
         (pendingOverdue(it) ? '<span class="tag">逾期</span>' : '') +
         '<button class="rowact" data-act="edit" title="编辑">' + PENCIL + '</button>' +
@@ -480,10 +474,9 @@ function renderMain() {
         '</div>';
     }
     if (!p.length) {
-      html += '<div class="empty"><div class="a">今天还没有待办</div><div class="b">点右上角 ＋ 新建一条</div></div>';
+      html += '<div class="empty"><div class="a">今天还没有待办</div><div class="b">点 ＋ 新建一条</div></div>';
     }
   }
-  html += '<div class="nowrow"><span class="t">现在</span><span class="node"><span class="tick"></span></span><span class="line"></span></div>';
   html += '<div class="sect"><span class="t">已完成 · ' + dn.length + '</span><span class="l"></span></div>';
   if (!dn.length) {
     html += '<div class="empty" style="padding:16px 0 4px"><div class="a" style="color:var(--faint)">今天还没有完成的事项</div></div>';
@@ -491,7 +484,6 @@ function renderMain() {
   for (const it of dn) {
     html += '<div class="trow done' + (state.flashId === it.id ? ' flash' : '') + '" data-id="' + it.id + '" data-kind="d">' +
       '<span class="tt">' + fmtHM(new Date(it.completedAt)) + '</span>' +
-      '<span class="node"><span class="dot solid"></span></span>' +
       '<span class="tx" title="' + esc(it.text) + '">' + esc(it.text) + '</span>' +
       (doneOverdue(it) ? '<span class="tag">逾期</span>' : '') +
       '<button class="rowact" data-act="edit" title="编辑">' + PENCIL + '</button>' +
