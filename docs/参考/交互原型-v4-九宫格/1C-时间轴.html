@@ -7,7 +7,8 @@
 <style>
 /* 交互原型 v4 · 九宫格 E1 · 风格一「极简克制」变体 1C：时间轴
    静态演示，无业务逻辑。令牌沿用 交互原型-v4-方向样板.html 的 body[data-dir="1"] 日/夜两套。
-   形态：左列竖直点线，已过时刻为实心点、未到为空心点；五枚窗口图标收右上角，时间与日期缩到操作区右端小号。 */
+   形态：待办在上（空心点，还没落笔）、已完成在下（实心点，已经过去），中间以"现在"分隔；
+   五枚窗口图标收右上角，时间与日期缩到操作区右端小号。 */
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{
@@ -193,7 +194,7 @@ body[data-theme="night"]{
   <aside class="brief">
     <h1>风格一 · 极简克制</h1>
     <div class="sub">变体 1C · 时间轴</div>
-    <p class="tagline">让一天有一条骨架：左列一条竖直点线，已过的时刻是实心点，未到的还是空心点，事项按时间挂在这条轴右侧。五枚窗口图标收在右上角，时间与日期缩成操作区右端的小号字，把读时的重心交给轴本身，视线自上而下就是一天从早到晚的流程。</p>
+    <p class="tagline">让一天有一条骨架：左列一条竖直点线，<b>待办挂在上面</b>（空心点，还没落笔），<b>已完成收在下面</b>（实心点，已经过去），中间用"现在"分隔——先看还没做的，再看今天已经做完的。五枚窗口图标收在右上角，时间与日期缩成操作区右端的小号字，把读时的重心交给轴本身。</p>
     <div class="dials"><span class="dial">VARIANCE 4</span><span class="dial">MOTION 2</span><span class="dial">DENSITY 4</span></div>
     <div class="mech">
       <h3>三项机制 · 新旧对照</h3>
@@ -241,28 +242,8 @@ body[data-theme="night"]{
           <span class="d">10月12日 星期一</span>
         </span>
       </div>
-      <!-- 时间轴：已过（实心点）→ 现在 → 未到（空心点） -->
+      <!-- 时间轴：待办（空心点，还没落笔）在上 → 现在 → 已完成（实心点，已经过去）收在下面 -->
       <div class="tl">
-        <div class="sect">已完成 · 3</div>
-        <div class="trow done">
-          <span class="tt">11:48</span><span class="node"><span class="dot solid"></span></span>
-          <span class="tx">整理桌面文件归档</span>
-          <span class="cb done"><svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
-        </div>
-        <div class="trow done">
-          <span class="tt">13:02</span><span class="node"><span class="dot solid"></span></span>
-          <span class="tx">回复合作方邮件</span>
-          <span class="cb done"><svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
-        </div>
-        <div class="trow done">
-          <span class="tt">13:15</span><span class="node"><span class="dot solid"></span></span>
-          <span class="tx">午前饮水打卡</span>
-          <span class="cb done"><svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
-        </div>
-        <div class="nowrow">
-          <span class="tt">现在</span><span class="node"><span class="nowtick"></span></span>
-          <span class="nowline"></span>
-        </div>
         <div class="sect">待办 · 5</div>
         <div class="trow">
           <span class="tt"></span><span class="node"><span class="dot hollow"></span></span>
@@ -289,6 +270,26 @@ body[data-theme="night"]{
           <span class="tx">预约牙医复诊</span>
           <span class="cb"></span>
         </div>
+        <div class="nowrow">
+          <span class="tt">现在</span><span class="node"><span class="nowtick"></span></span>
+          <span class="nowline"></span>
+        </div>
+        <div class="sect">已完成 · 3</div>
+        <div class="trow done">
+          <span class="tt">11:48</span><span class="node"><span class="dot solid"></span></span>
+          <span class="tx">整理桌面文件归档</span>
+          <span class="cb done"><svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+        </div>
+        <div class="trow done">
+          <span class="tt">13:02</span><span class="node"><span class="dot solid"></span></span>
+          <span class="tx">回复合作方邮件</span>
+          <span class="cb done"><svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+        </div>
+        <div class="trow done">
+          <span class="tt">13:15</span><span class="node"><span class="dot solid"></span></span>
+          <span class="tx">午前饮水打卡</span>
+          <span class="cb done"><svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+        </div>
       </div>
       <!-- 底部：模板 2/10 + 批量删除 -->
       <div class="foot">
@@ -298,7 +299,7 @@ body[data-theme="night"]{
         <span class="fdel">批量删除</span>
       </div>
     </div>
-    <div class="mock-label">1C 主窗 · 左列点线为轴，已过实心、未到空心（静态演示）</div>
+    <div class="mock-label">1C 主窗 · 左列点线为轴，待办在上（空心）、已完成在下（实心）（静态演示）</div>
     <div class="mock-sub">右上角五枚＝主题/置顶/缩进锁/设置/关闭；操作区三枚＝闪电（模板开关）、面板勾（已完成开关）、＋（新建待办），右端小号字＝时间与日期。</div>
 
     <!-- 收纳态示意 -->
