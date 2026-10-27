@@ -126,6 +126,13 @@ body[data-theme="night"]{
   font-variant-numeric:tabular-nums;padding-right:8px}
 .trow .grip{width:14px;flex:none;color:var(--faint);display:flex;align-items:center;justify-content:center;
   cursor:grab}
+/* 已完成段＝带时间轴的时间流；待办段＝无轴清单 */
+.doneblock{position:relative}
+.doneblock::before{content:"";position:absolute;left:42px;top:52px;bottom:18px;width:1px;
+  background:var(--card-border)}
+.trow .node{flex:none;width:16px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot.solid{background:var(--accent)}
 .trow .grip:active{cursor:grabbing}
 .trow .grip svg{width:12px;height:12px}
 /* 待办行无时间列：内容从左侧起（已完成行仍带 HH:mm 时间列） */
@@ -477,6 +484,7 @@ function renderMain() {
       html += '<div class="empty"><div class="a">今天还没有待办</div><div class="b">点 ＋ 新建一条</div></div>';
     }
   }
+  html += '<div class="doneblock">';
   html += '<div class="sect"><span class="t">已完成 · ' + dn.length + '</span><span class="l"></span></div>';
   if (!dn.length) {
     html += '<div class="empty" style="padding:16px 0 4px"><div class="a" style="color:var(--faint)">今天还没有完成的事项</div></div>';
@@ -484,12 +492,14 @@ function renderMain() {
   for (const it of dn) {
     html += '<div class="trow done' + (state.flashId === it.id ? ' flash' : '') + '" data-id="' + it.id + '" data-kind="d">' +
       '<span class="tt">' + fmtHM(new Date(it.completedAt)) + '</span>' +
+      '<span class="node"><span class="dot solid"></span></span>' +
       '<span class="tx" title="' + esc(it.text) + '">' + esc(it.text) + '</span>' +
       (doneOverdue(it) ? '<span class="tag">逾期</span>' : '') +
       '<button class="rowact" data-act="edit" title="编辑">' + PENCIL + '</button>' +
       '<span class="cb done" data-act="return" title="退回待办">' + CHECK + '</span>' +
       '</div>';
   }
+  html += '</div>';
   tl.innerHTML = html;
   tl.classList.toggle('dimdone', state.batch.on);
 
