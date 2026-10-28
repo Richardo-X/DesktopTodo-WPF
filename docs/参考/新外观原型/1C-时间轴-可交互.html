@@ -53,13 +53,27 @@ body[data-theme="night"]{
 /* ---------- 桌面：主窗固定，模板窗向右展开不挤动主窗 ---------- */
 .desk{position:absolute;inset:38px 0 0;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .anchor{transition:transform .28s cubic-bezier(.22,.61,.36,1)}
-.anchor.tucked{transform:translateY(-760px)}
+.anchor.tucked{transform:translateY(var(--tuck-offset,-760px))}
 .cluster{position:relative;display:flex;align-items:flex-start}
 .win{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-win);
   box-shadow:var(--win-shadow);color:var(--text);display:flex;flex-direction:column;overflow:hidden}
-.win.main{width:360px;height:640px}
-.win.tpl{position:absolute;left:calc(100% + 4px);top:0;width:260px;height:auto;max-height:640px;display:none}
+/* 主窗缩放：transform 不进布局（锚点/居中基准仍是 360×640 布局盒），视觉向右下生长；
+   模板窗左缘 = 主窗视觉右缘 + 固定 4px（缝隙不随缩放）。 */
+.win.main{width:360px;height:640px;position:relative;
+  transform:scale(var(--main-scale,1));transform-origin:top left}
+.win.tpl{position:absolute;left:calc(360px * var(--main-scale,1) + 4px);top:0;width:260px;
+  height:auto;max-height:640px;display:none;
+  transform:scale(var(--main-scale,1));transform-origin:top left}
 .win.tpl.open{display:flex}
+
+/* 右下缩放手柄（主窗 / 二级窗共用）：16px 视觉尺寸 + 20px 命中区 */
+.resize-grip{position:absolute;right:2px;bottom:2px;width:16px;height:16px;z-index:60;
+  cursor:nwse-resize;touch-action:none;opacity:.55;transition:opacity .15s;border-radius:4px}
+.resize-grip::before{content:"";position:absolute;right:0;bottom:0;width:10px;height:10px;
+  border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+  border-bottom-right-radius:8px}
+.resize-grip::after{content:"";position:absolute;inset:-2px}
+.resize-grip:hover{opacity:.9}
 
 /* 标题行 */
 .head{display:flex;align-items:center;gap:8px;padding:12px 16px 4px;flex:none}
@@ -120,7 +134,7 @@ body[data-theme="night"]{
 .sbtn.danger{color:var(--overdue);border-color:rgba(168,58,52,.4)}
 
 /* ---------- 时间轴：轴 + 点（1C 的身份，必须保留） ---------- */
-.tl{flex:1;min-height:0;overflow:auto;padding:0 16px 16px;position:relative}
+.tl{flex:1;min-height:0;overflow:auto;padding:0 16px 26px;position:relative}
 .tl::-webkit-scrollbar{width:8px}
 .tl::-webkit-scrollbar-thumb{background:var(--card-border);border-radius:99px}
 .trow{display:flex;align-items:center;height:36px;border-radius:var(--radius-row);position:relative}
@@ -415,6 +429,7 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
         </div>
 
         <div class="tl" id="tl"></div>
+        <span class="resize-grip" id="mainGrip" title="拖动缩放（主窗与模板窗联动）"></span>
       </div>
 
       <!-- 模板窗 -->
@@ -452,11 +467,14 @@ const GRIP = '<svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/
 const SORT_ASC = '<svg class="ic" viewBox="0 0 24 24"><path d="M7 20V6M7 6l-3 3M7 6l3 3"/><path d="M13 5h8M13 10h6M13 15h4"/></svg>';
 const SORT_DESC = '<svg class="ic" viewBox="0 0 24 24"><path d="M7 4v14M7 18l-3-3M7 18l3-3"/><path d="M13 5h8M13 10h6M13 15h4"/></svg>';
 const BACK = '<svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
+const DIALOG_GRIP = '<span class="resize-grip" data-grip="dlg" title="拖动缩放（本组独立）"></span>';
 const MAX_ITEMS_CAP = 10, MAX_TPL = 10, MAX_CHARS = 300;
+const MAIN_MIN = 0.7, MAIN_MAX = 1.15, CHILD_MIN = 0.7, CHILD_MAX = 1.2;
 
 const state = {
   theme: 'day', hour12: false,
   maxItems: MAX_ITEMS_CAP, autoStart: false, doneSort: 'asc',
+  mainScale: 1, childScales: { edit: 1, detail: 1, settings: 1, history: 1 },
   items: [], archive: {}, templates: [],
   tplOpen: false, tucked: false,
   batch: { on: false, sel: new Set() },
@@ -479,6 +497,14 @@ const keyDate = k => new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, +k.slice(8, 10
 const shiftKey = (k, delta) => { const d = keyDate(k); d.setDate(d.getDate() + delta); return localKey(d); };
 const yesterdayKey = () => shiftKey(todayKey(), -1);
 const fmtStamp = d => localKey(d) + ' ' + fmtHM(d);
+const clampNum = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const clampMainScale = v => clampNum(Number(v) || 1, MAIN_MIN, MAIN_MAX);
+const clampChildScale = v => clampNum(Number(v) || 1, CHILD_MIN, CHILD_MAX);
+function applyMainScale() {
+  document.documentElement.style.setProperty('--main-scale', state.mainScale);
+  // 收纳时整组完全离屏：按放大后的视觉高度留足余量
+  document.documentElement.style.setProperty('--tuck-offset', -(640 * state.mainScale + 960) + 'px');
+}
 const uid = () => Math.random().toString(16).slice(2, 10);
 const pendingOverdue = it => localKey(new Date(it.createdAt)) !== todayKey();
 const doneOverdue = it => localKey(new Date(it.createdAt)) !== localKey(new Date(it.completedAt));
@@ -496,6 +522,7 @@ function save() {
   localStorage.setItem(KEY, JSON.stringify({
     theme: state.theme, hour12: state.hour12,
     maxItems: state.maxItems, autoStart: state.autoStart, doneSort: state.doneSort,
+    mainScale: state.mainScale, childScales: state.childScales,
     items: state.items, archive: state.archive, templates: state.templates, tplOpen: state.tplOpen,
     lastSettleDate: state.lastSettleDate
   }));
@@ -513,6 +540,12 @@ function load() {
     state.maxItems = Math.min(MAX_ITEMS_CAP, Math.max(1, Number(d.maxItems) || MAX_ITEMS_CAP));
     state.autoStart = !!d.autoStart;
     state.doneSort = d.doneSort === 'desc' ? 'desc' : 'asc';
+    state.mainScale = clampMainScale(d.mainScale);
+    const cs = d.childScales && typeof d.childScales === 'object' ? d.childScales : {};
+    state.childScales = {
+      edit: clampChildScale(cs.edit), detail: clampChildScale(cs.detail),
+      settings: clampChildScale(cs.settings), history: clampChildScale(cs.history)
+    };
     state.archive = {};
     if (d.archive && typeof d.archive === 'object') {
       for (const k of Object.keys(d.archive)) {
@@ -558,6 +591,7 @@ function seed() {
   ];
   state.tplOpen = false; state.theme = 'day'; state.hour12 = false;
   state.maxItems = MAX_ITEMS_CAP; state.autoStart = false; state.doneSort = 'asc';
+  state.mainScale = 1; state.childScales = { edit: 1, detail: 1, settings: 1, history: 1 };
   state.lastSettleDate = todayKey();
 }
 
@@ -790,6 +824,7 @@ function openEditor({ mode, item, target }) {
           '<button class="btn primary" id="dSave">' + (isEdit ? '保存' : (isTpl ? '新建模板' : '新建')) + '</button>' +
         '</div>' +
       '</div>' +
+      DIALOG_GRIP +
     '</div>';
   host.classList.add('on');
 
@@ -808,7 +843,8 @@ function openEditor({ mode, item, target }) {
   ta.setSelectionRange(ta.value.length, ta.value.length);
   ta.oninput = () => { dirty = ta.value !== initText; sync(); };
 
-  centerDialog(host);
+  centerDialog(host, 'edit');
+  wireDialogGrip(host);
 
   const close = () => { host.classList.remove('on'); host.innerHTML = ''; };
   function back() {
@@ -946,9 +982,11 @@ function openDetail(it, opts = {}) {
           '<button class="btn primary" id="dClose">关闭</button>' +
         '</div>' +
       '</div>' +
+      DIALOG_GRIP +
     '</div>';
   host.classList.add('on');
-  centerDialog(host);
+  centerDialog(host, 'detail');
+  wireDialogGrip(host);
   const close = () => {
     host.classList.remove('on'); host.innerHTML = '';
     if (onClose) onClose();
@@ -964,11 +1002,55 @@ function openDetail(it, opts = {}) {
 }
 
 /* ---------- 设置 ---------- */
-function centerDialog(host) {
+function centerDialog(host, group) {
+  const s = state.childScales[group] || 1;
   const mainRect = document.getElementById('mainWin').getBoundingClientRect();
   const dlg = host.querySelector('.dlg');
-  dlg.style.left = Math.round(mainRect.left + (mainRect.width - 420) / 2) + 'px';
-  dlg.style.top = Math.round(mainRect.top + (mainRect.height - 560) / 2) + 'px';
+  dlg.dataset.group = group;
+  dlg.style.transformOrigin = 'top left';
+  dlg.style.transform = 'scale(' + s + ')';
+  dlg.style.left = Math.round(mainRect.left + (mainRect.width - 420 * s) / 2) + 'px';
+  dlg.style.top = Math.round(mainRect.top + (mainRect.height - 560 * s) / 2) + 'px';
+}
+/* 二级窗右下缩放手柄：左上角固定、向右下生长；每组独立存缩放值（edit/detail/settings/history） */
+function wireDialogGrip(host) {
+  const dlg = host.querySelector('.dlg');
+  const grip = dlg.querySelector('.resize-grip');
+  if (!grip) return;
+  const group = dlg.dataset.group;
+  grip.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault(); e.stopPropagation();
+    hideBubble();
+    const startX = e.clientX, startY = e.clientY;
+    const startScale = state.childScales[group] || 1;
+    const r = dlg.getBoundingClientRect();
+    const fit = Math.min(
+      (innerHeight - r.top - 12) / 560,
+      (innerWidth - r.left - 12) / 420
+    );
+    const limit = clampNum(Math.min(CHILD_MAX, fit), CHILD_MIN, CHILD_MAX);
+    grip.setPointerCapture(e.pointerId);
+    const onMove = ev => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      // ele ChildHost 口径：水平位移 + 垂直位移按 高/宽 折算，500px ≈ +1.0 档
+      const next = clampNum(startScale + (dx + dy * (560 / 420)) / 500,
+        CHILD_MIN, Math.max(CHILD_MIN, limit));
+      if (next === state.childScales[group]) return;
+      state.childScales[group] = next;
+      dlg.style.transform = 'scale(' + next + ')';
+    };
+    const onUp = () => {
+      grip.removeEventListener('pointermove', onMove);
+      grip.removeEventListener('pointerup', onUp);
+      grip.removeEventListener('pointercancel', onUp);
+      save();
+    };
+    grip.addEventListener('pointermove', onMove);
+    grip.addEventListener('pointerup', onUp);
+    grip.addEventListener('pointercancel', onUp);
+  });
 }
 function closeDialog() {
   const host = document.getElementById('modal');
@@ -1014,11 +1096,13 @@ function openSettings() {
             '<span class="knob"></span></button>' +
         '</div>' +
         '<p class="setmeta">所有设置即时生效并保留。</p>' +
-        '<p class="setver">1C 新外观原型 · v2.16</p>' +
+        '<p class="setver">1C 新外观原型 · v2.18</p>' +
       '</div>' +
+      DIALOG_GRIP +
     '</div>';
   host.classList.add('on');
-  centerDialog(host);
+  centerDialog(host, 'settings');
+  wireDialogGrip(host);
   document.getElementById('dBack').onclick = closeDialog;
   host.onclick = e => { if (e.target === host) closeDialog(); };
 
@@ -1129,9 +1213,11 @@ function openHistory(dateKey, fromSettings) {
             '<button class="btn sm" id="expBtn">导出 CSV</button>' +
           '</div>' +
         '</div>' +
+        DIALOG_GRIP +
       '</div>';
     host.classList.add('on');
-    centerDialog(host);
+    centerDialog(host, 'history');
+    wireDialogGrip(host);
 
     const back = () => { if (fromSettings) openSettings(); else closeDialog(); };
     document.getElementById('dBack').onclick = back;
@@ -1415,6 +1501,41 @@ document.getElementById('btnTuck').onclick = () => tuck(!state.tucked);
 document.getElementById('btnHide').onclick = () => tuck(true);
 document.getElementById('strip').onmouseenter = () => tuck(false);
 
+/* ---------- 主窗缩放（模板窗联动，锚点=主窗左上角） ---------- */
+function mainScaleLimit() {
+  const r = document.getElementById('mainWin').getBoundingClientRect();
+  const tplOpen = document.getElementById('tplWin').classList.contains('open');
+  const byH = (innerHeight - r.top - 12) / 640;
+  const byW = (innerWidth - r.left - 12) / (360 + (tplOpen ? 264 : 0));
+  return clampNum(Math.min(MAIN_MAX, byH, byW), MAIN_MIN, MAIN_MAX);
+}
+document.getElementById('mainGrip').addEventListener('pointerdown', e => {
+  if (e.button !== 0) return;
+  e.preventDefault(); e.stopPropagation();
+  hideBubble();
+  const grip = e.currentTarget;
+  const startX = e.clientX;
+  const startScale = state.mainScale;
+  const baseW = 360 * startScale;
+  const limit = mainScaleLimit();
+  grip.setPointerCapture(e.pointerId);
+  const onMove = ev => {
+    const next = clampNum((baseW + (ev.clientX - startX)) / 360, MAIN_MIN, Math.max(MAIN_MIN, limit));
+    if (next === state.mainScale) return;
+    state.mainScale = next;
+    applyMainScale();
+  };
+  const onUp = () => {
+    grip.removeEventListener('pointermove', onMove);
+    grip.removeEventListener('pointerup', onUp);
+    grip.removeEventListener('pointercancel', onUp);
+    save();
+  };
+  grip.addEventListener('pointermove', onMove);
+  grip.addEventListener('pointerup', onUp);
+  grip.addEventListener('pointercancel', onUp);
+});
+
 /* ---------- 拖动排序：抓点阵跟手，其余行动画让位 ---------- */
 const tlEl = document.getElementById('tl');
 const DRAG_EASE = 'cubic-bezier(.22,.61,.36,1)';
@@ -1437,27 +1558,29 @@ tlEl.addEventListener('pointerdown', e => {
   if (from < 0) return;
   tlEl.classList.add('drag-on');
 
-  const tlTop = tlEl.getBoundingClientRect().top;
+  const sc = state.mainScale || 1;
+  const tlRect = tlEl.getBoundingClientRect();
+  const localY = y => (y - tlRect.top) / sc + tlEl.scrollTop;
   const rowH = row.offsetHeight;
-  // 位置快照取"未加 transform"的布局值（内容坐标）：拖动中兄弟行在位移，
-  // 若实时量 rect 会把让位动画也算进去，目标槽位会来回抖。
-  const tops = rows.map(r => r.getBoundingClientRect().top - tlTop + tlEl.scrollTop);
-  const grab = e.clientY - tlTop + tlEl.scrollTop - tops[from]; // 抓点在行内的偏移
+  // 位置快照取"未加让位 transform"的局部布局坐标：rect 是缩放后的视觉 px，先除以 sc。
+  // 拖动中兄弟行在位移，若实时量 rect 会把让位动画也算进去，目标槽位会来回抖。
+  const tops = rows.map(r => (r.getBoundingClientRect().top - tlRect.top) / sc + tlEl.scrollTop);
+  const grab = localY(e.clientY) - tops[from]; // 抓点在行内的偏移（局部坐标）
   const minTop = tops[0], maxTop = tops[rows.length - 1];
-  const startY = e.clientY;
-  let armed = false, to = from, lastY = startY, raf = 0;
+  const startClientY = e.clientY;
+  let armed = false, to = from, lastY = startClientY, raf = 0;
 
   const paint = () => {
     if (!armed) {
-      if (Math.abs(lastY - startY) < DRAG_LIFT) return;
+      if (Math.abs(lastY - startClientY) < DRAG_LIFT) return;
       armed = true;
       row.classList.add('dragging');
       row.style.transition = 'none';
       rows.forEach(r => { if (r !== row) r.style.transition = 'transform .18s ' + DRAG_EASE; });
       raf = requestAnimationFrame(tick); // 自动滚动循环从真正拖动那一刻才开始
     }
-    // 被拖行的虚拟顶边（内容坐标）钳在待办段内：不能拖进已完成区
-    const want = Math.min(Math.max(lastY - tlTop + tlEl.scrollTop - grab, minTop), maxTop);
+    // 被拖行的虚拟顶边（局部内容坐标）钳在待办段内：不能拖进已完成区
+    const want = Math.min(Math.max(localY(lastY) - grab, minTop), maxTop);
     row.style.transform = 'translateY(' + (want - tops[from]) + 'px)';
     const vc = want + rowH / 2;
     let t = from;
@@ -1483,7 +1606,7 @@ tlEl.addEventListener('pointerdown', e => {
     if (!armed) return;
     raf = requestAnimationFrame(tick);
     const before = tlEl.scrollTop;
-    const cy = lastY - tlTop + tlEl.scrollTop;
+    const cy = localY(lastY);
     if (cy < before + 26) tlEl.scrollTop = before - 7;
     else if (cy > before + tlEl.clientHeight - 26) tlEl.scrollTop = before + 7;
     if (tlEl.scrollTop !== before) paint();
@@ -1545,6 +1668,7 @@ tlEl.addEventListener('pointerdown', e => {
 /* ---------- 启动 ---------- */
 if (!load()) { seed(); save(); }
 settle();
+applyMainScale();
 applyTheme();
 bindBubble(document.getElementById('tl'), '.trow .tx');
 bindBubble(document.getElementById('tplRows'), '.tplrow .tx');
@@ -1578,7 +1702,7 @@ document.getElementById('btnReset').onclick = () => confirmBox({
     seed(); save();
     state.batch.on = false; state.batch.sel.clear();
     state.tplBatch.on = false; state.tplBatch.sel.clear();
-    tuck(false); applyTheme(); renderAll();
+    tuck(false); applyTheme(); applyMainScale(); renderAll();
     document.getElementById('btnHour').textContent = '24 小时制';
     toast('已重置');
   }
