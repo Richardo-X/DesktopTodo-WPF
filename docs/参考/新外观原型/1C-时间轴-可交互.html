@@ -217,11 +217,28 @@ body[data-theme="night"]{
 .ghost:hover{background:var(--row-hover);color:var(--text)}
 .ghost:active{transform:translateY(1px)}
 .tplfoot .sp{margin-left:auto}
+.ghost:disabled{opacity:.45;cursor:default}
+.ghost:disabled:hover{background:transparent;color:var(--muted)}
+/* 批量条（主窗/模板窗同构）：与动作行同位等高替换；模板窗 260 宽 → 按钮收窄、计数缩写 */
+#tplBatchbar{padding:2px 10px 10px}
+#tplBatchbar .n{white-space:nowrap}
+#tplBatchbar .sbtn{padding:0 7px}
+#tplBatchbar #tplBatchCount{font-size:10px}
+/* 批量态：同级窗口整窗冻结（可读不可点，对齐 ele .panel.frozen） */
+.frozen-win{opacity:.7;pointer-events:none;user-select:none}
+/* 批量态：目标窗内只冻结的标题栏按钮（设置入口），.45 置灰 */
+.frozen-btn{opacity:.45;pointer-events:none}
 
 /* 收纳细线 */
 .strip{position:absolute;top:0;left:50%;transform:translate(-50%,-100%);width:48px;height:3px;
   background:var(--accent);border-radius:0 0 2px 2px;cursor:pointer;z-index:60;transition:transform .2s}
 .strip.on{transform:translate(-50%,0)}
+
+/* 最小化到托盘（原型示意）：隐藏后顶部浮提示，点按恢复 */
+.traytip{position:fixed;top:50px;left:50%;transform:translate(-50%,-8px);z-index:210;display:none;
+  background:rgba(20,24,30,.94);color:#eef3fa;font-size:12px;padding:9px 14px;border-radius:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);cursor:pointer}
+.traytip.on{display:block;animation:tin .18s ease-out}
 
 /* 二级窗 3:4 */
 .modal{position:fixed;inset:0;z-index:300;display:none;background:rgba(0,0,0,.18)}
@@ -234,6 +251,11 @@ body[data-theme="night"]{
   color:var(--muted);cursor:pointer;border:none;background:transparent;margin-left:-12px}
 .dlg .backbtn svg{width:14px;height:14px}
 .dlg .backbtn:hover{background:var(--row-hover);color:var(--text)}
+.dlg .closebtn{width:28px;height:28px;margin-left:auto;margin-right:-8px;display:flex;align-items:center;
+  justify-content:center;color:var(--muted);cursor:pointer;border:none;background:transparent;border-radius:6px}
+.dlg .closebtn svg{width:14px;height:14px}
+.dlg .closebtn:hover{background:var(--row-hover);color:var(--text)}
+.dlg .dview.boxed{background:var(--row-hover);border-radius:8px;padding:12px;flex:none;max-height:300px}
 .dlg .dtitle{position:absolute;left:0;right:0;text-align:center;font-size:13px;font-weight:600;
   pointer-events:none}
 .dlg .dbody{flex:1;min-height:0;display:flex;flex-direction:column;padding:8px 20px 0}
@@ -247,16 +269,11 @@ body[data-theme="night"]{
 .dlg .counter.near{color:var(--overdue)}
 .dlg .dview{flex:1;min-height:0;overflow:auto;font-size:13px;line-height:1.8;color:var(--text);
   padding:4px 0;white-space:pre-wrap;word-break:break-word}
-.dlg .detailrows{flex:none;border-top:1px solid var(--card-border);padding:10px 0 4px}
+.dlg .detailrows{flex:none;padding:10px 0 4px}
 .dlg .drow2{display:flex;gap:12px;padding:5px 0;font-size:12px}
 .dlg .drow2 .k{flex:none;width:60px;color:var(--faint)}
 .dlg .drow2 .v{color:var(--muted);font-variant-numeric:tabular-nums}
-.dlg .dview{flex:1;min-height:0;overflow:auto;font-size:13px;line-height:1.8;color:var(--text);
-  padding:4px 0;white-space:pre-wrap;word-break:break-word}
-.dlg .detailrows{flex:none;border-top:1px solid var(--card-border);padding:10px 0 4px}
-.dlg .drow2{display:flex;gap:12px;padding:5px 0;font-size:12px}
-.dlg .drow2 .k{flex:none;width:60px;color:var(--faint)}
-.dlg .drow2 .v{color:var(--muted);font-variant-numeric:tabular-nums}
+.dlg .drow2 .v.od{color:var(--overdue)}
 .dlg .dactions{flex:none;display:flex;align-items:center;gap:8px;padding:12px 20px 16px}
 .dlg .sp{margin-left:auto}
 .btn{height:32px;padding:0 14px;border-radius:6px;border:1px solid var(--card-border);background:var(--card);
@@ -397,7 +414,7 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
             <button class="ib" title="置顶（原型示意）"><svg class="ic" viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l1 7 3 3H5l3-3 1-7z"/></svg></button>
             <button class="ib" title="缩进锁定（原型示意）"><svg class="ic" viewBox="0 0 24 24"><path d="M3 4h18"/><rect x="7" y="11.5" width="10" height="8" rx="1.6"/><path d="M9.6 11.5V9a2.4 2.4 0 0 1 4.8 0v2.5"/></svg></button>
             <button class="ib" id="btnSettings" title="设置"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
-            <button class="ib" title="收纳（整组上滑）" id="btnHide"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            <button class="ib" title="最小化到系统状态栏" id="btnHide"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
           </span>
         </div>
 
@@ -437,15 +454,19 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
         <div class="tplhead">
           <span class="brand">模板</span>
           <span class="cnt" id="tplCnt">0/10</span>
-          <button class="ib" id="btnTplClose" title="收起模板窗" style="margin-left:4px">
-            <svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
         </div>
         <div class="tplrows" id="tplRows"></div>
-        <div class="tplfoot">
+        <div class="tplfoot" id="tplFoot">
           <button class="ghost" id="btnTplNew">＋ 新建模板</button>
           <span class="sp"></span>
           <button class="ghost" id="btnTplBatch">批量删除</button>
+        </div>
+        <div class="batchbar" id="tplBatchbar">
+          <span class="n" id="tplBatchCount">已选 0 项</span>
+          <button class="sbtn" id="tplBatchExit">返回</button>
+          <span class="sp"></span>
+          <button class="sbtn" id="tplBatchAll">全选</button>
+          <button class="sbtn danger" id="tplBatchDel" disabled>删除所选</button>
         </div>
       </div>
     </div>
@@ -453,6 +474,8 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
 
   <div class="strip" id="strip" title="鼠标碰到细线，整组滑回"></div>
 </div>
+
+<div class="traytip" id="trayTip" title="点按恢复组件">已最小化到系统状态栏（原型示意）— 点此恢复</div>
 
 <div class="modal" id="modal"></div>
 <div class="cmodal" id="cmodal"></div>
@@ -467,6 +490,7 @@ const GRIP = '<svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/
 const SORT_ASC = '<svg class="ic" viewBox="0 0 24 24"><path d="M7 20V6M7 6l-3 3M7 6l3 3"/><path d="M13 5h8M13 10h6M13 15h4"/></svg>';
 const SORT_DESC = '<svg class="ic" viewBox="0 0 24 24"><path d="M7 4v14M7 18l-3-3M7 18l3-3"/><path d="M13 5h8M13 10h6M13 15h4"/></svg>';
 const BACK = '<svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
+const CLOSE = '<svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 const DIALOG_GRIP = '<span class="resize-grip" data-grip="dlg" title="拖动缩放（本组独立）"></span>';
 const MAX_ITEMS_CAP = 10, MAX_TPL = 10, MAX_CHARS = 300;
 const MAIN_MIN = 0.7, MAIN_MAX = 1.15, CHILD_MIN = 0.7, CHILD_MAX = 1.2;
@@ -759,6 +783,12 @@ function renderMain() {
   document.getElementById('batchAll').textContent =
     state.batch.sel.size === p.length && p.length > 0 ? '取消全选' : '全选';
   document.getElementById('btnBatch').classList.toggle('on', state.batch.on);
+  // 批量规则：目标窗标题栏只冻结「设置」；主窗批量时模板窗整窗冻结（互斥另一侧在 renderTpl）
+  document.getElementById('btnSettings').classList.toggle('frozen-btn', state.batch.on || state.tplBatch.on);
+  document.getElementById('mainWin').classList.toggle('frozen-win', state.tplBatch.on);
+  document.getElementById('btnBatch').disabled = state.tplBatch.on;
+  document.getElementById('btnAdd').disabled = state.tplBatch.on;
+  document.getElementById('btnTpl').disabled = state.tplBatch.on;
   state.flashId = null;
 }
 function renderTpl() {
@@ -769,25 +799,36 @@ function renderTpl() {
   tplBtn.classList.toggle('on', state.tplOpen);
   document.getElementById('tplCnt').textContent = state.templates.length + '/' + MAX_TPL;
 
+  // 单目标互斥：模板批量态下主窗整窗冻结，主窗批量态下本窗整窗冻结（本窗是活动目标时只冻设置入口）
+  const mainBatch = state.batch.on;
+  const tplBatch = state.tplBatch.on;
+  win.classList.toggle('frozen-win', mainBatch);       // 同级窗冻结：可读不可点
+  document.getElementById('btnTpl').disabled = mainBatch;
+  document.getElementById('btnSettings').classList.toggle('frozen-btn', mainBatch || tplBatch);
+
   const rows = document.getElementById('tplRows');
   let html = '';
   if (!state.templates.length) {
     html = '<div class="empty"><div class="a">还没有模板</div><div class="b">点下面 ＋ 新建模板</div></div>';
   }
   for (const t of state.templates) {
-    const picked = state.tplBatch.sel.has(t.id);
+    const picked = tplBatch && state.tplBatch.sel.has(t.id);
     html += '<div class="tplrow' + (picked ? ' picked' : '') + '" data-tid="' + t.id + '">' +
-      (state.tplBatch.on ? '<span class="sel">' + CHECK + '</span>' : '') +
+      (tplBatch ? '<span class="sel">' + CHECK + '</span>' : '') +
       '<span class="tx">' + esc(t.text) + '</span>' +
-      (state.tplBatch.on ? '' : '<button class="plus" data-act="apply" title="加入今日待办">' +
+      (tplBatch ? '' : '<button class="plus" data-act="apply" title="加入今日待办">' +
         '<svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>') +
       '</div>';
   }
   rows.innerHTML = html;
-  const tb = document.getElementById('btnTplBatch');
-  tb.textContent = state.tplBatch.on
-    ? (state.tplBatch.sel.size ? '删除所选 (' + state.tplBatch.sel.size + ')' : '退出批量')
-    : '批量删除';
+  // 批量条与 footer 同位等高替换（对齐主窗口径）；「＋ 新建模板」在批量中冻结
+  document.getElementById('btnTplNew').disabled = tplBatch;
+  document.getElementById('tplBatchbar').classList.toggle('on', tplBatch);
+  document.getElementById('tplFoot').style.display = tplBatch ? 'none' : 'flex';
+  document.getElementById('tplBatchCount').textContent = '已选 ' + state.tplBatch.sel.size + ' 项';
+  document.getElementById('tplBatchDel').disabled = state.tplBatch.sel.size === 0;
+  document.getElementById('tplBatchAll').textContent =
+    tplBatch && state.tplBatch.sel.size === state.templates.length && state.templates.length ? '取消全选' : '全选';
 }
 function renderAll() { renderClock(); renderMain(); renderTpl(); }
 
@@ -956,30 +997,25 @@ document.getElementById('tl').addEventListener('click', e => {
   save(); renderMain();
 });
 
-// 只读详情（已完成）：内容 / 创建时间 / 完成时间，均不可编辑；可退回
+/* 只读详情（纯查看口径，同 ele）：标题区分已完成事项/历史事项；
+   内容块带淡背景，创建/完成时间与状态三行纯文字；只有右上「关闭」。 */
 function openDetail(it, opts = {}) {
   hideBubble();
-  const canReturn = opts.returnable !== false;
   const onClose = typeof opts.onClose === 'function' ? opts.onClose : null;
   const host = document.getElementById('modal');
   const created = new Date(it.createdAt), doneAt = new Date(it.completedAt);
   const od = doneOverdue(it);
+  const archived = Object.keys(state.archive).some(k => state.archive[k].some(x => x.id === it.id));
   host.innerHTML =
     '<div class="dlg">' +
-      '<div class="dhead"><button class="backbtn" id="dBack" title="返回">' +
-        '<svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>' +
-        '<span class="dtitle">详情</span></div>' +
+      '<div class="dhead"><span class="dtitle">' + (archived ? '历史事项' : '已完成事项') + '</span>' +
+        '<button class="closebtn" id="dClose" title="关闭">' + CLOSE + '</button></div>' +
       '<div class="dbody">' +
-        '<div class="state"><span class="badge' + (od ? ' od' : '') + '">' + (od ? '已逾期' : '已完成') +
-        '</span><span>创建于 ' + fmtDate(created) + ' ' + fmtHM(created) + '</span></div>' +
-        '<div class="dview">' + esc(it.text) + '</div>' +
+        '<div class="dview boxed">' + esc(it.text) + '</div>' +
         '<div class="detailrows">' +
           '<div class="drow2"><span class="k">创建时间</span><span class="v">' + fmtDate(created) + ' ' + fmtHM(created) + '</span></div>' +
           '<div class="drow2"><span class="k">完成时间</span><span class="v">' + fmtDate(doneAt) + ' ' + fmtHM(doneAt) + '</span></div>' +
-        '</div>' +
-        '<div class="dactions"><span class="sp"></span>' +
-          (canReturn ? '<button class="btn" id="dReturn">退回待办</button>' : '') +
-          '<button class="btn primary" id="dClose">关闭</button>' +
+          '<div class="drow2"><span class="k">状态</span><span class="v' + (od ? ' od' : '') + '">' + (od ? '已逾期' : '未逾期') + '</span></div>' +
         '</div>' +
       '</div>' +
       DIALOG_GRIP +
@@ -991,13 +1027,7 @@ function openDetail(it, opts = {}) {
     host.classList.remove('on'); host.innerHTML = '';
     if (onClose) onClose();
   };
-  document.getElementById('dBack').onclick = close;
   document.getElementById('dClose').onclick = close;
-  const ret = document.getElementById('dReturn');
-  if (ret) ret.onclick = () => {
-    if (pending().length >= state.maxItems) return toast('待办已达上限（' + state.maxItems + ' 条）');
-    it.completedAt = null; save(); renderAll(); close(); toast('已退回待办');
-  };
   host.onclick = e => { if (e.target === host) close(); };
 }
 
@@ -1291,7 +1321,7 @@ function openHistory(dateKey, fromSettings) {
       };
       r.ondblclick = () => {
         if (batching.on) return;
-        openDetail(it, { returnable: false, onClose: () => openHistory(cur, fromSettings) });
+        openDetail(it, { onClose: () => openHistory(cur, fromSettings) });
       };
     });
     list.scrollTop = lastScroll;
@@ -1404,8 +1434,9 @@ document.getElementById('btnBatch').onclick = () => {
   if (state.batch.on) { state.batch.on = false; state.batch.sel.clear(); }
   else {
     if (!pending().length) return toast('没有可批量删除的待办');
-    state.batch.on = true; state.batch.sel.clear();
+    // 单目标互斥：进入主窗批量先退出模板批量（btnBatch 在模板批量中已被禁用，双保险）
     state.tplBatch.on = false; state.tplBatch.sel.clear();
+    state.batch.on = true; state.batch.sel.clear();
   }
   renderAll();
 };
@@ -1431,7 +1462,6 @@ document.getElementById('batchDel').onclick = () => {
 
 /* ---------- 模板窗事件 ---------- */
 document.getElementById('btnTpl').onclick = () => { state.tplOpen = !state.tplOpen; save(); renderTpl(); };
-document.getElementById('btnTplClose').onclick = () => { state.tplOpen = false; save(); renderTpl(); };
 document.getElementById('btnTplNew').onclick = () => {
   if (state.templates.length >= MAX_TPL) return toast('模板已达上限（' + MAX_TPL + ' 条）');
   openEditor({ mode: 'new', target: 'tpl' });
@@ -1459,11 +1489,16 @@ document.getElementById('tplRows').addEventListener('dblclick', e => {
   const t = state.templates.find(x => x.id === row.dataset.tid);
   if (t) openEditor({ mode: 'edit', item: t, target: 'tpl' });
 });
-document.getElementById('btnTplBatch').onclick = () => {
-  if (!state.templates.length) return toast('还没有模板');
-  if (!state.tplBatch.on) { state.tplBatch.on = true; state.tplBatch.sel.clear(); renderTpl(); return; }
+/* 模板批量条（与主窗同构） */
+document.getElementById('tplBatchExit').onclick = () => { state.tplBatch.on = false; state.tplBatch.sel.clear(); renderTpl(); };
+document.getElementById('tplBatchAll').onclick = () => {
+  if (state.tplBatch.sel.size === state.templates.length && state.templates.length) state.tplBatch.sel.clear();
+  else state.templates.forEach(t => state.tplBatch.sel.add(t.id));
+  renderTpl();
+};
+document.getElementById('tplBatchDel').onclick = () => {
   const n = state.tplBatch.sel.size;
-  if (!n) { state.tplBatch.on = false; renderTpl(); return; }
+  if (!n) return;
   confirmBox({
     title: '删除所选 ' + n + ' 个模板？', body: '模板删除后不可恢复。', okText: '删除', danger: true,
     onOk: () => {
@@ -1472,6 +1507,13 @@ document.getElementById('btnTplBatch').onclick = () => {
       save(); renderTpl(); toast('已删除 ' + n + ' 个模板');
     }
   });
+};
+document.getElementById('btnTplBatch').onclick = () => {
+  if (!state.templates.length) return toast('还没有模板');
+  // 单目标互斥：进入模板批量先退出主窗批量
+  state.batch.on = false; state.batch.sel.clear();
+  state.tplBatch.on = true; state.tplBatch.sel.clear();
+  renderAll();
 };
 
 /* ---------- 主题 / 12-24 / 收纳 ---------- */
@@ -1498,8 +1540,24 @@ function tuck(on) {
   else strip.classList.remove('on');
 }
 document.getElementById('btnTuck').onclick = () => tuck(!state.tucked);
-document.getElementById('btnHide').onclick = () => tuck(true);
 document.getElementById('strip').onmouseenter = () => tuck(false);
+
+/* ×＝最小化到系统状态栏（托盘）。原型无真实托盘：整组隐藏 + 顶部浮提示，点提示恢复。
+   口径：所有"隐藏到托盘"的路径（×/托盘双击/托盘菜单）在隐藏前先退出批量态，恢复即一般态；
+   贴边缩进不在此列——它是贴顶触发，弹回后批量与选中保留。 */
+function minimizeToTray() {
+  state.batch.on = false; state.batch.sel.clear();
+  state.tplBatch.on = false; state.tplBatch.sel.clear();
+  hideBubble(); renderAll();
+  document.getElementById('anchor').style.display = 'none';
+  const tip = document.getElementById('trayTip');
+  tip.classList.add('on');
+}
+document.getElementById('btnHide').onclick = minimizeToTray;
+document.getElementById('trayTip').onclick = () => {
+  document.getElementById('trayTip').classList.remove('on');
+  document.getElementById('anchor').style.display = '';
+};
 
 /* ---------- 主窗缩放（模板窗联动，锚点=主窗左上角） ---------- */
 function mainScaleLimit() {
