@@ -216,7 +216,9 @@ body[data-theme="night"]{
 .tplrow.picked{background:var(--accent-soft)}
 .tplrow.picked .sel{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
 .tplrow .sel svg{width:11px;height:11px}
-.tplfoot{display:flex;align-items:center;gap:2px;padding:8px 10px 10px;border-top:1px solid var(--card-border);flex:none}
+.tplfoot{display:flex;align-items:center;gap:8px;padding:8px 10px 10px;border-top:1px solid var(--card-border);flex:none}
+/* 新建钮（accent）与行内容左缘对齐：补回按钮内边距差，让 ＋ 视觉对齐行文字 */
+.tplfoot .addbtn{margin-left:-2px}
 .ghost{font-size:11px;color:var(--muted);cursor:pointer;padding:5px 9px;border-radius:5px;border:none;
   background:transparent;font-family:inherit;transition:background .15s,color .15s}
 .ghost:hover{background:var(--row-hover);color:var(--text)}
@@ -461,10 +463,13 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
           <span class="cnt" id="tplCnt">0/10</span>
         </div>
         <div class="tplrows" id="tplRows"></div>
+        <!-- 模板窗动作行：与主窗动作行同构——新建（accent ＋）→ 批量删除（描边图标钮），
+             左对齐、8px 间隙、全部 28px 水平对齐；批量中整行让位给批量条 -->
         <div class="tplfoot" id="tplFoot">
-          <button class="ghost" id="btnTplNew">＋ 新建模板</button>
-          <span class="sp"></span>
-          <button class="ghost" id="btnTplBatch">批量删除</button>
+          <button class="addbtn" id="btnTplNew" title="新建模板" aria-label="新建模板"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button class="sidebtn" id="btnTplBatch" title="批量删除模板" aria-label="批量删除模板">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
+          </button>
         </div>
         <div class="batchbar" id="tplBatchbar">
           <span class="n" id="tplBatchCount">已选 0 项</span>
@@ -1495,8 +1500,9 @@ document.getElementById('tplRows').addEventListener('dblclick', e => {
   const t = state.templates.find(x => x.id === row.dataset.tid);
   if (t) openEditor({ mode: 'edit', item: t, target: 'tpl' });
 });
-/* 模板批量条（与主窗同构） */
-document.getElementById('tplBatchExit').onclick = () => { state.tplBatch.on = false; state.tplBatch.sel.clear(); renderTpl(); };
+/* 模板批量条（与主窗同构）。退出/删除后都要 renderAll：主窗的整窗冻结与按钮禁用
+   由 renderMain 依据 tplBatch 状态解除（renderTpl 只管模板窗自己）。 */
+document.getElementById('tplBatchExit').onclick = () => { state.tplBatch.on = false; state.tplBatch.sel.clear(); renderAll(); };
 document.getElementById('tplBatchAll').onclick = () => {
   if (state.tplBatch.sel.size === state.templates.length && state.templates.length) state.tplBatch.sel.clear();
   else state.templates.forEach(t => state.tplBatch.sel.add(t.id));
@@ -1510,7 +1516,7 @@ document.getElementById('tplBatchDel').onclick = () => {
     onOk: () => {
       state.templates = state.templates.filter(t => !state.tplBatch.sel.has(t.id));
       state.tplBatch.on = false; state.tplBatch.sel.clear();
-      save(); renderTpl(); toast('已删除 ' + n + ' 个模板');
+      save(); renderAll(); toast('已删除 ' + n + ' 个模板');
     }
   });
 };
