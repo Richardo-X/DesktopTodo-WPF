@@ -224,10 +224,10 @@ body[data-theme="night"]{
 /* 动作行在标题栏下：按钮一行；计数放同一行最右（与按钮垂直居中对齐）。
    内边距与批量条统一（v2.27）：两侧同用 2 上 + 6 下，与标题的 8px 视觉间距
    由标题栏 padding-bottom（4→10）提供。等高公式：2 + 28 + 6 = 36，两侧同构 */
-.tplfoot .cnt{margin-left:auto;font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
-/* 新建钮（accent）与行内容左缘对齐：补回按钮内边距差，让 ＋ 视觉对齐行文字 */
 /* 动作行顺序（用户 2026-10-29）：计数 → 新建 → 弹性空白 → 批量删除（贴最右）；
-   ＋ 不再承担"与行内容左缘对齐"的角色（行首是计数chip），左移补偿移除 */
+   计数贴左缘、与新建钮同组左对齐（cnt 是 11px 文字非 chip，无背景）；＋ 左移 2px 对齐行文字 */
+.tplfoot .cnt{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;line-height:18px}
+.tplfoot .addbtn{margin-left:-2px}
 .ghost{font-size:11px;color:var(--muted);cursor:pointer;padding:5px 9px;border-radius:5px;border:none;
   background:transparent;font-family:inherit;transition:background .15s,color .15s}
 .ghost:hover{background:var(--row-hover);color:var(--text)}
