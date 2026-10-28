@@ -16,6 +16,7 @@ body{
   --text:#33383f;--muted:#5c636c;--faint:#676d76;
   --card:#f7f8f9;--card-border:rgba(30,35,42,.12);--row-hover:rgba(30,35,42,.05);
   --chip:rgba(30,35,42,.06);--line:rgba(30,35,42,.26);--overdue:#a83a34;--done-time:#5c636c;
+  --bubble-bg:#ffffff;--bubble-fg:#222222;--bubble-border:rgba(0,0,0,.09);
   --radius-win:8px;--radius-row:6px;--win-shadow:0 6px 24px rgba(16,24,34,.18);
   font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif;
   font-size:13px;line-height:1.5;overflow:hidden;color:var(--text);
@@ -29,6 +30,7 @@ body[data-theme="night"]{
   --text:#dde2e8;--muted:#a8b0ba;--faint:#9099a3;
   --card:#1d2127;--card-border:rgba(255,255,255,.10);--row-hover:rgba(255,255,255,.06);
   --chip:rgba(255,255,255,.08);--line:rgba(255,255,255,.22);--overdue:#e08a83;--done-time:#a8b0ba;
+  --bubble-bg:#3a3a3c;--bubble-fg:#f0f0f0;--bubble-border:rgba(255,255,255,.11);
   --win-shadow:0 6px 24px rgba(0,0,0,.45);
 }
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
@@ -264,6 +266,21 @@ body[data-theme="night"]{
 .cbox .b{margin-top:8px;font-size:12px;line-height:1.7;color:var(--muted);word-break:break-all}
 .cbox .acts{margin-top:20px;display:flex;justify-content:flex-end;gap:8px}
 
+/* 悬停气泡：仅内容被截断时显示全文。纯展示层（鼠标穿透），尺寸随内容自适应：
+   不设高度上限、不裁切、不省略、不滚动——正文上限 300 字，全量显示屏幕放得下。 */
+.bubble{position:fixed;z-index:250;left:0;top:0;max-width:300px;width:fit-content;
+  padding:9px 12px;background:var(--bubble-bg);color:var(--bubble-fg);
+  border:1px solid var(--bubble-border);border-radius:8px;
+  box-shadow:0 10px 28px rgba(10,20,40,.28);font-size:12px;line-height:1.5;
+  word-break:break-all;white-space:normal;pointer-events:none;
+  opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;visibility:hidden}
+.bubble.on{visibility:visible}
+.bubble.show{opacity:1;transform:none}
+.bubble::after{content:"";position:absolute;right:-6px;top:var(--arrow-top,50%);
+  border:6px solid transparent;border-left-color:var(--bubble-bg)}
+.bubble[data-side="right"]::after{right:auto;left:-6px;border-left-color:transparent;
+  border-right-color:var(--bubble-bg)}
+
 /* toast */
 .toasts{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:400;display:flex;
   flex-direction:column;gap:8px;align-items:center;pointer-events:none}
@@ -282,7 +299,7 @@ body[data-theme="night"]{
   <button id="btnTuck">收纳示意</button>
   <span class="sep"></span>
   <button id="btnReset">重置演示数据</button>
-  <span class="hint">点 ＋ 新建 / 双击或悬停 ✎ 编辑 / 点方框完成 / ⚡ 模板窗 / 已完成点方框退回 / 拖点阵排序</span>
+  <span class="hint">点 ＋ 新建 / 双击编辑 / 点方框完成 / ⚡ 模板窗 / 已完成点方框退回 / 拖点阵排序</span>
 </div>
 
 <div class="desk">
@@ -357,6 +374,7 @@ body[data-theme="night"]{
 <div class="modal" id="modal"></div>
 <div class="cmodal" id="cmodal"></div>
 <div class="toasts" id="toasts"></div>
+<div class="bubble" id="bubble"><span id="bubbleText"></span></div>
 
 <script>
 'use strict';
@@ -442,6 +460,7 @@ function toast(msg) {
   setTimeout(() => d.remove(), 2200);
 }
 function confirmBox({ title, body, okText = '确定', danger = false, onOk }) {
+  hideBubble();
   const host = document.getElementById('cmodal');
   host.innerHTML = '<div class="cbox"><div class="t">' + title + '</div>' +
     (body ? '<div class="b">' + body + '</div>' : '') +
@@ -456,6 +475,62 @@ function confirmBox({ title, body, okText = '确定', danger = false, onOk }) {
   host.onkeydown = e => { if (e.key === 'Escape') host.classList.remove('on'); };
 }
 
+/* ---------- 悬停气泡：内容被截断时显示全文 ---------- */
+const bubbleEl = document.getElementById('bubble');
+const bubbleText = document.getElementById('bubbleText');
+const BUBBLE_DELAY = 500, BUBBLE_GAP = 14, BUBBLE_EDGE = 8;
+let bubbleTimer = 0, bubbleFor = null;
+
+// 行内是 nowrap + ellipsis，scrollWidth 即全文宽度；没超宽=全文已在行里，不弹
+const bubbleTruncated = tx => tx.scrollWidth > tx.clientWidth + 1;
+
+function hideBubble() {
+  if (bubbleTimer) { clearTimeout(bubbleTimer); bubbleTimer = 0; }
+  bubbleFor = null;
+  bubbleEl.classList.remove('show', 'on');
+}
+
+function showBubble(tx) {
+  const row = tx.closest('.trow, .tplrow');
+  if (!row || !tx.isConnected || !bubbleTruncated(tx)) return;
+  bubbleText.textContent = tx.textContent;
+  bubbleEl.classList.remove('show');
+  bubbleEl.classList.add('on');           // 先可见但透明：量真实内容尺寸
+  const rr = row.getBoundingClientRect();
+  const bw = bubbleEl.offsetWidth, bh = bubbleEl.offsetHeight;
+  const cy = rr.top + rr.height / 2;
+  let side = 'left', x = rr.left - BUBBLE_GAP - bw;
+  if (x < BUBBLE_EDGE) { side = 'right'; x = rr.right + BUBBLE_GAP; }
+  x = Math.min(Math.max(x, BUBBLE_EDGE), Math.max(BUBBLE_EDGE, innerWidth - bw - BUBBLE_EDGE));
+  const y = Math.min(Math.max(cy - bh / 2, BUBBLE_EDGE), Math.max(BUBBLE_EDGE, innerHeight - bh - BUBBLE_EDGE));
+  bubbleEl.style.left = x + 'px';
+  bubbleEl.style.top = y + 'px';
+  bubbleEl.dataset.side = side;
+  bubbleEl.style.setProperty('--arrow-top', Math.min(Math.max(cy - y - 6, 10), bh - 12) + 'px');
+  // 等一帧再淡入；若这期间已移开/收起则不要补上 show
+  requestAnimationFrame(() => { if (bubbleFor === tx) bubbleEl.classList.add('show'); });
+}
+
+function bindBubble(host, sel) {
+  host.addEventListener('mouseover', e => {
+    const tx = e.target.closest(sel);
+    if (!tx || (e.relatedTarget && tx.contains(e.relatedTarget))) return;
+    if (!bubbleTruncated(tx)) return;
+    if (bubbleTimer) clearTimeout(bubbleTimer);
+    bubbleFor = tx;
+    bubbleTimer = setTimeout(() => {
+      bubbleTimer = 0;
+      if (bubbleFor === tx) showBubble(tx);
+    }, BUBBLE_DELAY);
+  });
+  host.addEventListener('mouseout', e => {
+    const tx = e.target.closest(sel);
+    if (!tx || (e.relatedTarget && tx.contains(e.relatedTarget))) return;
+    if (bubbleFor === tx) hideBubble();
+  });
+  host.addEventListener('scroll', hideBubble); // 列表一滚就收，气泡不停在滚走的行旁
+}
+
 /* ---------- 渲染 ---------- */
 function renderClock() {
   const d = nowDate();
@@ -463,6 +538,7 @@ function renderClock() {
   document.getElementById('date').textContent = fmtDate(d);
 }
 function renderMain() {
+  hideBubble();
   const tl = document.getElementById('tl');
   const p = pending(), dn = completed();
   let html = '';
@@ -474,7 +550,7 @@ function renderMain() {
     html += '<div class="trow' + (picked ? ' picked' : '') + (state.flashId === it.id ? ' flash' : '') +
       '" data-id="' + it.id + '" data-kind="p">' +
       '<span class="grip' + (inBatch ? ' disabled' : '') + '" title="' + (inBatch ? '批量中不可拖动' : '拖动排序') + '">' + GRIP + '</span>' +
-      '<span class="tx" title="' + esc(it.text) + '">' + esc(it.text) + '</span>' +
+      '<span class="tx">' + esc(it.text) + '</span>' +
       (pendingOverdue(it) ? '<span class="tag">逾期</span>' : '') +
       '<span class="cb' + (inBatch ? ' selecting' : '') + '" data-act="' + (inBatch ? 'select' : 'complete') +
       '" title="' + (inBatch ? (picked ? '取消选中' : '选中') : '完成') + '">' + CHECK + '</span>' +
@@ -494,7 +570,7 @@ function renderMain() {
     html += '<div class="trow done' + (state.flashId === it.id ? ' flash' : '') + '" data-id="' + it.id + '" data-kind="d">' +
       '<span class="tt">' + fmtHM(new Date(it.completedAt)) + '</span>' +
       '<span class="node"><span class="dot solid"></span></span>' +
-      '<span class="tx" title="' + esc(it.text) + '">' + esc(it.text) + '</span>' +
+      '<span class="tx">' + esc(it.text) + '</span>' +
       (doneOverdue(it) ? '<span class="tag">逾期</span>' : '') +
       '<span class="cb done" data-act="return" title="退回待办">' + CHECK + '</span>' +
       '</div>';
@@ -517,6 +593,7 @@ function renderMain() {
   state.flashId = null;
 }
 function renderTpl() {
+  hideBubble();
   const win = document.getElementById('tplWin');
   win.classList.toggle('open', state.tplOpen);
   const tplBtn = document.getElementById('btnTpl');
@@ -532,7 +609,7 @@ function renderTpl() {
     const picked = state.tplBatch.sel.has(t.id);
     html += '<div class="tplrow' + (picked ? ' picked' : '') + '" data-tid="' + t.id + '">' +
       (state.tplBatch.on ? '<span class="sel">' + CHECK + '</span>' : '') +
-      '<span class="tx" title="' + esc(t.text) + '">' + esc(t.text) + '</span>' +
+      '<span class="tx">' + esc(t.text) + '</span>' +
       (state.tplBatch.on ? '' : '<button class="plus" data-act="apply" title="加入今日待办">' +
         '<svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>') +
       '</div>';
@@ -547,6 +624,7 @@ function renderAll() { renderClock(); renderMain(); renderTpl(); }
 
 /* ---------- 二级窗 ---------- */
 function openEditor({ mode, item, target }) {
+  hideBubble();
   const host = document.getElementById('modal');
   const isTpl = target === 'tpl';
   const isEdit = mode === 'edit';
@@ -706,6 +784,7 @@ document.getElementById('tl').addEventListener('dblclick', e => {
 
 // 只读详情（已完成）：内容 / 创建时间 / 完成时间，均不可编辑；可退回
 function openDetail(it) {
+  hideBubble();
   const host = document.getElementById('modal');
   const created = new Date(it.createdAt), doneAt = new Date(it.completedAt);
   const od = doneOverdue(it);
@@ -836,6 +915,7 @@ document.getElementById('btnHour').onclick = function () {
   renderClock(); save();
 };
 function tuck(on) {
+  hideBubble();
   state.tucked = on;
   document.getElementById('anchor').classList.toggle('tucked', on);
   const strip = document.getElementById('strip');
@@ -858,6 +938,7 @@ tlEl.addEventListener('pointerdown', e => {
   if (!grip) return;
   const row = grip.closest('.trow');
   if (!row || row.dataset.kind !== 'p') return;
+  hideBubble();
 
   // 按下即吃掉默认行为：不产生兼容 mouse 事件，拖过文字也不会刷选内容
   e.preventDefault();
@@ -975,6 +1056,9 @@ tlEl.addEventListener('pointerdown', e => {
 /* ---------- 启动 ---------- */
 if (!load()) { seed(); save(); }
 applyTheme();
+bindBubble(document.getElementById('tl'), '.trow .tx');
+bindBubble(document.getElementById('tplRows'), '.tplrow .tx');
+window.addEventListener('blur', hideBubble);
 document.getElementById('btnHour').textContent = state.hour12 ? '12 小时制' : '24 小时制';
 renderAll();
 setInterval(renderClock, 1000);
