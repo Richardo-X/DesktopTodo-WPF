@@ -257,6 +257,73 @@ body[data-theme="night"]{
 .btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
 .btn.ghost:hover{background:var(--row-hover);color:var(--text)}
 
+/* ---------- 设置 / 历史（二级窗内容） ---------- */
+.dlg .dbody.scroll{overflow:auto;padding:4px 20px 16px}
+.dlg .dbody.hist{padding:8px 20px 14px}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0}
+.setcol{display:flex;flex-direction:column;gap:8px;padding:10px 0}
+.setlabel{display:flex;flex-direction:column;gap:3px;min-width:0}
+.setlabel b{font-size:13px;font-weight:600;color:var(--text)}
+.setlabel span{font-size:11px;line-height:1.5;color:var(--faint)}
+.setdivider{height:1px;background:var(--card-border)}
+.stepper{display:flex;align-items:center;border:1px solid var(--card-border);border-radius:6px;height:28px;flex:none}
+.stepper .step{width:26px;height:26px;border:none;background:transparent;color:var(--muted);font-size:14px;
+  font-family:inherit;cursor:pointer;border-radius:4px}
+.stepper .step:hover{background:var(--row-hover);color:var(--text)}
+.stepper .step:disabled{opacity:.35;cursor:default;background:transparent}
+.stepper .val{min-width:20px;text-align:center;font-size:12px;font-variant-numeric:tabular-nums}
+.seg{display:flex;border:1px solid var(--card-border);border-radius:6px;overflow:hidden;flex:none}
+.seg button{height:26px;padding:0 9px;border:none;background:transparent;color:var(--muted);font-size:11px;
+  font-family:inherit;cursor:pointer;transition:background .15s,color .15s}
+.seg button+button{border-left:1px solid var(--card-border)}
+.seg button.on{background:var(--accent-soft);color:var(--accent)}
+.switch{width:36px;height:20px;border-radius:99px;border:1px solid var(--line);background:var(--chip);
+  position:relative;padding:0;cursor:pointer;flex:none;transition:background .15s,border-color .15s}
+.switch .knob{position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;
+  background:var(--muted);transition:transform .16s,background .16s}
+.switch.on{background:var(--accent-soft);border-color:var(--accent)}
+.switch.on .knob{transform:translateX(16px);background:var(--accent)}
+.setmeta{margin-top:10px;font-size:11px;color:var(--faint)}
+.setver{margin-top:4px;font-size:10px;color:var(--faint)}
+.setbtns{display:flex;gap:8px;flex:none}
+
+.histnav{display:flex;align-items:center;gap:6px;flex:none}
+.histnav .sbtn{height:28px;line-height:26px;padding:0 8px}
+.histnav input[type=date]{width:118px}
+.dlg input[type=date]{height:28px;border:1px solid var(--card-border);border-radius:6px;background:var(--card);
+  color:var(--text);font-family:inherit;font-size:11px;padding:0 6px;outline:none}
+body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
+.dlg input[type=date]:disabled{opacity:.5}
+.histmeta{display:flex;align-items:center;gap:8px;padding:10px 0 2px;flex:none}
+.histmeta .d{font-size:11px;font-weight:600;color:var(--text)}
+.histmeta .n{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+.histmeta .sp{flex:1}
+.histlist{flex:1;min-height:0;overflow:auto;padding:4px 0;display:flex;flex-direction:column}
+.histrow{display:flex;align-items:center;gap:8px;height:36px;padding:0 6px;border-radius:6px}
+.histrow:hover{background:var(--row-hover)}
+.histrow .tx{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.histrow .tag{flex:none;font-size:11px;color:var(--overdue)}
+.histrow .tt{flex:none;font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+.histrow.picked{background:var(--accent-soft)}
+.histrow.picked .cb{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.histempty{flex:1;display:flex;align-items:center;justify-content:center;min-height:120px;
+  font-size:12px;color:var(--faint);text-align:center;line-height:1.7}
+.histexport{display:flex;align-items:center;gap:6px;flex:none;border-top:1px solid var(--card-border);
+  padding-top:10px}
+.histexport .lbl{font-size:11px;color:var(--muted)}
+.histexport input[type=date]{width:102px}
+.histexport .btn{margin-left:auto}
+.histexport.frozen{opacity:.45;pointer-events:none}
+.histbatch{padding:2px 0 8px}
+
+/* 已完成段排序按钮：与行尾勾选框同列（16px 宽 → 中心对齐），线向左让位 */
+.sect .sortbtn{width:16px;height:16px;flex:none;padding:0;border:none;background:transparent;
+  color:var(--faint);border-radius:4px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;position:relative}
+.sect .sortbtn::after{content:"";position:absolute;inset:-6px}
+.sect .sortbtn:hover{background:var(--row-hover);color:var(--text)}
+.sect .sortbtn svg{width:12px;height:12px}
+
 /* 确认框 */
 .cmodal{position:fixed;inset:0;z-index:350;display:none;background:rgba(0,0,0,.28)}
 .cmodal.on{display:flex;align-items:center;justify-content:center}
@@ -268,7 +335,7 @@ body[data-theme="night"]{
 
 /* 悬停气泡：仅内容被截断时显示全文。纯展示层（鼠标穿透），尺寸随内容自适应：
    不设高度上限、不裁切、不省略、不滚动——正文上限 300 字，全量显示屏幕放得下。 */
-.bubble{position:fixed;z-index:250;left:0;top:0;max-width:300px;width:fit-content;
+.bubble{position:fixed;z-index:320;left:0;top:0;max-width:300px;width:fit-content;
   padding:9px 12px;background:var(--bubble-bg);color:var(--bubble-fg);
   border:1px solid var(--bubble-border);border-radius:8px;
   box-shadow:0 4px 12px rgba(10,20,40,.16);
@@ -315,7 +382,7 @@ body[data-theme="night"]{
             <button class="ib" title="切换日/夜主题" id="btnMoon"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
             <button class="ib" title="置顶（原型示意）"><svg class="ic" viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l1 7 3 3H5l3-3 1-7z"/></svg></button>
             <button class="ib" title="缩进锁定（原型示意）"><svg class="ic" viewBox="0 0 24 24"><path d="M3 4h18"/><rect x="7" y="11.5" width="10" height="8" rx="1.6"/><path d="M9.6 11.5V9a2.4 2.4 0 0 1 4.8 0v2.5"/></svg></button>
-            <button class="ib" title="设置（后续批次）"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+            <button class="ib" id="btnSettings" title="设置"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
             <button class="ib" title="收纳（整组上滑）" id="btnHide"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
           </span>
         </div>
@@ -376,20 +443,25 @@ body[data-theme="night"]{
 <div class="cmodal" id="cmodal"></div>
 <div class="toasts" id="toasts"></div>
 <div class="bubble" id="bubble"><span id="bubbleText"></span></div>
+<input type="file" id="csvFile" accept=".csv,text/csv" hidden>
 
 <script>
 'use strict';
 const CHECK = '<svg class="ic chk" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const GRIP = '<svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>';
-const MAX_ITEMS = 10, MAX_TPL = 10, MAX_CHARS = 300;
+const SORT_ASC = '<svg class="ic" viewBox="0 0 24 24"><path d="M7 20V6M7 6l-3 3M7 6l3 3"/><path d="M13 5h8M13 10h6M13 15h4"/></svg>';
+const SORT_DESC = '<svg class="ic" viewBox="0 0 24 24"><path d="M7 4v14M7 18l-3-3M7 18l3-3"/><path d="M13 5h8M13 10h6M13 15h4"/></svg>';
+const BACK = '<svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
+const MAX_ITEMS_CAP = 10, MAX_TPL = 10, MAX_CHARS = 300;
 
 const state = {
   theme: 'day', hour12: false,
-  items: [], templates: [],
+  maxItems: MAX_ITEMS_CAP, autoStart: false, doneSort: 'asc',
+  items: [], archive: {}, templates: [],
   tplOpen: false, tucked: false,
   batch: { on: false, sel: new Set() },
   tplBatch: { on: false, sel: new Set() },
-  flashId: null,
+  flashId: null, lastSettleDate: null,
 };
 
 const pad = n => String(n).padStart(2, '0');
@@ -403,11 +475,19 @@ function fmtClock(d) {
 }
 const fmtHM = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
 const fmtDate = d => (d.getMonth() + 1) + '月' + d.getDate() + '日 星期' + '日一二三四五六'[d.getDay()];
+const keyDate = k => new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, +k.slice(8, 10));
+const shiftKey = (k, delta) => { const d = keyDate(k); d.setDate(d.getDate() + delta); return localKey(d); };
+const yesterdayKey = () => shiftKey(todayKey(), -1);
+const fmtStamp = d => localKey(d) + ' ' + fmtHM(d);
 const uid = () => Math.random().toString(16).slice(2, 10);
 const pendingOverdue = it => localKey(new Date(it.createdAt)) !== todayKey();
 const doneOverdue = it => localKey(new Date(it.createdAt)) !== localKey(new Date(it.completedAt));
 const pending = () => state.items.filter(i => !i.completedAt);
-const completed = () => state.items.filter(i => i.completedAt).sort((a, b) => a.completedAt - b.completedAt);
+const todayDone = () => state.items.filter(i => i.completedAt && localKey(new Date(i.completedAt)) === todayKey());
+const completed = () => {
+  const list = todayDone().sort((a, b) => a.completedAt - b.completedAt);
+  return state.doneSort === 'desc' ? list.reverse() : list;
+};
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
 /* ---------- 持久化 ---------- */
@@ -415,7 +495,9 @@ const KEY = 'proto-1c-state-v2';
 function save() {
   localStorage.setItem(KEY, JSON.stringify({
     theme: state.theme, hour12: state.hour12,
-    items: state.items, templates: state.templates, tplOpen: state.tplOpen
+    maxItems: state.maxItems, autoStart: state.autoStart, doneSort: state.doneSort,
+    items: state.items, archive: state.archive, templates: state.templates, tplOpen: state.tplOpen,
+    lastSettleDate: state.lastSettleDate
   }));
 }
 function load() {
@@ -428,6 +510,19 @@ function load() {
     state.items = Array.isArray(d.items) ? d.items : [];
     state.templates = Array.isArray(d.templates) ? d.templates : [];
     state.tplOpen = !!d.tplOpen;
+    state.maxItems = Math.min(MAX_ITEMS_CAP, Math.max(1, Number(d.maxItems) || MAX_ITEMS_CAP));
+    state.autoStart = !!d.autoStart;
+    state.doneSort = d.doneSort === 'desc' ? 'desc' : 'asc';
+    state.archive = {};
+    if (d.archive && typeof d.archive === 'object') {
+      for (const k of Object.keys(d.archive)) {
+        if (Array.isArray(d.archive[k])) state.archive[k] = d.archive[k];
+      }
+    }
+    state.lastSettleDate = typeof d.lastSettleDate === 'string' ? d.lastSettleDate : null;
+    // 上限不可低于当前待办数（旧档/异常数据兜底）
+    state.maxItems = Math.min(MAX_ITEMS_CAP,
+      Math.max(state.maxItems, state.items.filter(i => !i.completedAt).length));
     return true;
   } catch (e) { return false; }
 }
@@ -435,6 +530,7 @@ function seed() {
   const now = nowDate();
   const at = (h, m) => { const d = new Date(now); d.setHours(h, m, 0, 0); return +d; };
   const yest = (h, m) => { const d = new Date(now); d.setDate(d.getDate() - 1); d.setHours(h, m, 0, 0); return +d; };
+  const dayAt = (off, h, m) => { const d = new Date(now); d.setDate(d.getDate() + off); d.setHours(h, m, 0, 0); return +d; };
   state.items = [
     { id: uid(), text: '写周报并发给部门同步', createdAt: yest(17, 20), completedAt: null },
     { id: uid(), text: '整理下季度 OKR 草稿，拆成可执行的关键结果', createdAt: at(9, 10), completedAt: null },
@@ -449,7 +545,42 @@ function seed() {
     { id: uid(), text: '每天站会前喝口水' },
     { id: uid(), text: '写周报' },
   ];
+  state.archive = {};
+  const k1 = localKey(new Date(dayAt(-1, 0, 0))), k2 = localKey(new Date(dayAt(-2, 0, 0)));
+  state.archive[k1] = [
+    { id: uid(), text: '提交周报初稿', createdAt: dayAt(-1, 9, 10), completedAt: dayAt(-1, 11, 20) },
+    { id: uid(), text: '整理会议纪要并发到群里', createdAt: dayAt(-2, 16, 0), completedAt: dayAt(-1, 15, 45) },
+    { id: uid(), text: '回复客户报价邮件', createdAt: dayAt(-1, 9, 30), completedAt: dayAt(-1, 17, 10) },
+  ];
+  state.archive[k2] = [
+    { id: uid(), text: '预约体检', createdAt: dayAt(-2, 8, 50), completedAt: dayAt(-2, 10, 15) },
+    { id: uid(), text: '归档上季度发票', createdAt: dayAt(-3, 14, 0), completedAt: dayAt(-2, 16, 40) },
+  ];
   state.tplOpen = false; state.theme = 'day'; state.hour12 = false;
+  state.maxItems = MAX_ITEMS_CAP; state.autoStart = false; state.doneSort = 'asc';
+  state.lastSettleDate = todayKey();
+}
+
+/* 跨天结算：完成日期≠今天的已完成项归档进 archive[完成日]；逾期是实时判定，无需落字段 */
+function settle() {
+  const today = todayKey();
+  const keep = [];
+  let moved = 0;
+  for (const it of state.items) {
+    if (it.completedAt && localKey(new Date(it.completedAt)) !== today) {
+      const k = localKey(new Date(it.completedAt));
+      if (!Array.isArray(state.archive[k])) state.archive[k] = [];
+      state.archive[k].push(it);
+      moved++;
+    } else keep.push(it);
+  }
+  state.items = keep;
+  for (const k of Object.keys(state.archive)) {
+    state.archive[k].sort((a, b) => a.completedAt - b.completedAt);
+  }
+  state.lastSettleDate = today;
+  if (moved) save();
+  return moved;
 }
 
 /* ---------- toast / 确认 ---------- */
@@ -563,7 +694,10 @@ function renderMain() {
       : '<div class="empty"><div class="a">今天还没有待办</div><div class="b">点 ＋ 新建一条</div></div>';
   }
   html += '<div class="doneblock">';
-  html += '<div class="sect"><span class="t">已完成 · ' + dn.length + '</span><span class="l"></span></div>';
+  html += '<div class="sect"><span class="t">已完成 · ' + dn.length + '</span><span class="l"></span>' +
+    '<button class="sortbtn" id="btnDoneSort" aria-label="按完成时间排序" title="' +
+      (state.doneSort === 'asc' ? '当前正序，点击切换为倒序' : '当前倒序，点击切换为正序') + '">' +
+      (state.doneSort === 'asc' ? SORT_ASC : SORT_DESC) + '</button></div>';
   if (!dn.length) {
     html += '<div class="empty" style="padding:16px 0 4px"><div class="a" style="color:var(--faint)">今天还没有完成的事项</div></div>';
   }
@@ -581,8 +715,8 @@ function renderMain() {
   tl.classList.toggle('dimdone', state.batch.on);
 
   const cnt = document.getElementById('cnt');
-  cnt.textContent = p.length + '/' + MAX_ITEMS;
-  cnt.classList.toggle('full', p.length >= MAX_ITEMS);
+  cnt.textContent = p.length + '/' + state.maxItems;
+  cnt.classList.toggle('full', p.length >= state.maxItems);
 
   document.getElementById('batchbar').classList.toggle('on', state.batch.on);
   document.getElementById('actionzone').style.display = state.batch.on ? 'none' : 'flex';
@@ -674,10 +808,7 @@ function openEditor({ mode, item, target }) {
   ta.setSelectionRange(ta.value.length, ta.value.length);
   ta.oninput = () => { dirty = ta.value !== initText; sync(); };
 
-  const mainRect = document.getElementById('mainWin').getBoundingClientRect();
-  const dlg = host.querySelector('.dlg');
-  dlg.style.left = Math.round(mainRect.left + (mainRect.width - 420) / 2) + 'px';
-  dlg.style.top = Math.round(mainRect.top + (mainRect.height - 560) / 2) + 'px';
+  centerDialog(host);
 
   const close = () => { host.classList.remove('on'); host.innerHTML = ''; };
   function back() {
@@ -735,7 +866,7 @@ function openEditor({ mode, item, target }) {
       if (it) it.text = text;
       save(); renderAll(); close(); toast('已保存');
     } else {
-      if (!canAdd()) return toast('已达上限（' + MAX_ITEMS + ' 条），先完成或删除一条');
+      if (!canAdd()) return toast('已达上限（' + state.maxItems + ' 条），先完成或删除一条');
       state.items.push({ id: uid(), text, createdAt: +nowDate(), completedAt: null });
       save(); renderAll(); close(); toast('已新建');
     }
@@ -746,7 +877,7 @@ function openEditor({ mode, item, target }) {
     if (e.key === 'Escape') { e.preventDefault(); back(); }
   };
 }
-const canAdd = () => pending().length < MAX_ITEMS;
+const canAdd = () => pending().length < state.maxItems;
 
 /* ---------- 主窗事件 ---------- */
 document.getElementById('tl').addEventListener('click', e => {
@@ -769,6 +900,7 @@ document.getElementById('tl').addEventListener('click', e => {
     return;
   }
   if (act && act.dataset.act === 'return') {
+    if (pending().length >= state.maxItems) return toast('待办已达上限（' + state.maxItems + ' 条）');
     it.completedAt = null;
     state.flashId = it.id;
     save(); renderAll(); toast('已退回待办');
@@ -782,10 +914,17 @@ document.getElementById('tl').addEventListener('dblclick', e => {
   if (it.completedAt) return openDetail(it);   // 已完成=只读详情
   openEditor({ mode: 'edit', item: it, target: 'todo' });
 });
+document.getElementById('tl').addEventListener('click', e => {
+  if (!e.target.closest('#btnDoneSort')) return;
+  state.doneSort = state.doneSort === 'asc' ? 'desc' : 'asc';
+  save(); renderMain();
+});
 
 // 只读详情（已完成）：内容 / 创建时间 / 完成时间，均不可编辑；可退回
-function openDetail(it) {
+function openDetail(it, opts = {}) {
   hideBubble();
+  const canReturn = opts.returnable !== false;
+  const onClose = typeof opts.onClose === 'function' ? opts.onClose : null;
   const host = document.getElementById('modal');
   const created = new Date(it.createdAt), doneAt = new Date(it.completedAt);
   const od = doneOverdue(it);
@@ -803,27 +942,367 @@ function openDetail(it) {
           '<div class="drow2"><span class="k">完成时间</span><span class="v">' + fmtDate(doneAt) + ' ' + fmtHM(doneAt) + '</span></div>' +
         '</div>' +
         '<div class="dactions"><span class="sp"></span>' +
-          '<button class="btn" id="dReturn">退回待办</button>' +
+          (canReturn ? '<button class="btn" id="dReturn">退回待办</button>' : '') +
           '<button class="btn primary" id="dClose">关闭</button>' +
         '</div>' +
       '</div>' +
     '</div>';
   host.classList.add('on');
-  const mainRect = document.getElementById('mainWin').getBoundingClientRect();
-  const dlg = host.querySelector('.dlg');
-  dlg.style.left = Math.round(mainRect.left + (mainRect.width - 420) / 2) + 'px';
-  dlg.style.top = Math.round(mainRect.top + (mainRect.height - 560) / 2) + 'px';
-  const close = () => { host.classList.remove('on'); host.innerHTML = ''; };
+  centerDialog(host);
+  const close = () => {
+    host.classList.remove('on'); host.innerHTML = '';
+    if (onClose) onClose();
+  };
   document.getElementById('dBack').onclick = close;
   document.getElementById('dClose').onclick = close;
-  document.getElementById('dReturn').onclick = () => {
+  const ret = document.getElementById('dReturn');
+  if (ret) ret.onclick = () => {
+    if (pending().length >= state.maxItems) return toast('待办已达上限（' + state.maxItems + ' 条）');
     it.completedAt = null; save(); renderAll(); close(); toast('已退回待办');
   };
   host.onclick = e => { if (e.target === host) close(); };
 }
 
+/* ---------- 设置 ---------- */
+function centerDialog(host) {
+  const mainRect = document.getElementById('mainWin').getBoundingClientRect();
+  const dlg = host.querySelector('.dlg');
+  dlg.style.left = Math.round(mainRect.left + (mainRect.width - 420) / 2) + 'px';
+  dlg.style.top = Math.round(mainRect.top + (mainRect.height - 560) / 2) + 'px';
+}
+function closeDialog() {
+  const host = document.getElementById('modal');
+  host.classList.remove('on');
+  host.innerHTML = '';
+}
+
+function openSettings() {
+  hideBubble();
+  const host = document.getElementById('modal');
+  host.innerHTML =
+    '<div class="dlg">' +
+      '<div class="dhead"><button class="backbtn" id="dBack" title="返回">' + BACK + '</button>' +
+        '<span class="dtitle">设置</span></div>' +
+      '<div class="dbody scroll">' +
+        '<div class="setrow">' +
+          '<div class="setlabel"><b>待办数量上限</b><span>1~10 条；不可低于当前待办数量</span></div>' +
+          '<div class="stepper"><button class="step" id="setMinus">−</button>' +
+            '<span class="val" id="setMax">' + state.maxItems + '</span>' +
+            '<button class="step" id="setPlus">＋</button></div>' +
+        '</div>' +
+        '<div class="setdivider"></div>' +
+        '<div class="setrow">' +
+          '<div class="setlabel"><b>时间显示制式</b><span>作用于主窗时钟</span></div>' +
+          '<div class="seg"><button id="set24" class="' + (!state.hour12 ? 'on' : '') + '">24 小时制</button>' +
+            '<button id="set12" class="' + (state.hour12 ? 'on' : '') + '">12 小时制</button></div>' +
+        '</div>' +
+        '<div class="setdivider"></div>' +
+        '<div class="setrow">' +
+          '<div class="setlabel"><b>历史记录</b><span>按天查看已归档的完成事项</span></div>' +
+          '<button class="btn sm" id="setHistory">打开</button>' +
+        '</div>' +
+        '<div class="setdivider"></div>' +
+        '<div class="setcol">' +
+          '<div class="setlabel"><b>导入历史记录</b><span>只接受本软件导出的 CSV；覆盖导入会替换现有全部历史</span></div>' +
+          '<div class="setbtns"><button class="btn sm" id="setImportCover">覆盖导入</button>' +
+            '<button class="btn sm" id="setImportMerge">合并导入</button></div>' +
+        '</div>' +
+        '<div class="setdivider"></div>' +
+        '<div class="setrow">' +
+          '<div class="setlabel"><b>开机自启</b><span>开启后开机直接显示组件窗口</span></div>' +
+          '<button class="switch' + (state.autoStart ? ' on' : '') + '" id="setAutoStart" aria-label="开机自启">' +
+            '<span class="knob"></span></button>' +
+        '</div>' +
+        '<p class="setmeta">所有设置即时生效并保留。</p>' +
+        '<p class="setver">1C 新外观原型 · v2.16</p>' +
+      '</div>' +
+    '</div>';
+  host.classList.add('on');
+  centerDialog(host);
+  document.getElementById('dBack').onclick = closeDialog;
+  host.onclick = e => { if (e.target === host) closeDialog(); };
+
+  const refresh = () => {
+    document.getElementById('setMax').textContent = state.maxItems;
+    document.getElementById('setMinus').disabled = state.maxItems - 1 < Math.max(1, pending().length);
+    document.getElementById('setPlus').disabled = state.maxItems >= MAX_ITEMS_CAP;
+    document.getElementById('set24').classList.toggle('on', !state.hour12);
+    document.getElementById('set12').classList.toggle('on', state.hour12);
+  };
+  refresh();
+
+  document.getElementById('setMinus').onclick = () => {
+    if (state.maxItems - 1 < Math.max(1, pending().length)) return toast('不可低于当前待办数量');
+    state.maxItems--; save(); refresh(); renderMain();
+  };
+  document.getElementById('setPlus').onclick = () => {
+    if (state.maxItems >= MAX_ITEMS_CAP) return;
+    state.maxItems++; save(); refresh(); renderMain();
+  };
+  const setHour = h => {
+    state.hour12 = h; save();
+    document.getElementById('btnHour').textContent = h ? '12 小时制' : '24 小时制';
+    refresh(); renderClock(); renderMain();
+  };
+  document.getElementById('set24').onclick = () => setHour(false);
+  document.getElementById('set12').onclick = () => setHour(true);
+  document.getElementById('setHistory').onclick = () => openHistory(yesterdayKey(), true);
+  document.getElementById('setAutoStart').onclick = () => {
+    state.autoStart = !state.autoStart; save();
+    document.getElementById('setAutoStart').classList.toggle('on', state.autoStart);
+    toast(state.autoStart ? '已开启（原型示意，安装版生效）' : '已关闭');
+  };
+  document.getElementById('setImportCover').onclick = () => confirmBox({
+    title: '覆盖导入历史记录？', body: '会清空现有全部历史记录（含今天已完成的），无法恢复。',
+    okText: '选择文件', danger: true,
+    onOk: () => { importMode = 'cover'; document.getElementById('csvFile').click(); }
+  });
+  document.getElementById('setImportMerge').onclick = () => {
+    importMode = 'merge'; document.getElementById('csvFile').click();
+  };
+}
+
+/* ---------- 历史记录 ---------- */
+function openHistory(dateKey, fromSettings) {
+  hideBubble();
+  let cur = dateKey || yesterdayKey();
+  let batching = { on: false, sel: new Set() };
+  let lastScroll = 0;
+  let expFrom = Object.keys(state.archive).sort()[0] || yesterdayKey();
+  let expTo = todayKey();
+  const host = document.getElementById('modal');
+
+  const render = () => {
+    const oldList = document.getElementById('histList');
+    if (oldList) lastScroll = oldList.scrollTop;
+    hideBubble();
+    const earliest = Object.keys(state.archive).sort()[0] || yesterdayKey();
+    const items = (state.archive[cur] || []).slice().sort((a, b) => a.completedAt - b.completedAt);
+    if (state.doneSort === 'desc') items.reverse();
+    const isToday = cur === todayKey();
+    let rows = '';
+    if (!items.length) {
+      rows = '<div class="histempty">' + (isToday
+        ? '今天完成的在「已完成」里<br>结算后进入历史'
+        : '该日期暂无已完成事项') + '</div>';
+    } else {
+      for (const it of items) {
+        const picked = batching.on && batching.sel.has(it.id);
+        rows += '<div class="histrow' + (picked ? ' picked' : '') + '" data-id="' + it.id + '">' +
+          '<span class="tx">' + esc(it.text) + '</span>' +
+          (doneOverdue(it) ? '<span class="tag">逾期</span>' : '') +
+          '<span class="tt">' + fmtHM(new Date(it.completedAt)) + '</span>' +
+          (batching.on ? '<span class="cb">' + CHECK + '</span>' : '') +
+        '</div>';
+      }
+    }
+    const batchBar = batching.on
+      ? '<div class="batchbar on histbatch"><span class="n">已选 ' + batching.sel.size + ' 项</span>' +
+        '<button class="sbtn" id="histBatchExit">返回</button><span class="sp"></span>' +
+        '<button class="sbtn" id="histBatchAll">' +
+          (items.length && batching.sel.size === items.length ? '取消全选' : '全选') + '</button>' +
+        '<button class="sbtn danger" id="histBatchDel"' + (batching.sel.size ? '' : ' disabled') + '>删除所选</button></div>'
+      : '<div class="histmeta"><span class="d">' + fmtDate(keyDate(cur)) + '</span>' +
+        '<span class="n">' + items.length + ' 条</span><span class="sp"></span>' +
+        '<button class="sbtn" id="histBatch"' + (items.length ? '' : ' disabled') + '>批量删除</button></div>';
+
+    host.innerHTML =
+      '<div class="dlg">' +
+        '<div class="dhead"><button class="backbtn" id="dBack" title="返回设置">' + BACK + '</button>' +
+          '<span class="dtitle">历史记录</span></div>' +
+        '<div class="dbody hist">' +
+          '<div class="histnav">' +
+            '<button class="sbtn" id="histPrev"' + (batching.on || cur <= earliest ? ' disabled' : '') + '>前一天</button>' +
+            '<input type="date" id="histDate" value="' + cur + '" min="' + earliest + '" max="' + todayKey() + '"' +
+              (batching.on ? ' disabled' : '') + '>' +
+            '<button class="sbtn" id="histNext"' + (batching.on || isToday ? ' disabled' : '') + '>后一天</button>' +
+            '<button class="sbtn" id="histToday"' + (batching.on || isToday ? ' disabled' : '') + '>回到今天</button>' +
+          '</div>' +
+          batchBar +
+          '<div class="histlist" id="histList">' + rows + '</div>' +
+          '<div class="histexport' + (batching.on ? ' frozen' : '') + '">' +
+            '<span class="lbl">导出</span><input type="date" id="expFrom" value="' + expFrom + '">' +
+            '<span class="lbl">至</span><input type="date" id="expTo" value="' + expTo + '">' +
+            '<button class="btn sm" id="expBtn">导出 CSV</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    host.classList.add('on');
+    centerDialog(host);
+
+    const back = () => { if (fromSettings) openSettings(); else closeDialog(); };
+    document.getElementById('dBack').onclick = back;
+    host.onclick = e => { if (e.target === host) back(); };
+    document.getElementById('histPrev').onclick = () => {
+      if (cur <= earliest) return;
+      cur = shiftKey(cur, -1); batching = { on: false, sel: new Set() }; render();
+    };
+    document.getElementById('histNext').onclick = () => {
+      if (cur >= todayKey()) return;
+      cur = shiftKey(cur, 1); batching = { on: false, sel: new Set() }; render();
+    };
+    document.getElementById('histToday').onclick = () => {
+      cur = todayKey(); batching = { on: false, sel: new Set() }; render();
+    };
+    document.getElementById('histDate').onchange = e => {
+      const v = e.target.value;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+      cur = v < earliest ? earliest : (v > todayKey() ? todayKey() : v);
+      batching = { on: false, sel: new Set() }; render();
+    };
+    document.getElementById('expFrom').onchange = e => { expFrom = e.target.value; };
+    document.getElementById('expTo').onchange = e => { expTo = e.target.value; };
+    document.getElementById('expBtn').onclick = () => {
+      if (batching.on) return;
+      expFrom = document.getElementById('expFrom').value;
+      expTo = document.getElementById('expTo').value;
+      exportCsv(expFrom, expTo);
+    };
+
+    if (batching.on) {
+      document.getElementById('histBatchExit').onclick = () => {
+        batching = { on: false, sel: new Set() }; render();
+      };
+      document.getElementById('histBatchAll').onclick = () => {
+        if (items.length && batching.sel.size === items.length) batching.sel.clear();
+        else items.forEach(i => batching.sel.add(i.id));
+        render();
+      };
+      document.getElementById('histBatchDel').onclick = () => {
+        const n = batching.sel.size;
+        if (!n) return;
+        confirmBox({
+          title: '删除所选 ' + n + ' 条历史记录？', body: '删除后无法恢复。', okText: '删除', danger: true,
+          onOk: () => {
+            const left = (state.archive[cur] || []).filter(i => !batching.sel.has(i.id));
+            if (left.length) state.archive[cur] = left; else delete state.archive[cur];
+            batching = { on: false, sel: new Set() };
+            save(); render(); toast('已删除 ' + n + ' 条');
+          }
+        });
+      };
+    } else {
+      const b = document.getElementById('histBatch');
+      if (b) b.onclick = () => { batching = { on: true, sel: new Set() }; render(); };
+    }
+
+    const list = document.getElementById('histList');
+    list.querySelectorAll('.histrow').forEach(r => {
+      const it = items.find(x => x.id === r.dataset.id);
+      r.onclick = () => {
+        if (!batching.on) return;
+        if (batching.sel.has(it.id)) batching.sel.delete(it.id); else batching.sel.add(it.id);
+        render();
+      };
+      r.ondblclick = () => {
+        if (batching.on) return;
+        openDetail(it, { returnable: false, onClose: () => openHistory(cur, fromSettings) });
+      };
+    });
+    list.scrollTop = lastScroll;
+    list.addEventListener('scroll', () => { lastScroll = list.scrollTop; });
+    bindBubble(list, '.histrow .tx');
+  };
+  render();
+}
+
+/* ---------- CSV 导入 / 导出 ---------- */
+let importMode = 'merge';
+
+function parseCsvText(text) {
+  const rows = [];
+  let row = [], field = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else q = false;
+      } else field += c;
+    } else if (c === '"') q = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+    else if (c !== '\r') field += c;
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+function parseStamp(s) {
+  const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (!m) return null;
+  const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], 0, 0);
+  return isNaN(+d) ? null : +d;
+}
+function csvField(s) {
+  const t = String(s);
+  return /[",\r\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+}
+function importCsvText(text, mode) {
+  const rows = parseCsvText(String(text).replace(/^\uFEFF/, ''));
+  if (!rows.length || rows[0].length < 5 || rows[0][0].trim() !== '完成日期') return { ok: false };
+  const now = Date.now();
+  const incoming = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.length < 5) continue;
+    const date = (r[0] || '').trim(), hm = (r[1] || '').trim(), content = (r[2] || '').trim();
+    if (!content || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}/.test(hm)) continue;
+    const completedAt = parseStamp(date + ' ' + hm) || parseStamp(r[4]);
+    if (!completedAt || completedAt > now) continue;
+    incoming.push({ id: uid(), text: content, createdAt: parseStamp(r[3]) || completedAt, completedAt });
+  }
+  if (!incoming.length) return { ok: false };
+  if (mode === 'cover') {
+    state.archive = {};
+    state.items = state.items.filter(i => !i.completedAt);
+  }
+  const seen = new Set();
+  const sig = it => it.text + '|' + it.completedAt;
+  state.items.filter(i => i.completedAt).forEach(i => seen.add(sig(i)));
+  Object.keys(state.archive).forEach(k => state.archive[k].forEach(i => seen.add(sig(i))));
+  let n = 0;
+  for (const it of incoming) {
+    if (seen.has(sig(it))) continue;
+    seen.add(sig(it));
+    const k = localKey(new Date(it.completedAt));
+    if (k === todayKey()) state.items.push(it);
+    else {
+      if (!Array.isArray(state.archive[k])) state.archive[k] = [];
+      state.archive[k].push(it);
+    }
+    n++;
+  }
+  Object.keys(state.archive).forEach(k => state.archive[k].sort((a, b) => a.completedAt - b.completedAt));
+  return { ok: true, n };
+}
+function exportCsv(from, to) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) return toast('请选择起止日期');
+  if (from > to) return toast('起始日期不能晚于结束日期');
+  const out = [['完成日期', '完成时间', '事项内容', '创建时间', '完成时间']];
+  const keys = Object.keys(state.archive).filter(k => k >= from && k <= to).sort();
+  for (const k of keys) {
+    const list = state.archive[k].slice().sort((a, b) => a.completedAt - b.completedAt);
+    for (const it of list) {
+      const c = new Date(it.createdAt), d = new Date(it.completedAt);
+      out.push([k, fmtHM(d), it.text, fmtStamp(c), fmtStamp(d)]);
+    }
+  }
+  if (out.length === 1) return toast('该区间暂无记录');
+  const csv = '\uFEFF' + out.map(r => r.map(csvField).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '待办完成记录_' + from + '_' + to + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  toast('已导出 CSV');
+}
+
 document.getElementById('btnAdd').onclick = () => {
-  if (!canAdd()) return toast('已达上限（' + MAX_ITEMS + ' 条），先完成或删除一条');
+  if (!canAdd()) return toast('已达上限（' + state.maxItems + ' 条），先完成或删除一条');
   openEditor({ mode: 'new', target: 'todo' });
 };
 document.getElementById('btnBatch').onclick = () => {
@@ -874,7 +1353,7 @@ document.getElementById('tplRows').addEventListener('click', e => {
   }
   const act = e.target.closest('[data-act]');
   if (act && act.dataset.act === 'apply') {
-    if (!canAdd()) return toast('待办已达上限（' + MAX_ITEMS + ' 条）');
+    if (!canAdd()) return toast('待办已达上限（' + state.maxItems + ' 条）');
     state.items.push({ id: uid(), text: t.text, createdAt: +nowDate(), completedAt: null });
     save(); renderAll(); toast('已加入今日待办');
   }
@@ -1056,15 +1535,36 @@ tlEl.addEventListener('pointerdown', e => {
 
 /* ---------- 启动 ---------- */
 if (!load()) { seed(); save(); }
+settle();
 applyTheme();
 bindBubble(document.getElementById('tl'), '.trow .tx');
 bindBubble(document.getElementById('tplRows'), '.tplrow .tx');
 window.addEventListener('blur', hideBubble);
+document.getElementById('btnSettings').onclick = openSettings;
+document.getElementById('csvFile').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const res = importCsvText(String(reader.result), importMode);
+    if (!res.ok) return toast('文件格式不正确，只支持本软件导出的 CSV');
+    save(); renderMain();
+    toast(res.n ? '已导入 ' + res.n + ' 条' : '没有新记录（内容已存在）');
+  };
+  reader.onerror = () => toast('文件读取失败');
+  reader.readAsText(f, 'utf-8');
+});
 document.getElementById('btnHour').textContent = state.hour12 ? '12 小时制' : '24 小时制';
 renderAll();
-setInterval(renderClock, 1000);
+setInterval(() => {
+  if (state.lastSettleDate !== todayKey() && !document.getElementById('tl').classList.contains('drag-on')) {
+    settle(); save(); renderAll();
+  }
+  renderClock();
+}, 1000);
 document.getElementById('btnReset').onclick = () => confirmBox({
-  title: '重置演示数据？', body: '会清掉你在这里新建的所有待办与模板。', okText: '重置', danger: true,
+  title: '重置演示数据？', body: '会清掉你在这里新建的所有待办、模板与历史归档，设置恢复默认。', okText: '重置', danger: true,
   onOk: () => {
     seed(); save();
     state.batch.on = false; state.batch.sel.clear();
