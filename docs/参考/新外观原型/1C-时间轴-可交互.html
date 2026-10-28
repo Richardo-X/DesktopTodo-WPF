@@ -233,8 +233,10 @@ body[data-theme="night"]{
 .tplfoot .sp{margin-left:auto}
 .ghost:disabled{opacity:.45;cursor:default}
 .ghost:disabled:hover{background:transparent;color:var(--muted)}
-/* 批量条（主窗/模板窗同构）：与动作行同位等高替换；模板窗 260 宽 → 按钮收窄、计数缩写 */
+/* 批量条（主窗/模板窗同构）：与动作行同位等高替换；模板窗 260 宽 → 按钮收窄、计数缩写；
+   模板批量条在顶部（动作行位置），与列表之间留 6px */
 #tplBatchbar{padding:2px 10px 10px}
+#tplBatchbar + .tplrows{padding-top:0}
 #tplBatchbar .n{white-space:nowrap}
 #tplBatchbar .sbtn{padding:0 7px}
 #tplBatchbar #tplBatchCount{font-size:10px}
@@ -477,7 +479,7 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
           <!-- 计数在同一行动作钮下方右侧对齐（绝对定位于动作行容器） -->
           <span class="cnt" id="tplCnt">0/10</span>
         </div>
-        <div class="tplrows" id="tplRows"></div>
+        <!-- 批量条与动作行同位等高替换（用户定稿：批量条也在顶部） -->
         <div class="batchbar" id="tplBatchbar">
           <span class="n" id="tplBatchCount">已选 0 项</span>
           <button class="sbtn" id="tplBatchExit">返回</button>
@@ -485,6 +487,7 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
           <button class="sbtn" id="tplBatchAll">全选</button>
           <button class="sbtn danger" id="tplBatchDel" disabled>删除所选</button>
         </div>
+        <div class="tplrows" id="tplRows"></div>
       </div>
     </div>
   </div>
