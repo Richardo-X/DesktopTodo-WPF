@@ -130,8 +130,11 @@ body[data-theme="night"]{
 .trow .grip::after{content:"";position:absolute;inset:0 -3px}
 /* 已完成段＝带时间轴的时间流；待办段＝无轴清单 */
 .doneblock{position:relative}
-.doneblock::before{content:"";position:absolute;left:42px;top:52px;bottom:18px;width:1px;
-  background:var(--card-border)}
+/* 时间轴：2px 宽 + opacity .55（观感仍是一条细线）。用 2px 而不是 1px，
+   是因为 1px 在 125%/150% 缩放下只能吸附到某一条设备像素列，线心会偏到点的一侧；
+   2px 以自身中心（left 41 → 中心 42）对称对齐实心点中心，任何缩放都居中。 */
+.doneblock::before{content:"";position:absolute;left:41px;top:52px;bottom:18px;width:2px;
+  background:var(--card-border);opacity:.55}
 .trow .node{flex:none;width:16px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
 .dot{width:7px;height:7px;border-radius:50%}
 .dot.solid{background:var(--accent)}
