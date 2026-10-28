@@ -316,13 +316,13 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
 .histexport.frozen{opacity:.45;pointer-events:none}
 .histbatch{padding:2px 0 8px}
 
-/* 已完成段排序按钮：与行尾勾选框同列（16px 宽 → 中心对齐），线向左让位 */
-.sect .sortbtn{width:16px;height:16px;flex:none;padding:0;border:none;background:transparent;
+/* 完成时间排序按钮（已完成段 / 历史页共用）：16px 宽，中心与行尾勾选框列对齐 */
+.sortbtn{width:16px;height:16px;flex:none;padding:0;border:none;background:transparent;
   color:var(--faint);border-radius:4px;display:flex;align-items:center;justify-content:center;
   cursor:pointer;position:relative}
-.sect .sortbtn::after{content:"";position:absolute;inset:-6px}
-.sect .sortbtn:hover{background:var(--row-hover);color:var(--text)}
-.sect .sortbtn svg{width:12px;height:12px}
+.sortbtn::after{content:"";position:absolute;inset:-6px}
+.sortbtn:hover{background:var(--row-hover);color:var(--text)}
+.sortbtn svg{width:12px;height:12px}
 
 /* 确认框 */
 .cmodal{position:fixed;inset:0;z-index:350;display:none;background:rgba(0,0,0,.28)}
@@ -1104,7 +1104,10 @@ function openHistory(dateKey, fromSettings) {
         '<button class="sbtn danger" id="histBatchDel"' + (batching.sel.size ? '' : ' disabled') + '>删除所选</button></div>'
       : '<div class="histmeta"><span class="d">' + fmtDate(keyDate(cur)) + '</span>' +
         '<span class="n">' + items.length + ' 条</span><span class="sp"></span>' +
-        '<button class="sbtn" id="histBatch"' + (items.length ? '' : ' disabled') + '>批量删除</button></div>';
+        '<button class="sbtn" id="histBatch"' + (items.length ? '' : ' disabled') + '>批量删除</button>' +
+        '<button class="sortbtn" id="histSort" aria-label="按完成时间排序" title="' +
+          (state.doneSort === 'asc' ? '当前正序，点击切换为倒序' : '当前倒序，点击切换为正序') + '">' +
+          (state.doneSort === 'asc' ? SORT_ASC : SORT_DESC) + '</button></div>';
 
     host.innerHTML =
       '<div class="dlg">' +
@@ -1185,6 +1188,12 @@ function openHistory(dateKey, fromSettings) {
       const b = document.getElementById('histBatch');
       if (b) b.onclick = () => { batching = { on: true, sel: new Set() }; render(); };
     }
+
+    const hs = document.getElementById('histSort');
+    if (hs) hs.onclick = () => {
+      state.doneSort = state.doneSort === 'asc' ? 'desc' : 'asc';
+      save(); renderMain(); render();
+    };
 
     const list = document.getElementById('histList');
     list.querySelectorAll('.histrow').forEach(r => {
