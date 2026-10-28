@@ -125,8 +125,9 @@ body[data-theme="night"]{
 .trow:hover{background:var(--row-hover)}
 .trow .tt{flex:none;width:34px;text-align:right;font-size:11px;color:var(--done-time);
   font-variant-numeric:tabular-nums;padding-right:8px}
-.trow .grip{width:14px;flex:none;color:var(--faint);display:flex;align-items:center;justify-content:center;
-  cursor:grab}
+.trow .grip{width:14px;flex:none;align-self:stretch;color:var(--faint);display:flex;align-items:center;
+  justify-content:center;cursor:grab;touch-action:none;position:relative}
+.trow .grip::after{content:"";position:absolute;inset:0 -3px}
 /* 已完成段＝带时间轴的时间流；待办段＝无轴清单 */
 .doneblock{position:relative}
 .doneblock::before{content:"";position:absolute;left:42px;top:52px;bottom:18px;width:1px;
@@ -167,7 +168,12 @@ body[data-theme="night"]{
 .empty{padding:32px 0 8px;text-align:center}
 .empty .a{font-size:13px;color:var(--muted)}
 .empty .b{margin-top:8px;font-size:11px;color:var(--faint)}
-.trow.dragging{opacity:.45}
+/* 拖动：被拖行跟手浮起，其余行让位滑动；drag-on 期间禁选文字（否则拖过内容会刷选文字） */
+.tl.drag-on,.tl.drag-on *{user-select:none;-webkit-user-select:none;cursor:grabbing}
+.tl.drag-on .trow:not(.dragging):hover{background:transparent} /* 拖动中不给其它行亮悬停底 */
+.trow.dragging{position:relative;z-index:6;background:var(--card);
+  box-shadow:0 8px 22px -8px rgba(0,0,0,.35),0 0 0 1px var(--card-border)}
+.trow.dragging .grip{color:var(--accent)}
 
 /* ---------- 模板窗 ---------- */
 .tplhead{display:flex;align-items:center;gap:8px;padding:12px 14px 8px;flex:none}
@@ -361,7 +367,7 @@ const state = {
   tplOpen: false, tucked: false,
   batch: { on: false, sel: new Set() },
   tplBatch: { on: false, sel: new Set() },
-  drag: null, flashId: null,
+  flashId: null,
 };
 
 const pad = n => String(n).padStart(2, '0');
@@ -837,41 +843,130 @@ document.getElementById('btnTuck').onclick = () => tuck(!state.tucked);
 document.getElementById('btnHide').onclick = () => tuck(true);
 document.getElementById('strip').onmouseenter = () => tuck(false);
 
-/* ---------- 拖动排序 ---------- */
-document.getElementById('tl').addEventListener('mousedown', e => {
+/* ---------- 拖动排序：抓点阵跟手，其余行动画让位 ---------- */
+const tlEl = document.getElementById('tl');
+const DRAG_EASE = 'cubic-bezier(.22,.61,.36,1)';
+const DRAG_LIFT = 4;    // 位移超过 4px 才算拖动，避免手抖误触
+const DRAG_SETTLE = 170; // 松手归位时长（与归位 transition .16s 对齐）
+
+tlEl.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || state.batch.on || tlEl.classList.contains('drag-on')) return;
   const grip = e.target.closest('.grip');
-  if (!grip || state.batch.on) return;
+  if (!grip) return;
   const row = grip.closest('.trow');
-  if (!row) return;
-  const from = pending().findIndex(i => i.id === row.dataset.id);
+  if (!row || row.dataset.kind !== 'p') return;
+
+  // 按下即吃掉默认行为：不产生兼容 mouse 事件，拖过文字也不会刷选内容
+  e.preventDefault();
+
+  const rows = Array.from(tlEl.querySelectorAll('.trow[data-kind="p"]'));
+  const from = rows.indexOf(row);
   if (from < 0) return;
-  state.drag = { from, to: from };
-  row.classList.add('dragging');
-  const onMove = ev => {
-    const rows = Array.from(document.querySelectorAll('#tl .trow[data-kind="p"]'));
-    let idx = rows.findIndex(r => {
-      const b = r.getBoundingClientRect();
-      return ev.clientY < b.top + b.height / 2;
-    });
-    if (idx < 0) idx = rows.length - 1;
-    state.drag.to = idx;
-  };
-  const onUp = () => {
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup', onUp);
-    row.classList.remove('dragging');
-    const drag = state.drag; state.drag = null;
-    if (drag && drag.to !== drag.from) {
-      const arr = pending().slice();
-      const item = arr.splice(drag.from, 1)[0];
-      arr.splice(Math.max(0, Math.min(drag.to, arr.length)), 0, item);
-      const comp = state.items.filter(i => i.completedAt).sort((a, b) => a.completedAt - b.completedAt);
-      state.items = arr.concat(comp);
-      save(); renderMain();
+  tlEl.classList.add('drag-on');
+
+  const tlTop = tlEl.getBoundingClientRect().top;
+  const rowH = row.offsetHeight;
+  // 位置快照取"未加 transform"的布局值（内容坐标）：拖动中兄弟行在位移，
+  // 若实时量 rect 会把让位动画也算进去，目标槽位会来回抖。
+  const tops = rows.map(r => r.getBoundingClientRect().top - tlTop + tlEl.scrollTop);
+  const grab = e.clientY - tlTop + tlEl.scrollTop - tops[from]; // 抓点在行内的偏移
+  const minTop = tops[0], maxTop = tops[rows.length - 1];
+  const startY = e.clientY;
+  let armed = false, to = from, lastY = startY, raf = 0;
+
+  const paint = () => {
+    if (!armed) {
+      if (Math.abs(lastY - startY) < DRAG_LIFT) return;
+      armed = true;
+      row.classList.add('dragging');
+      row.style.transition = 'none';
+      rows.forEach(r => { if (r !== row) r.style.transition = 'transform .18s ' + DRAG_EASE; });
+      raf = requestAnimationFrame(tick); // 自动滚动循环从真正拖动那一刻才开始
     }
+    // 被拖行的虚拟顶边（内容坐标）钳在待办段内：不能拖进已完成区
+    const want = Math.min(Math.max(lastY - tlTop + tlEl.scrollTop - grab, minTop), maxTop);
+    row.style.transform = 'translateY(' + (want - tops[from]) + 'px)';
+    const vc = want + rowH / 2;
+    let t = from;
+    for (let i = 0; i < rows.length; i++) {
+      const c = tops[i] + rowH / 2;
+      // 用 <=/>=：被拖行中心刚好压到邻居中心线时就算换位（钳到首/末槽也落得进去）
+      if (i < from && vc <= c) t = Math.min(t, i);
+      else if (i > from && vc >= c) t = Math.max(t, i);
+    }
+    if (t === to) return;
+    to = t;
+    rows.forEach((r, i) => {
+      if (i === from) return;
+      let s = 0;
+      if (to > from && i > from && i <= to) s = -rowH;
+      else if (to < from && i >= to && i < from) s = rowH;
+      r.style.transform = s ? 'translateY(' + s + 'px)' : '';
+    });
   };
-  document.addEventListener('mousemove', onMove);
-  document.addEventListener('mouseup', onUp);
+
+  // 拖到列表上下边缘自动滚动；滚动会改变指针的内容坐标，滚动后重算一次
+  const tick = () => {
+    if (!armed) return;
+    raf = requestAnimationFrame(tick);
+    const before = tlEl.scrollTop;
+    const cy = lastY - tlTop + tlEl.scrollTop;
+    if (cy < before + 26) tlEl.scrollTop = before - 7;
+    else if (cy > before + tlEl.clientHeight - 26) tlEl.scrollTop = before + 7;
+    if (tlEl.scrollTop !== before) paint();
+  };
+
+  const end = commit => {
+    grip.removeEventListener('pointermove', onMove);
+    grip.removeEventListener('pointerup', onUp);
+    grip.removeEventListener('pointercancel', onCancel);
+    window.removeEventListener('blur', onBlur);
+    document.removeEventListener('keydown', onKey, true);
+    cancelAnimationFrame(raf);
+    if (!armed) { tlEl.classList.remove('drag-on'); return; } // 只点了一下点阵：什么都没发生
+    const target = commit ? to : from;
+    row.style.transition = 'transform .16s ' + DRAG_EASE;
+    row.style.transform = 'translateY(' + (tops[target] - tops[from]) + 'px)';
+    if (!commit || to === from) {
+      // 取消或原地放下：让位行也滑回原位
+      rows.forEach((r, i) => {
+        if (i === from) return;
+        r.style.transition = 'transform .16s ' + DRAG_EASE;
+        r.style.transform = '';
+      });
+    }
+    setTimeout(() => {
+      tlEl.classList.remove('drag-on');
+      if (commit && to !== from) {
+        const arr = pending().slice();
+        const item = arr.splice(from, 1)[0];
+        arr.splice(to, 0, item);
+        state.items = arr.concat(completed());
+        save(); renderMain(); // 重排后布局与松手瞬间的画面重合，看不到跳变
+      } else {
+        row.classList.remove('dragging');
+        row.style.transition = ''; row.style.transform = '';
+        rows.forEach(r => { r.style.transition = ''; r.style.transform = ''; });
+      }
+    }, DRAG_SETTLE);
+  };
+
+  const onMove = ev => { lastY = ev.clientY; paint(); };
+  const onUp = ev => { lastY = ev.clientY; paint(); end(true); };
+  const onCancel = () => end(false);
+  const onBlur = () => end(false);
+  const onKey = ev => {
+    if (ev.key !== 'Escape') return;
+    ev.preventDefault(); ev.stopPropagation();
+    end(false);
+  };
+
+  grip.setPointerCapture(e.pointerId);
+  grip.addEventListener('pointermove', onMove);
+  grip.addEventListener('pointerup', onUp);
+  grip.addEventListener('pointercancel', onCancel);
+  window.addEventListener('blur', onBlur);
+  document.addEventListener('keydown', onKey, true);
 });
 
 /* ---------- 启动 ---------- */
