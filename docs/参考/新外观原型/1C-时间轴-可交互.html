@@ -226,7 +226,6 @@ body[data-theme="night"]{
    由标题栏 padding-bottom（4→10）提供。等高公式：2 + 28 + 6 = 36，两侧同构 */
 /* 动作行顺序（用户 2026-10-29）：计数 → 新建 → 弹性空白 → 批量删除（贴最右）；
    计数贴左缘、与新建钮同组左对齐（cnt 是 11px 文字非 chip，无背景）；＋ 左移 2px 对齐行文字 */
-.tplfoot .cnt{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;line-height:18px}
 .tplfoot .addbtn{margin-left:-2px}
 .ghost{font-size:11px;color:var(--muted);cursor:pointer;padding:5px 9px;border-radius:5px;border:none;
   background:transparent;font-family:inherit;transition:background .15s,color .15s}
@@ -470,9 +469,9 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
         <div class="tplhead">
           <span class="brand">模板</span>
         </div>
-        <!-- 动作行（用户定稿 2026-10-29）：计数 → 新建 → 批量删除（弹性空白，批量删除贴最右） -->
+        <!-- 动作行（用户定稿 2026-10-29）：计数 chip（同主窗） → 新建 → 批量删除（弹性空白，批量删除贴最右） -->
         <div class="tplfoot" id="tplFoot">
-          <span class="cnt" id="tplCnt">0/10</span>
+          <span class="cntchip" id="tplCnt">0/10</span>
           <button class="addbtn" id="btnTplNew" title="新建模板" aria-label="新建模板"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
           <span class="sp"></span>
           <button class="sidebtn" id="btnTplBatch" title="批量删除模板" aria-label="批量删除模板">
@@ -818,7 +817,9 @@ function renderTpl() {
   win.classList.toggle('open', state.tplOpen);
   const tplBtn = document.getElementById('btnTpl');
   tplBtn.classList.toggle('on', state.tplOpen);
-  document.getElementById('tplCnt').textContent = state.templates.length + '/' + MAX_TPL;
+  const tplCnt = document.getElementById('tplCnt');
+  tplCnt.textContent = state.templates.length + '/' + MAX_TPL;
+  tplCnt.classList.toggle('full', state.templates.length >= MAX_TPL);
 
   // 单目标互斥：模板批量态下主窗整窗冻结，主窗批量态下本窗整窗冻结（本窗是活动目标时只冻设置入口）
   const mainBatch = state.batch.on;
