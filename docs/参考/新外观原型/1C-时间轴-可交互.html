@@ -187,6 +187,11 @@ body[data-theme="night"]{
 .empty{padding:32px 0 8px;text-align:center}
 .empty .a{font-size:13px;color:var(--muted)}
 .empty .b{margin-top:8px;font-size:11px;color:var(--faint)}
+/* 待办空态＝单行行内占位：占位高度恰等于一行（36px），出现在最后一条待办消失的那一行；
+   已完成段与"现在"分隔线位置不动。大空态（.empty 双行版）只留给列表全空（无已完成）的场景。 */
+.empty.inline{padding:0;display:flex;align-items:center;justify-content:center;gap:8px;height:36px}
+.empty.inline .a{font-size:13px;color:var(--muted)}
+.empty.inline .b{margin:0;font-size:11px;color:var(--faint)}
 /* 拖动：被拖行跟手浮起，其余行让位滑动；drag-on 期间禁选文字（否则拖过内容会刷选文字） */
 .tl.drag-on,.tl.drag-on *{user-select:none;-webkit-user-select:none;cursor:grabbing}
 .tl.drag-on .trow:not(.dragging):hover{background:transparent} /* 拖动中不给其它行亮悬停底 */
@@ -747,9 +752,10 @@ function renderMain() {
       '</div>';
   }
   if (!p.length) {
+    // 单行空态：占一行的高度（36px），落在最后一条待办消失的位置；已完成段不受牵动
     html += inBatch
-      ? '<div class="empty"><div class="a">没有可批量删除的待办</div><div class="b">点「返回」退出批量</div></div>'
-      : '<div class="empty"><div class="a">今天还没有待办</div><div class="b">点 ＋ 新建一条</div></div>';
+      ? '<div class="empty inline"><span class="a">没有可批量删除的待办</span><span class="b">点「返回」退出批量</span></div>'
+      : '<div class="empty inline"><span class="a">今天还没有待办</span><span class="b">点 ＋ 新建一条</span></div>';
   }
   html += '<div class="doneblock">';
   html += '<div class="sect"><span class="t">已完成 · ' + dn.length + '</span><span class="l"></span>' +
