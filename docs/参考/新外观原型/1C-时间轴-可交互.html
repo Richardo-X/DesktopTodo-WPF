@@ -200,10 +200,9 @@ body[data-theme="night"]{
 .trow.dragging .grip{color:var(--accent)}
 
 /* ---------- 模板窗 ---------- */
-.tplhead{display:flex;align-items:center;gap:8px;padding:12px 14px 8px;flex:none}
+.tplhead{display:flex;align-items:center;gap:8px;padding:12px 14px 4px;flex:none}
 .tplhead .brand{font-size:13px;font-weight:600;letter-spacing:.4px}
-.tplhead .cnt{margin-left:auto;font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
-.tplrows{flex:1;min-height:0;overflow:auto;padding:0 8px 8px}
+.tplrows{flex:1;min-height:0;overflow:auto;padding:4px 8px 8px}
 .tplrow{display:flex;align-items:center;gap:8px;height:36px;padding:0 8px;border-radius:var(--radius-row)}
 .tplrow:hover{background:var(--row-hover)}
 .tplrow .tx{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -211,12 +210,20 @@ body[data-theme="night"]{
   border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .tplrow .plus:hover{background:var(--accent-soft);color:var(--accent)}
 .tplrow .plus svg{width:12px;height:12px;stroke-width:2.2}
-.tplrow .sel{width:15px;height:15px;flex:none;border:1px solid var(--line);border-radius:4px;
-  display:flex;align-items:center;justify-content:center;color:transparent;cursor:pointer}
+/* 批量勾选框：与行尾 ＋ 同槽位（22px 命中、勾框 16px 同主窗 .cb 规格）；
+   行首不再放勾选框 → 行内容位置在批量进入/退出时零变化（用户定稿） */
+.tplrow .cb{width:16px;height:16px;flex:none;margin:0 3px;border:1px solid var(--line);border-radius:4px;
+  background:var(--card);display:flex;align-items:center;justify-content:center;color:transparent;
+  cursor:pointer;position:relative;transition:border-color .15s,background .15s}
+.tplrow .cb::after{content:"";position:absolute;inset:-4px}
+.tplrow .cb:hover{border-color:var(--accent)}
+.tplrow .cb svg{width:11px;height:11px}
 .tplrow.picked{background:var(--accent-soft)}
-.tplrow.picked .sel{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
-.tplrow .sel svg{width:11px;height:11px}
-.tplfoot{display:flex;align-items:center;gap:8px;padding:8px 10px 10px;border-top:1px solid var(--card-border);flex:none}
+.tplrow.picked .cb{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.tplfoot{display:flex;align-items:center;gap:8px;padding:8px 10px 0;border-top:1px solid var(--card-border);flex:none}
+/* 动作行在标题栏下：按钮一行；计数放同一行最右（与按钮垂直居中对齐）——
+   "按钮下方右侧"由行内 flow 完成，不再绝对定位（用户 2026-10-29 微调前方案留档：cnt 曾在按钮下 18px 行） */
+.tplfoot .cnt{margin-left:auto;font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
 /* 新建钮（accent）与行内容左缘对齐：补回按钮内边距差，让 ＋ 视觉对齐行文字 */
 .tplfoot .addbtn{margin-left:-2px}
 .ghost{font-size:11px;color:var(--muted);cursor:pointer;padding:5px 9px;border-radius:5px;border:none;
@@ -460,17 +467,17 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
       <div class="win tpl" id="tplWin">
         <div class="tplhead">
           <span class="brand">模板</span>
-          <span class="cnt" id="tplCnt">0/10</span>
         </div>
-        <div class="tplrows" id="tplRows"></div>
-        <!-- 模板窗动作行：与主窗动作行同构——新建（accent ＋）→ 批量删除（描边图标钮），
-             左对齐、8px 间隙、全部 28px 水平对齐；批量中整行让位给批量条 -->
+        <!-- 动作行移到标题栏下方（用户定稿）：新建（accent ＋）→ 批量删除（描边图标钮），左对齐 8px 间隙 -->
         <div class="tplfoot" id="tplFoot">
           <button class="addbtn" id="btnTplNew" title="新建模板" aria-label="新建模板"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
           <button class="sidebtn" id="btnTplBatch" title="批量删除模板" aria-label="批量删除模板">
             <svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
           </button>
+          <!-- 计数在同一行动作钮下方右侧对齐（绝对定位于动作行容器） -->
+          <span class="cnt" id="tplCnt">0/10</span>
         </div>
+        <div class="tplrows" id="tplRows"></div>
         <div class="batchbar" id="tplBatchbar">
           <span class="n" id="tplBatchCount">已选 0 项</span>
           <button class="sbtn" id="tplBatchExit">返回</button>
@@ -824,11 +831,13 @@ function renderTpl() {
   }
   for (const t of state.templates) {
     const picked = tplBatch && state.tplBatch.sel.has(t.id);
+    // 批量态：勾选框原位替换行尾 ＋（同一槽位 22px），行内容位置不变（用户定稿）
     html += '<div class="tplrow' + (picked ? ' picked' : '') + '" data-tid="' + t.id + '">' +
-      (tplBatch ? '<span class="sel">' + CHECK + '</span>' : '') +
       '<span class="tx">' + esc(t.text) + '</span>' +
-      (tplBatch ? '' : '<button class="plus" data-act="apply" title="加入今日待办">' +
-        '<svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>') +
+      (tplBatch
+        ? '<span class="cb selecting' + (picked ? ' picked-cb' : '') + '" title="' + (picked ? '取消选中' : '选中') + '">' + CHECK + '</span>'
+        : '<button class="plus" data-act="apply" title="加入今日待办">' +
+          '<svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>') +
       '</div>';
   }
   rows.innerHTML = html;
