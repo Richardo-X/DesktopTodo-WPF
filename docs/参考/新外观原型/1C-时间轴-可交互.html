@@ -267,10 +267,8 @@ body[data-theme="night"]{
   color:var(--muted);cursor:pointer;border:none;background:transparent;margin-left:-12px}
 .dlg .backbtn svg{width:14px;height:14px}
 .dlg .backbtn:hover{background:var(--row-hover);color:var(--text)}
-.dlg .closebtn{width:28px;height:28px;margin-left:auto;margin-right:-8px;display:flex;align-items:center;
-  justify-content:center;color:var(--muted);cursor:pointer;border:none;background:transparent;border-radius:6px}
-.dlg .closebtn svg{width:14px;height:14px}
-.dlg .closebtn:hover{background:var(--row-hover);color:var(--text)}
+/* 详情标题行右端「删除」按钮（与返回箭头同排）：标题绝对定位居中不受影响 */
+.dlg .dhead .btn{flex:none;margin-left:auto;margin-right:-6px}
 .dlg .dview.boxed{background:var(--row-hover);border-radius:8px;padding:12px;flex:none;max-height:300px}
 .dlg .dtitle{position:absolute;left:0;right:0;text-align:center;font-size:13px;font-weight:600;
   pointer-events:none}
@@ -1021,7 +1019,8 @@ document.getElementById('tl').addEventListener('click', e => {
 });
 
 /* 只读详情（纯查看口径，同 ele）：标题区分已完成事项/历史事项；
-   内容块带淡背景，创建/完成时间与状态三行纯文字；只有右上「关闭」。 */
+   左上返回箭头（替代 ×）；内容顺序=三属性在上、内容块在下；
+   标题行右端「删除」——删除该已完成事项（含归档项；删除后关闭详情）。 */
 function openDetail(it, opts = {}) {
   hideBubble();
   const onClose = typeof opts.onClose === 'function' ? opts.onClose : null;
@@ -1031,15 +1030,16 @@ function openDetail(it, opts = {}) {
   const archived = Object.keys(state.archive).some(k => state.archive[k].some(x => x.id === it.id));
   host.innerHTML =
     '<div class="dlg">' +
-      '<div class="dhead"><span class="dtitle">' + (archived ? '历史事项' : '已完成事项') + '</span>' +
-        '<button class="closebtn" id="dClose" title="关闭">' + CLOSE + '</button></div>' +
+      '<div class="dhead"><button class="backbtn" id="dBack" title="返回">' + BACK + '</button>' +
+        '<span class="dtitle">' + (archived ? '历史事项' : '已完成事项') + '</span>' +
+        '<button class="btn sm danger" id="dDel" title="删除该事项">删除</button></div>' +
       '<div class="dbody">' +
-        '<div class="dview boxed">' + esc(it.text) + '</div>' +
         '<div class="detailrows">' +
           '<div class="drow2"><span class="k">创建时间</span><span class="v">' + fmtDate(created) + ' ' + fmtHM(created) + '</span></div>' +
           '<div class="drow2"><span class="k">完成时间</span><span class="v">' + fmtDate(doneAt) + ' ' + fmtHM(doneAt) + '</span></div>' +
           '<div class="drow2"><span class="k">状态</span><span class="v' + (od ? ' od' : '') + '">' + (od ? '已逾期' : '未逾期') + '</span></div>' +
         '</div>' +
+        '<div class="dview boxed">' + esc(it.text) + '</div>' +
       '</div>' +
       DIALOG_GRIP +
     '</div>';
@@ -1050,7 +1050,24 @@ function openDetail(it, opts = {}) {
     host.classList.remove('on'); host.innerHTML = '';
     if (onClose) onClose();
   };
-  document.getElementById('dClose').onclick = close;
+  document.getElementById('dBack').onclick = close;
+  document.getElementById('dDel').onclick = () => {
+    confirmBox({
+      title: '删除这条' + (archived ? '历史' : '已完成') + '事项？',
+      body: esc(it.text), okText: '删除', danger: true,
+      onOk: () => {
+        if (archived) {
+          for (const k of Object.keys(state.archive)) {
+            state.archive[k] = state.archive[k].filter(x => x.id !== it.id);
+            if (!state.archive[k].length) delete state.archive[k];
+          }
+        } else {
+          state.items = state.items.filter(x => x.id !== it.id);
+        }
+        save(); renderAll(); close(); toast('已删除');
+      }
+    });
+  };
   host.onclick = e => { if (e.target === host) close(); };
 }
 
