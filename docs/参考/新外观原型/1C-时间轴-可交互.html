@@ -64,16 +64,10 @@ body[data-theme="night"]{
    下边框拖拽只改布局高度 --main-h（宽度不变），模板窗不跟随高度、只跟随等比缩放。 */
 .win.main{width:360px;height:calc(var(--main-h,640) * 1px);position:relative;
   transform:scale(var(--main-scale,1));transform-origin:top left}
-/* 模板窗：左缘用 transform 追主窗视觉右缘（= 360s + 4）。缩放时只改合成属性，
-   不改 left，避免每帧触发布局重排（观感上就是"内容抖动"的来源之一）。 */
-.win.tpl{position:absolute;left:364px;top:0;width:260px;
+.win.tpl{position:absolute;left:calc(360px * var(--main-scale,1) + 4px);top:0;width:260px;
   height:auto;max-height:640px;display:none;
-  transform:translateX(calc(360px * (var(--main-scale,1) - 1))) scale(var(--main-scale,1));
-  transform-origin:top left}
+  transform:scale(var(--main-scale,1));transform-origin:top left}
 .win.tpl.open{display:flex}
-
-/* 缩放拖动中把两窗提升为合成层：避免逐帧按新尺寸重新栅格化文字与 1px 描边（发虚/抖动） */
-.anchor.scaling .win{will-change:transform}
 
 /* 右下缩放手柄（主窗 / 二级窗共用）：16px 视觉尺寸 + 20px 命中区 */
 .resize-grip{position:absolute;right:2px;bottom:2px;width:16px;height:16px;z-index:60;
@@ -1706,8 +1700,6 @@ document.getElementById('mainGrip').addEventListener('pointerdown', e => {
   const baseW = 360 * startScale;
   const limit = mainScaleLimit();
   grip.setPointerCapture(e.pointerId);
-  // 拖动期间提升合成层（见 .anchor.scaling）：文字不再逐帧重栅格化
-  document.getElementById('anchor').classList.add('scaling');
   const onMove = ev => {
     const next = clampNum((baseW + (ev.clientX - startX)) / 360, MAIN_MIN, Math.max(MAIN_MIN, limit));
     if (next === state.mainScale) return;
@@ -1718,7 +1710,6 @@ document.getElementById('mainGrip').addEventListener('pointerdown', e => {
     grip.removeEventListener('pointermove', onMove);
     grip.removeEventListener('pointerup', onUp);
     grip.removeEventListener('pointercancel', onUp);
-    document.getElementById('anchor').classList.remove('scaling');
     save();
   };
   grip.addEventListener('pointermove', onMove);
