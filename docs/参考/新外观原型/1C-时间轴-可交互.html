@@ -532,7 +532,8 @@ const DIALOG_GRIP = '<span class="resize-grip" data-grip="dlg" title="拖动缩�
 const MAX_ITEMS_CAP = 10, MAX_TPL = 10, MAX_CHARS = 300;
 const MAIN_MIN = 0.7, MAIN_MAX = 1.15, CHILD_MIN = 0.7, CHILD_MAX = 1.2;
 // 布局高度（px）：下边框拖拽只动这一维；上限另受视口约束（主窗见 mainHeightLimit，二级窗在各组的 pointerdown 里算）
-const MAIN_H_BASE = 640, MAIN_H_MIN = 420, MAIN_H_MAX = 1200;
+// 主窗最小高度 = 模板窗装满 10 条时的自身高度（实测 448）：保证模板窗永远不会伸出主窗底边
+const MAIN_H_BASE = 640, MAIN_H_MIN = 448, MAIN_H_MAX = 1200;
 const CHILD_H_BASE = 560, CHILD_H_MIN = 360, CHILD_H_MAX = 900;
 
 const state = {
