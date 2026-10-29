@@ -52,14 +52,17 @@ body[data-theme="night"]{
 
 /* ---------- 桌面：主窗固定，模板窗向右展开不挤动主窗 ---------- */
 .desk{position:absolute;inset:38px 0 0;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.anchor{transition:transform .28s cubic-bezier(.22,.61,.36,1)}
-.anchor.tucked{transform:translateY(var(--tuck-offset,-760px))}
+/* 布局高度变化时 .desk 会重新居中布局盒、把顶边往上顶；--grow-comp 把顶边钉回原位 */
+.anchor{transition:transform .28s cubic-bezier(.22,.61,.36,1);transform:translateY(var(--grow-comp,0px))}
+.anchor.tucked{transform:translateY(calc(var(--grow-comp,0px) + var(--tuck-offset,-760px)))}
+.anchor.ht-drag{transition:none}
 .cluster{position:relative;display:flex;align-items:flex-start}
 .win{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-win);
   box-shadow:var(--win-shadow);color:var(--text);display:flex;flex-direction:column;overflow:hidden}
 /* 主窗缩放：transform 不进布局（锚点/居中基准仍是 360×640 布局盒），视觉向右下生长；
-   模板窗左缘 = 主窗视觉右缘 + 固定 4px（缝隙不随缩放）。 */
-.win.main{width:360px;height:640px;position:relative;
+   模板窗左缘 = 主窗视觉右缘 + 固定 4px（缝隙不随缩放）。
+   下边框拖拽只改布局高度 --main-h（宽度不变），模板窗不跟随高度、只跟随等比缩放。 */
+.win.main{width:360px;height:calc(var(--main-h,640) * 1px);position:relative;
   transform:scale(var(--main-scale,1));transform-origin:top left}
 .win.tpl{position:absolute;left:calc(360px * var(--main-scale,1) + 4px);top:0;width:260px;
   height:auto;max-height:640px;display:none;
@@ -74,6 +77,13 @@ body[data-theme="night"]{
   border-bottom-right-radius:8px}
 .resize-grip::after{content:"";position:absolute;inset:-2px}
 .resize-grip:hover{opacity:.9}
+
+/* 下边框高度手柄：整条底边可拖（右端让出 22px 给右下角标），只改高度、不改宽度 */
+.hgrip{position:absolute;left:0;right:22px;bottom:0;height:8px;z-index:55;
+  cursor:ns-resize;touch-action:none}
+.hgrip::after{content:"";position:absolute;left:50%;margin-left:-18px;bottom:3px;width:36px;height:3px;
+  border-radius:2px;background:var(--muted);opacity:0;transition:opacity .15s}
+.hgrip:hover::after,.hgrip.dragging::after{opacity:.55}
 
 /* 标题行 */
 .head{display:flex;align-items:center;gap:8px;padding:12px 16px 4px;flex:none}
@@ -461,6 +471,7 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
         </div>
 
         <div class="tl" id="tl"></div>
+        <span class="hgrip" id="mainHGrip" title="拖动调整高度（模板窗不跟随）"></span>
         <span class="resize-grip" id="mainGrip" title="拖动缩放（主窗与模板窗联动）"></span>
       </div>
 
@@ -510,14 +521,19 @@ const SORT_ASC = '<svg class="ic" viewBox="0 0 24 24"><path d="M7 20V6M7 6l-3 3M
 const SORT_DESC = '<svg class="ic" viewBox="0 0 24 24"><path d="M7 4v14M7 18l-3-3M7 18l3-3"/><path d="M13 5h8M13 10h6M13 15h4"/></svg>';
 const BACK = '<svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
 const CLOSE = '<svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-const DIALOG_GRIP = '<span class="resize-grip" data-grip="dlg" title="拖动缩放（本组独立）"></span>';
+const DIALOG_GRIP = '<span class="resize-grip" data-grip="dlg" title="拖动缩放（本组独立）"></span>' +
+  '<span class="hgrip" data-hgrip="dlg" title="拖动调整高度（本组共享）"></span>';
 const MAX_ITEMS_CAP = 10, MAX_TPL = 10, MAX_CHARS = 300;
 const MAIN_MIN = 0.7, MAIN_MAX = 1.15, CHILD_MIN = 0.7, CHILD_MAX = 1.2;
+// 布局高度（px）：下边框拖拽只动这一维；上限另受视口约束（主窗见 mainHeightLimit，二级窗在各组的 pointerdown 里算）
+const MAIN_H_BASE = 640, MAIN_H_MIN = 420, MAIN_H_MAX = 1200;
+const CHILD_H_BASE = 560, CHILD_H_MIN = 360, CHILD_H_MAX = 900;
 
 const state = {
   theme: 'day', hour12: false,
   maxItems: MAX_ITEMS_CAP, autoStart: false, doneSort: 'asc',
   mainScale: 1, childScales: { edit: 1, detail: 1, settings: 1, history: 1 },
+  mainH: MAIN_H_BASE, childHeights: { edit: CHILD_H_BASE, detail: CHILD_H_BASE, settings: CHILD_H_BASE, history: CHILD_H_BASE },
   items: [], archive: {}, templates: [],
   tplOpen: false, tucked: false,
   batch: { on: false, sel: new Set() },
@@ -543,10 +559,22 @@ const fmtStamp = d => localKey(d) + ' ' + fmtHM(d);
 const clampNum = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const clampMainScale = v => clampNum(Number(v) || 1, MAIN_MIN, MAIN_MAX);
 const clampChildScale = v => clampNum(Number(v) || 1, CHILD_MIN, CHILD_MAX);
+const clampMainH = v => clampNum(Number(v) || MAIN_H_BASE, MAIN_H_MIN, MAIN_H_MAX);
+const clampChildH = v => clampNum(Number(v) || CHILD_H_BASE, CHILD_H_MIN, CHILD_H_MAX);
 function applyMainScale() {
   document.documentElement.style.setProperty('--main-scale', state.mainScale);
-  // 收纳时整组完全离屏：按放大后的视觉高度留足余量
-  document.documentElement.style.setProperty('--tuck-offset', -(640 * state.mainScale + 960) + 'px');
+  // 收纳时整组完全离屏：按缩放后的视觉高度留足余量
+  document.documentElement.style.setProperty('--tuck-offset', -(state.mainH * state.mainScale + 960) + 'px');
+}
+function applyMainH() {
+  const a = document.getElementById('anchor');
+  // 初始化/重置时直接落位，别让 .anchor 的 .28s 过渡把整个窗口滑一下
+  const dragging = a.classList.contains('ht-drag');
+  if (!dragging) { a.classList.add('ht-drag'); void a.offsetWidth; }
+  document.documentElement.style.setProperty('--main-h', state.mainH);
+  // .desk 居中布局盒：高度 ±Δ 会让顶边上移 Δ/2，这里补回来，顶边始终不动
+  document.documentElement.style.setProperty('--grow-comp', (state.mainH - MAIN_H_BASE) / 2 + 'px');
+  if (!dragging) { void a.offsetWidth; a.classList.remove('ht-drag'); }
 }
 const uid = () => Math.random().toString(16).slice(2, 10);
 const pendingOverdue = it => localKey(new Date(it.createdAt)) !== todayKey();
@@ -566,6 +594,7 @@ function save() {
     theme: state.theme, hour12: state.hour12,
     maxItems: state.maxItems, autoStart: state.autoStart, doneSort: state.doneSort,
     mainScale: state.mainScale, childScales: state.childScales,
+    mainH: state.mainH, childHeights: state.childHeights,
     items: state.items, archive: state.archive, templates: state.templates, tplOpen: state.tplOpen,
     lastSettleDate: state.lastSettleDate
   }));
@@ -588,6 +617,12 @@ function load() {
     state.childScales = {
       edit: clampChildScale(cs.edit), detail: clampChildScale(cs.detail),
       settings: clampChildScale(cs.settings), history: clampChildScale(cs.history)
+    };
+    state.mainH = clampMainH(d.mainH);
+    const ch = d.childHeights && typeof d.childHeights === 'object' ? d.childHeights : {};
+    state.childHeights = {
+      edit: clampChildH(ch.edit), detail: clampChildH(ch.detail),
+      settings: clampChildH(ch.settings), history: clampChildH(ch.history)
     };
     state.archive = {};
     if (d.archive && typeof d.archive === 'object') {
@@ -635,6 +670,8 @@ function seed() {
   state.tplOpen = false; state.theme = 'day'; state.hour12 = false;
   state.maxItems = MAX_ITEMS_CAP; state.autoStart = false; state.doneSort = 'asc';
   state.mainScale = 1; state.childScales = { edit: 1, detail: 1, settings: 1, history: 1 };
+  state.mainH = MAIN_H_BASE;
+  state.childHeights = { edit: CHILD_H_BASE, detail: CHILD_H_BASE, settings: CHILD_H_BASE, history: CHILD_H_BASE };
   state.lastSettleDate = todayKey();
 }
 
@@ -1077,13 +1114,15 @@ function openDetail(it, opts = {}) {
 /* ---------- 设置 ---------- */
 function centerDialog(host, group) {
   const s = state.childScales[group] || 1;
+  const h = state.childHeights[group] || CHILD_H_BASE;
   const mainRect = document.getElementById('mainWin').getBoundingClientRect();
   const dlg = host.querySelector('.dlg');
   dlg.dataset.group = group;
   dlg.style.transformOrigin = 'top left';
   dlg.style.transform = 'scale(' + s + ')';
+  dlg.style.height = h + 'px';
   dlg.style.left = Math.round(mainRect.left + (mainRect.width - 420 * s) / 2) + 'px';
-  dlg.style.top = Math.round(mainRect.top + (mainRect.height - 560 * s) / 2) + 'px';
+  dlg.style.top = Math.round(mainRect.top + (mainRect.height - h * s) / 2) + 'px';
 }
 /* 二级窗右下缩放手柄：左上角固定、向右下生长；每组独立存缩放值（edit/detail/settings/history） */
 function wireDialogGrip(host) {
@@ -1097,9 +1136,10 @@ function wireDialogGrip(host) {
     hideBubble();
     const startX = e.clientX, startY = e.clientY;
     const startScale = state.childScales[group] || 1;
+    const dlgH = state.childHeights[group] || CHILD_H_BASE;
     const r = dlg.getBoundingClientRect();
     const fit = Math.min(
-      (innerHeight - r.top - 12) / 560,
+      (innerHeight - r.top - 12) / dlgH,
       (innerWidth - r.left - 12) / 420
     );
     const limit = clampNum(Math.min(CHILD_MAX, fit), CHILD_MIN, CHILD_MAX);
@@ -1123,6 +1163,38 @@ function wireDialogGrip(host) {
     grip.addEventListener('pointermove', onMove);
     grip.addEventListener('pointerup', onUp);
     grip.addEventListener('pointercancel', onUp);
+  });
+
+  /* 下边框：只改本组布局高度；同一档共用一值（edit/detail/settings/history），下次打开即沿用 */
+  const hgrip = dlg.querySelector('.hgrip');
+  if (!hgrip) return;
+  hgrip.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault(); e.stopPropagation();
+    hideBubble();
+    const startY = e.clientY;
+    const startH = state.childHeights[group] || CHILD_H_BASE;
+    const s = state.childScales[group] || 1;
+    const r = dlg.getBoundingClientRect();
+    const limit = clampNum((innerHeight - r.top - 12) / s, CHILD_H_MIN, CHILD_H_MAX);
+    hgrip.setPointerCapture(e.pointerId);
+    hgrip.classList.add('dragging');
+    const onMove = ev => {
+      const next = clampNum(startH + (ev.clientY - startY) / s, CHILD_H_MIN, Math.max(CHILD_H_MIN, limit));
+      if (next === state.childHeights[group]) return;
+      state.childHeights[group] = next;
+      dlg.style.height = next + 'px';
+    };
+    const onUp = () => {
+      hgrip.removeEventListener('pointermove', onMove);
+      hgrip.removeEventListener('pointerup', onUp);
+      hgrip.removeEventListener('pointercancel', onUp);
+      hgrip.classList.remove('dragging');
+      save();
+    };
+    hgrip.addEventListener('pointermove', onMove);
+    hgrip.addEventListener('pointerup', onUp);
+    hgrip.addEventListener('pointercancel', onUp);
   });
 }
 function closeDialog() {
@@ -1607,7 +1679,7 @@ document.getElementById('trayTip').onclick = () => {
 function mainScaleLimit() {
   const r = document.getElementById('mainWin').getBoundingClientRect();
   const tplOpen = document.getElementById('tplWin').classList.contains('open');
-  const byH = (innerHeight - r.top - 12) / 640;
+  const byH = (innerHeight - r.top - 12) / state.mainH;
   const byW = (innerWidth - r.left - 12) / (360 + (tplOpen ? 264 : 0));
   return clampNum(Math.min(MAIN_MAX, byH, byW), MAIN_MIN, MAIN_MAX);
 }
@@ -1637,6 +1709,51 @@ document.getElementById('mainGrip').addEventListener('pointerdown', e => {
   grip.addEventListener('pointerup', onUp);
   grip.addEventListener('pointercancel', onUp);
 });
+
+/* ---------- 主窗下边框：只改布局高度（宽度不变；模板窗不跟随高度，仍跟随等比缩放） ---------- */
+function mainHeightLimit() {
+  const r = document.getElementById('mainWin').getBoundingClientRect();
+  const s = state.mainScale || 1;
+  return clampNum((innerHeight - r.top - 12) / s, MAIN_H_MIN, MAIN_H_MAX);
+}
+document.getElementById('mainHGrip').addEventListener('pointerdown', e => {
+  if (e.button !== 0) return;
+  e.preventDefault(); e.stopPropagation();
+  hideBubble();
+  const strip = e.currentTarget;
+  const anchor = document.getElementById('anchor');
+  const startY = e.clientY;
+  const startH = state.mainH;
+  const s = state.mainScale || 1;
+  const limit = mainHeightLimit();
+  strip.setPointerCapture(e.pointerId);
+  strip.classList.add('dragging');
+  anchor.classList.add('ht-drag');
+  const onMove = ev => {
+    // clientY 是缩放后的视觉 px，换算回布局 px 才跟手
+    const next = clampNum(startH + (ev.clientY - startY) / s, MAIN_H_MIN, Math.max(MAIN_H_MIN, limit));
+    if (next === state.mainH) return;
+    state.mainH = next;
+    applyMainH(); applyMainScale();
+  };
+  const onUp = () => {
+    strip.removeEventListener('pointermove', onMove);
+    strip.removeEventListener('pointerup', onUp);
+    strip.removeEventListener('pointercancel', onUp);
+    strip.classList.remove('dragging');
+    anchor.classList.remove('ht-drag');
+    applyMainH(); applyMainScale();
+    save();
+  };
+  strip.addEventListener('pointermove', onMove);
+  strip.addEventListener('pointerup', onUp);
+  strip.addEventListener('pointercancel', onUp);
+});
+// 手柄压在列表底部留白上：滚轮照样滚列表，不因为命中手柄就吞掉
+document.getElementById('mainHGrip').addEventListener('wheel', e => {
+  document.getElementById('tl').scrollTop += e.deltaY;
+  e.preventDefault();
+}, { passive: false });
 
 /* ---------- 拖动排序：抓点阵跟手，其余行动画让位 ---------- */
 const tlEl = document.getElementById('tl');
@@ -1771,6 +1888,7 @@ tlEl.addEventListener('pointerdown', e => {
 if (!load()) { seed(); save(); }
 settle();
 applyMainScale();
+applyMainH();
 applyTheme();
 bindBubble(document.getElementById('tl'), '.trow .tx');
 bindBubble(document.getElementById('tplRows'), '.tplrow .tx');
@@ -1804,7 +1922,7 @@ document.getElementById('btnReset').onclick = () => confirmBox({
     seed(); save();
     state.batch.on = false; state.batch.sel.clear();
     state.tplBatch.on = false; state.tplBatch.sel.clear();
-    tuck(false); applyTheme(); applyMainScale(); renderAll();
+    tuck(false); applyTheme(); applyMainScale(); applyMainH(); renderAll();
     document.getElementById('btnHour').textContent = '24 小时制';
     toast('已重置');
   }
