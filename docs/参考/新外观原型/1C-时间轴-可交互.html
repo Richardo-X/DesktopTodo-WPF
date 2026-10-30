@@ -398,9 +398,9 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
 .cbox .acts{margin-top:20px;display:flex;justify-content:flex-end;gap:8px}
 
 /* 悬停气泡：仅内容被截断时显示全文。纯展示层（鼠标穿透）。
-   尺寸口径（2026-10-30 用户定）：水平方向固定 300，垂直方向随内容增减（同模板窗逻辑）；
-   整体跟随主窗等比缩放（--bubble-scale），避免主窗放大后气泡显得偏小。 */
-.bubble{position:fixed;z-index:320;left:0;top:0;width:300px;
+   尺寸口径（2026-10-30 用户定）：水平方向固定 280，垂直方向随内容增减（同模板窗逻辑）；
+   整体跟随主窗等比缩放（--bubble-scale，幅度先按 1:1），避免主窗放大后气泡显得偏小。 */
+.bubble{position:fixed;z-index:320;left:0;top:0;width:280px;
   padding:9px 12px;background:var(--bubble-bg);color:var(--bubble-fg);
   border:1px solid var(--bubble-border);border-radius:8px;
   box-shadow:0 4px 12px rgba(10,20,40,.16);
