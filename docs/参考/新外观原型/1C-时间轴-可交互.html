@@ -15,7 +15,10 @@ body{
   --accent:#4f7391;--accent-hover:#5f86a5;--accent-fg:#f7fafc;--accent-soft:rgba(79,115,145,.14);
   --text:#33383f;--muted:#5c636c;--faint:#676d76;
   --card:#f7f8f9;--card-border:rgba(30,35,42,.12);--row-hover:rgba(30,35,42,.05);
+  --shell:#eef1f6;
   --chip:rgba(30,35,42,.06);--line:rgba(30,35,42,.26);--overdue:#a83a34;--done-time:#5c636c;
+  --row-card:#ffffff;--row-card-border:rgba(30,35,42,.06);--row-card-hover:#f5f7f9;
+  --field:#ffffff;--field-border:rgba(30,35,42,.10);
   --bubble-bg:#ffffff;--bubble-fg:#222222;--bubble-border:rgba(0,0,0,.09);
   --radius-win:8px;--radius-row:6px;--win-shadow:0 6px 24px rgba(16,24,34,.18);
   font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif;
@@ -29,7 +32,10 @@ body[data-theme="night"]{
   --accent:#8fb0c9;--accent-hover:#a3c0d6;--accent-fg:#0e1418;--accent-soft:rgba(143,176,201,.18);
   --text:#dde2e8;--muted:#a8b0ba;--faint:#9099a3;
   --card:#1d2127;--card-border:rgba(255,255,255,.10);--row-hover:rgba(255,255,255,.06);
+  --shell:#171a1f;
   --chip:rgba(255,255,255,.08);--line:rgba(255,255,255,.22);--overdue:#e08a83;--done-time:#a8b0ba;
+  --row-card:#252930;--row-card-border:rgba(255,255,255,.055);--row-card-hover:#2b3038;
+  --field:#252930;--field-border:rgba(255,255,255,.09);
   --bubble-bg:#3a3a3c;--bubble-fg:#f0f0f0;--bubble-border:rgba(255,255,255,.11);
   --win-shadow:0 6px 24px rgba(0,0,0,.45);
 }
@@ -57,7 +63,7 @@ body[data-theme="night"]{
 .anchor.tucked{transform:translateY(calc(var(--grow-comp,0px) + var(--tuck-offset,-760px)))}
 .anchor.ht-drag{transition:none}
 .cluster{position:relative;display:flex;align-items:flex-start}
-.win{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-win);
+.win{background:var(--shell);border:1px solid var(--card-border);border-radius:var(--radius-win);
   box-shadow:var(--win-shadow);color:var(--text);display:flex;flex-direction:column;overflow:hidden}
 /* 主窗缩放：transform 不进布局（锚点/居中基准仍是 360×640 布局盒），视觉向右下生长；
    模板窗左缘 = 主窗视觉右缘 + 固定 4px（缝隙不随缩放）。
@@ -155,6 +161,11 @@ body[data-theme="night"]{
 .dlg .dview::-webkit-scrollbar-track,.histlist::-webkit-scrollbar-track{background:transparent}
 .trow{display:flex;align-items:center;height:36px;border-radius:var(--radius-row);position:relative}
 .trow:hover{background:var(--row-hover)}
+/* 待办行＝卡片（Electron 口径：窗口底浅一档、行底更亮一档），已完成段不加卡、保留时间轴 */
+.trow[data-kind="p"]{background:var(--row-card);border:1px solid var(--row-card-border);
+  border-radius:8px;margin:4px 0}
+.trow[data-kind="p"]:hover{background:var(--row-card-hover)}
+.trow[data-kind="p"].picked,.trow[data-kind="p"].picked:hover{background:var(--accent-soft)}
 .trow .tt{flex:none;width:34px;text-align:right;font-size:11px;color:var(--done-time);
   font-variant-numeric:tabular-nums;padding-right:8px}
 .trow .grip{width:14px;flex:none;align-self:stretch;color:var(--faint);display:flex;align-items:center;
@@ -211,7 +222,7 @@ body[data-theme="night"]{
 /* 拖动：被拖行跟手浮起，其余行让位滑动；drag-on 期间禁选文字（否则拖过内容会刷选文字） */
 .tl.drag-on,.tl.drag-on *{user-select:none;-webkit-user-select:none;cursor:grabbing}
 .tl.drag-on .trow:not(.dragging):hover{background:transparent} /* 拖动中不给其它行亮悬停底 */
-.trow.dragging{position:relative;z-index:6;background:var(--card);
+.trow.dragging{position:relative;z-index:6;background:var(--row-card);
   box-shadow:0 8px 22px -8px rgba(0,0,0,.35),0 0 0 1px var(--card-border)}
 .trow.dragging .grip{color:var(--accent)}
 
@@ -276,7 +287,7 @@ body[data-theme="night"]{
 /* 二级窗 3:4 */
 .modal{position:fixed;inset:0;z-index:300;display:none;background:rgba(0,0,0,.18)}
 .modal.on{display:block}
-.dlg{position:absolute;width:420px;height:560px;background:var(--card);border:1px solid var(--card-border);
+.dlg{position:absolute;width:420px;height:560px;background:var(--shell);border:1px solid var(--card-border);
   border-radius:10px;box-shadow:0 24px 56px -12px rgba(10,20,40,.5);display:flex;flex-direction:column;
   overflow:hidden}
 .dlg .dhead{display:flex;align-items:center;height:40px;padding:0 12px;flex:none;position:relative}
@@ -293,7 +304,8 @@ body[data-theme="night"]{
 .dlg .state{display:flex;gap:12px;align-items:baseline;font-size:11px;color:var(--muted);
   padding:4px 0 10px;flex:none}
 .dlg .state .badge.od{color:var(--overdue)}
-.dlg textarea{flex:1;min-height:0;width:100%;resize:none;border:none;outline:none;background:transparent;
+.dlg textarea{flex:1;min-height:0;width:100%;resize:none;outline:none;
+  background:var(--field);border:1px solid var(--field-border);border-radius:8px;padding:10px 12px;
   color:var(--text);font-family:inherit;font-size:13px;line-height:1.8;padding:4px 0}
 .dlg textarea::placeholder{color:var(--faint)}
 .dlg .counter{flex:none;text-align:right;font-size:11px;color:var(--faint);padding:8px 0 0}
@@ -391,7 +403,7 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
 /* 确认框 */
 .cmodal{position:fixed;inset:0;z-index:350;display:none;background:rgba(0,0,0,.28)}
 .cmodal.on{display:flex;align-items:center;justify-content:center}
-.cbox{width:340px;background:var(--card);border:1px solid var(--card-border);border-radius:10px;
+.cbox{width:340px;background:var(--shell);border:1px solid var(--card-border);border-radius:10px;
   box-shadow:0 24px 56px -12px rgba(10,20,40,.5);padding:20px}
 .cbox .t{font-size:13px;font-weight:600}
 .cbox .b{margin-top:8px;font-size:12px;line-height:1.7;color:var(--muted);word-break:break-all}
@@ -1805,6 +1817,8 @@ tlEl.addEventListener('pointerdown', e => {
   // 位置快照取"未加让位 transform"的局部布局坐标：rect 是缩放后的视觉 px，先除以 sc。
   // 拖动中兄弟行在位移，若实时量 rect 会把让位动画也算进去，目标槽位会来回抖。
   const tops = rows.map(r => (r.getBoundingClientRect().top - tlRect.top) / sc + tlEl.scrollTop);
+  // 行距（含行间距）：让位位移必须按 pitch 走，否则会留出/叠掉 4px
+  const pitch = rows.length > 1 ? tops[1] - tops[0] : rowH;
   const grab = localY(e.clientY) - tops[from]; // 抓点在行内的偏移（局部坐标）
   const minTop = tops[0], maxTop = tops[rows.length - 1];
   const startClientY = e.clientY;
@@ -1835,8 +1849,8 @@ tlEl.addEventListener('pointerdown', e => {
     rows.forEach((r, i) => {
       if (i === from) return;
       let s = 0;
-      if (to > from && i > from && i <= to) s = -rowH;
-      else if (to < from && i >= to && i < from) s = rowH;
+      if (to > from && i > from && i <= to) s = -pitch;
+      else if (to < from && i >= to && i < from) s = pitch;
       r.style.transform = s ? 'translateY(' + s + 'px)' : '';
     });
   };
