@@ -152,13 +152,13 @@ body[data-theme="night"]{
 /* ---------- 时间轴：轴 + 点（1C 的身份，必须保留） ---------- */
 /* 滚动条不挤压内容：滚动容器永久预留 8px 槽位（overflow-y:scroll），
    右侧内边距同步让出 8px，所以滚动条出现/消失时内容宽度恒定、文字不重排。 */
-.tl{flex:1;min-height:0;overflow-y:scroll;overflow-x:hidden;padding:0 4px 26px 12px;position:relative}
+.tl{flex:1;min-height:0;overflow-y:scroll;overflow-x:hidden;padding:0 6px 26px 12px;position:relative}
 .tl::-webkit-scrollbar,.tplrows::-webkit-scrollbar,.dlg .dbody.scroll::-webkit-scrollbar,
-.dlg .dview::-webkit-scrollbar,.histlist::-webkit-scrollbar{width:8px}
+.dlg .dview::-webkit-scrollbar,.histlist::-webkit-scrollbar,.dlg textarea::-webkit-scrollbar{width:6px}
 .tl::-webkit-scrollbar-thumb,.tplrows::-webkit-scrollbar-thumb,.dlg .dbody.scroll::-webkit-scrollbar-thumb,
-.dlg .dview::-webkit-scrollbar-thumb,.histlist::-webkit-scrollbar-thumb{background:var(--card-border);border-radius:99px}
+.dlg .dview::-webkit-scrollbar-thumb,.histlist::-webkit-scrollbar-thumb,.dlg textarea::-webkit-scrollbar-thumb{background:var(--card-border);border-radius:99px}
 .tl::-webkit-scrollbar-track,.tplrows::-webkit-scrollbar-track,.dlg .dbody.scroll::-webkit-scrollbar-track,
-.dlg .dview::-webkit-scrollbar-track,.histlist::-webkit-scrollbar-track{background:transparent}
+.dlg .dview::-webkit-scrollbar-track,.histlist::-webkit-scrollbar-track,.dlg textarea::-webkit-scrollbar-track{background:transparent}
 .trow{display:flex;align-items:center;height:36px;border-radius:var(--radius-row);position:relative}
 .trow:hover{background:var(--row-hover)}
 /* 待办行＝卡片：高度自适应（最小 34）、内边距 上下3 / 左右8、元素间距 8、圆角 8。
@@ -237,7 +237,7 @@ body[data-theme="night"]{
 /* ---------- 模板窗 ---------- */
 .tplhead{display:flex;align-items:center;gap:8px;padding:12px 14px 10px;flex:none}
 .tplhead .brand{font-size:13px;font-weight:600;letter-spacing:.4px}
-.tplrows{flex:1;min-height:0;overflow-y:scroll;overflow-x:hidden;padding:4px 0 8px 8px}
+.tplrows{flex:1;min-height:0;overflow-y:scroll;overflow-x:hidden;padding:4px 2px 8px 8px}
 .tplrow{display:flex;align-items:center;gap:8px;height:36px;padding:0 8px;border-radius:var(--radius-row)}
 .tplrow:hover{background:var(--row-hover)}
 .tplrow .tx{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -313,13 +313,16 @@ body[data-theme="night"]{
   padding:4px 0 10px;flex:none}
 .dlg .state .badge.od{color:var(--overdue)}
 .dlg textarea{flex:1;min-height:0;width:100%;resize:none;outline:none;
-  background:var(--field);border:1px solid var(--field-border);border-radius:8px;padding:10px 12px;
-  color:var(--text);font-family:inherit;font-size:13px;line-height:1.8;padding:4px 0}
+  overflow-y:scroll;overflow-x:hidden;
+  background:var(--field);border:1px solid var(--field-border);border-radius:8px;
+  /* 右侧 6px 留给滚动条槽位：6 + 6 = 原先的 12，文字宽度不随滚动条出现变化 */
+  padding:10px 6px 10px 12px;
+  color:var(--text);font-family:inherit;font-size:13px;line-height:1.8}
 .dlg textarea::placeholder{color:var(--faint)}
 .dlg .counter{flex:none;text-align:right;font-size:11px;color:var(--faint);padding:8px 0 0}
 .dlg .counter.near{color:var(--overdue)}
 .dlg .dview{flex:1;min-height:0;overflow-y:scroll;overflow-x:hidden;font-size:13px;line-height:1.8;color:var(--text);
-  padding:4px 0;white-space:pre-wrap;word-break:break-word}
+  padding:4px 2px 4px 0;white-space:pre-wrap;word-break:break-word}
 .dlg .detailrows{flex:none;padding:10px 0 4px}
 .dlg .drow2{display:flex;gap:12px;padding:5px 0;font-size:12px}
 .dlg .drow2 .k{flex:none;width:60px;color:var(--faint)}
@@ -340,7 +343,7 @@ body[data-theme="night"]{
 .btn.ghost:hover{background:var(--row-hover);color:var(--text)}
 
 /* ---------- 设置 / 历史（二级窗内容） ---------- */
-.dlg .dbody.scroll{overflow-y:scroll;overflow-x:hidden;padding:4px 12px 16px 20px}
+.dlg .dbody.scroll{overflow-y:scroll;overflow-x:hidden;padding:4px 14px 16px 20px}
 .dlg .dbody.hist{padding:8px 20px 14px}
 .setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0}
 .setcol{display:flex;flex-direction:column;gap:8px;padding:10px 0}
@@ -383,7 +386,7 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
 .histbar .n{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;line-height:18px}
 .histbar .sp{flex:1}
 .histbar .sbtn{height:28px;line-height:26px}
-.histlist{flex:1;min-height:0;overflow-y:scroll;overflow-x:hidden;padding:4px 0;display:flex;flex-direction:column}
+.histlist{flex:1;min-height:0;overflow-y:scroll;overflow-x:hidden;padding:4px 2px 4px 0;display:flex;flex-direction:column}
 .histrow{display:flex;align-items:center;gap:8px;height:36px;padding:0 6px;border-radius:6px}
 .histrow:hover{background:var(--row-hover)}
 .histrow .tx{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
