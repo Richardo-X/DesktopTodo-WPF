@@ -168,6 +168,9 @@ body[data-theme="night"]{
   border-radius:8px;margin:4px 0}
 /* 有 gap 之后行内元素自带的外边距要归零，否则一侧会多出 6~8px */
 .trow[data-kind="p"] .tx{padding:0}
+/* 点阵图案在 14px 盒子里左右各留约 4.8px 空白，直接对齐会让左侧看着比右侧空；
+   把点阵盒左移 5px，让"看到的第一颗点"与右侧勾选框离边距离一致（约 9px）。 */
+.trow[data-kind="p"] .grip{margin-left:-5px}
 .trow[data-kind="p"] .tag{padding-right:0}
 .trow[data-kind="p"]:hover{background:var(--row-hover);border-color:var(--accent)}
 .trow[data-kind="p"].picked,.trow[data-kind="p"].picked:hover{background:var(--accent-soft);border-color:var(--accent)}
