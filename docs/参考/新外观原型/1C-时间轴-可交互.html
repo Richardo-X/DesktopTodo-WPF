@@ -321,16 +321,18 @@ body[data-theme="night"]{
 
 /* ---------- 编辑窗（新建/编辑待办与模板） ---------- */
 /* 结构：标题行 / 内容区（状态条 + 输入框 + 计数）/ 底部操作条（整宽分隔线） */
-.ed-meta{display:flex;align-items:center;gap:8px;padding:2px 0 10px;flex:none;min-width:0}
+/* 顶行：左＝状态胶囊＋创建时间，右＝还原＋字数计数（与时间同一水平线） */
+.ed-top{display:flex;align-items:center;gap:8px;padding:2px 0 8px;flex:none;min-width:0}
+.ed-top .sp{flex:1}
+.ed-meta{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden}
 .ed-badge{flex:none;font-size:10.5px;font-weight:600;line-height:1;padding:4px 8px;border-radius:99px;
   background:var(--accent-soft);color:var(--accent);letter-spacing:.2px}
 .ed-badge.od{background:var(--overdue-soft);color:var(--overdue)}
 .ed-time{font-size:11px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ed-count{flex:none;text-align:right;font-size:11px;color:var(--faint);
-  font-variant-numeric:tabular-nums;padding:6px 2px 0}
+  font-variant-numeric:tabular-nums;padding:0 2px 0 0}
 .ed-count.near{color:var(--overdue)}
-.ed-foot{flex:none;display:flex;align-items:center;gap:4px;padding:12px 20px 16px;
-  border-top:1px solid var(--card-border)}
+.ed-foot{flex:none;display:flex;align-items:center;gap:4px;padding:10px 20px 16px}
 .ed-foot .sp{flex:1}
 .ed-btn{height:30px;padding:0 12px;border:1px solid transparent;border-radius:6px;background:transparent;
   color:var(--muted);font-family:inherit;font-size:12px;cursor:pointer;
@@ -975,20 +977,23 @@ function openEditor({ mode, item, target }) {
         '<svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>' +
         '<span class="dtitle">' + title + '</span></div>' +
       '<div class="dbody ed">' +
-        (isEdit && !isTpl
-          ? '<div class="ed-meta"><span class="ed-badge' + (od ? ' od' : '') + '">' +
-            (item.completedAt ? (od ? '已逾期' : '已完成') : (od ? '已逾期' : '进行中')) +
-            '</span><span class="ed-time">创建于 ' + fmtDate(created) + ' ' + fmtHM(created) + '</span></div>'
-          : '') +
+        '<div class="ed-top">' +
+          (isEdit && !isTpl
+            ? '<div class="ed-meta"><span class="ed-badge' + (od ? ' od' : '') + '">' +
+              (item.completedAt ? (od ? '已逾期' : '已完成') : (od ? '已逾期' : '进行中')) +
+              '</span><span class="ed-time">创建于 ' + fmtDate(created) + ' ' + fmtHM(created) + '</span></div>'
+            : '') +
+          '<span class="sp"></span>' +
+          (isEdit ? '<button class="ed-btn" id="dRestore">还原</button>' : '') +
+          '<span class="ed-count" id="dCounter">0/300</span>' +
+        '</div>' +
         '<textarea id="dText" maxlength="300" placeholder="' +
           (isTpl ? '模板内容（≤300 字）' : '写点什么（≤300 字）') + '"></textarea>' +
-        '<div class="ed-count" id="dCounter">0/300</div>' +
       '</div>' +
       '<div class="ed-foot">' +
-        (isEdit ? '<button class="ed-btn" id="dRestore">还原</button>' : '<button class="ed-btn" id="dClear">清空</button>') +
-        (isEdit && !isTpl ? '<button class="ed-btn" id="dToTpl">添加到模板</button>' : '') +
-        (isEdit ? '<button class="ed-btn danger" id="dDel">删除</button>' : '') +
+        (isEdit ? '<button class="ed-btn danger" id="dDel">删除</button>' : '<button class="ed-btn" id="dClear">清空</button>') +
         '<span class="sp"></span>' +
+        (isEdit && !isTpl ? '<button class="ed-btn" id="dToTpl">添加到模板</button>' : '') +
         '<button class="ed-btn primary" id="dSave">' + (isEdit ? '保存' : (isTpl ? '新建模板' : '新建')) + '</button>' +
       '</div>' +
       DIALOG_GRIP +
