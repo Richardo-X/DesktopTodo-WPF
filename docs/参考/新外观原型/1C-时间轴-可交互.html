@@ -350,7 +350,10 @@ body[data-theme="night"]{
 .setlabel{display:flex;flex-direction:column;gap:3px;min-width:0}
 .setlabel b{font-size:13px;font-weight:600;color:var(--text)}
 .setlabel span{font-size:11px;line-height:1.5;color:var(--faint)}
-.setdivider{height:1px;background:var(--card-border)}
+/* 设置页是 flex 纵列：分割线 1px 默认可收缩，内容超高（出现滚动）时会被压成 0 而"消失"。
+   所有分组项锁死不被压缩，溢出交给滚动容器。 */
+.setdivider{height:1px;background:var(--card-border);flex:none}
+.setrow,.setcol,.setmeta,.setver{flex:none}
 .stepper{display:flex;align-items:center;border:1px solid var(--card-border);border-radius:6px;height:28px;flex:none}
 .stepper .step{width:26px;height:26px;border:none;background:transparent;color:var(--muted);font-size:14px;
   font-family:inherit;cursor:pointer;border-radius:4px}
