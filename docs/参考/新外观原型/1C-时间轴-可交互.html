@@ -16,7 +16,6 @@ body{
   --text:#33383f;--muted:#5c636c;--faint:#676d76;
   --card:#f7f8f9;--card-border:rgba(30,35,42,.12);--row-hover:rgba(30,35,42,.05);
   --chip:rgba(30,35,42,.06);--line:rgba(30,35,42,.26);--overdue:#a83a34;--done-time:#5c636c;
-  --paper:#ffffff;--hairline:rgba(30,35,42,.08);
   --bubble-bg:#ffffff;--bubble-fg:#222222;--bubble-border:rgba(0,0,0,.09);
   --radius-win:8px;--radius-row:6px;--win-shadow:0 6px 24px rgba(16,24,34,.18);
   font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif;
@@ -31,7 +30,6 @@ body[data-theme="night"]{
   --text:#dde2e8;--muted:#a8b0ba;--faint:#9099a3;
   --card:#1d2127;--card-border:rgba(255,255,255,.10);--row-hover:rgba(255,255,255,.06);
   --chip:rgba(255,255,255,.08);--line:rgba(255,255,255,.22);--overdue:#e08a83;--done-time:#a8b0ba;
-  --paper:#22262d;--hairline:rgba(255,255,255,.07);
   --bubble-bg:#3a3a3c;--bubble-fg:#f0f0f0;--bubble-border:rgba(255,255,255,.11);
   --win-shadow:0 6px 24px rgba(0,0,0,.45);
 }
@@ -148,11 +146,7 @@ body[data-theme="night"]{
 /* ---------- 时间轴：轴 + 点（1C 的身份，必须保留） ---------- */
 /* 滚动条不挤压内容：滚动容器永久预留 8px 槽位（overflow-y:scroll），
    右侧内边距同步让出 8px，所以滚动条出现/消失时内容宽度恒定、文字不重排。 */
-/* 内容区＝“纸面”：比外壳亮一档，与上方标题/动作区分成两层；
-   顶部一条分隔线 + 极浅内阴影，让纸面看起来嵌在外壳里（层次/对比来源）。 */
-.tl{flex:1;min-height:0;overflow-y:scroll;overflow-x:hidden;padding:10px 8px 26px 16px;position:relative;
-  background:var(--paper);border-top:1px solid var(--card-border);
-  box-shadow:inset 0 2px 4px rgba(16,24,34,.045)}
+.tl{flex:1;min-height:0;overflow-y:scroll;overflow-x:hidden;padding:0 8px 26px 16px;position:relative}
 .tl::-webkit-scrollbar,.tplrows::-webkit-scrollbar,.dlg .dbody.scroll::-webkit-scrollbar,
 .dlg .dview::-webkit-scrollbar,.histlist::-webkit-scrollbar{width:8px}
 .tl::-webkit-scrollbar-thumb,.tplrows::-webkit-scrollbar-thumb,.dlg .dbody.scroll::-webkit-scrollbar-thumb,
@@ -160,10 +154,6 @@ body[data-theme="night"]{
 .tl::-webkit-scrollbar-track,.tplrows::-webkit-scrollbar-track,.dlg .dbody.scroll::-webkit-scrollbar-track,
 .dlg .dview::-webkit-scrollbar-track,.histlist::-webkit-scrollbar-track{background:transparent}
 .trow{display:flex;align-items:center;height:36px;border-radius:var(--radius-row);position:relative}
-/* 行分隔：只画在相邻待办行之间（已完成段靠时间轴，不画线）。
-   用伪元素画直线，避免 box-shadow 跟着行的圆角变成"胶囊"。 */
-.trow[data-kind="p"]+.trow[data-kind="p"]::after{content:"";position:absolute;left:0;right:0;top:-1px;
-  height:1px;background:var(--hairline)}
 .trow:hover{background:var(--row-hover)}
 .trow .tt{flex:none;width:34px;text-align:right;font-size:11px;color:var(--done-time);
   font-variant-numeric:tabular-nums;padding-right:8px}
@@ -303,8 +293,7 @@ body[data-theme="night"]{
 .dlg .state{display:flex;gap:12px;align-items:baseline;font-size:11px;color:var(--muted);
   padding:4px 0 10px;flex:none}
 .dlg .state .badge.od{color:var(--overdue)}
-.dlg textarea{flex:1;min-height:0;width:100%;resize:none;outline:none;
-  background:var(--paper);border:1px solid var(--card-border);border-radius:8px;padding:10px 12px;
+.dlg textarea{flex:1;min-height:0;width:100%;resize:none;border:none;outline:none;background:transparent;
   color:var(--text);font-family:inherit;font-size:13px;line-height:1.8;padding:4px 0}
 .dlg textarea::placeholder{color:var(--faint)}
 .dlg .counter{flex:none;text-align:right;font-size:11px;color:var(--faint);padding:8px 0 0}
