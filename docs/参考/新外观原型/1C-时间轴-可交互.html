@@ -16,7 +16,7 @@ body{
   --text:#33383f;--muted:#5c636c;--faint:#676d76;
   --card:#f7f8f9;--card-border:rgba(30,35,42,.12);--row-hover:rgba(30,35,42,.05);
   --shell:#eef1f6;
-  --chip:rgba(30,35,42,.06);--line:rgba(30,35,42,.26);--overdue:#a83a34;--done-time:#5c636c;
+  --chip:rgba(30,35,42,.06);--line:rgba(30,35,42,.26);--overdue:#a83a34;--overdue-soft:rgba(168,58,52,.10);--done-time:#5c636c;
   --row-card:#ffffff;--row-card-border:rgba(30,35,42,.06);--row-card-hover:#f5f7f9;
   --field:#ffffff;--field-border:rgba(30,35,42,.10);
   --bubble-bg:#ffffff;--bubble-fg:#222222;--bubble-border:rgba(0,0,0,.09);
@@ -33,7 +33,7 @@ body[data-theme="night"]{
   --text:#dde2e8;--muted:#a8b0ba;--faint:#9099a3;
   --card:#1d2127;--card-border:rgba(255,255,255,.10);--row-hover:rgba(255,255,255,.06);
   --shell:#171a1f;
-  --chip:rgba(255,255,255,.08);--line:rgba(255,255,255,.22);--overdue:#e08a83;--done-time:#a8b0ba;
+  --chip:rgba(255,255,255,.08);--line:rgba(255,255,255,.22);--overdue:#e08a83;--overdue-soft:rgba(224,138,131,.14);--done-time:#a8b0ba;
   --row-card:#252930;--row-card-border:rgba(255,255,255,.055);--row-card-hover:#2b3038;
   --field:#252930;--field-border:rgba(255,255,255,.09);
   --bubble-bg:#3a3a3c;--bubble-fg:#f0f0f0;--bubble-border:rgba(255,255,255,.11);
@@ -309,9 +309,7 @@ body[data-theme="night"]{
 .dlg .dtitle{position:absolute;left:0;right:0;text-align:center;font-size:13px;font-weight:600;
   pointer-events:none}
 .dlg .dbody{flex:1;min-height:0;display:flex;flex-direction:column;padding:8px 20px 0}
-.dlg .state{display:flex;gap:12px;align-items:baseline;font-size:11px;color:var(--muted);
-  padding:4px 0 10px;flex:none}
-.dlg .state .badge.od{color:var(--overdue)}
+
 .dlg textarea{flex:1;min-height:0;width:100%;resize:none;outline:none;
   overflow-y:scroll;overflow-x:hidden;
   background:var(--field);border:1px solid var(--field-border);border-radius:8px;
@@ -319,8 +317,33 @@ body[data-theme="night"]{
   padding:10px 9px 10px 12px;
   color:var(--text);font-family:inherit;font-size:13px;line-height:1.8}
 .dlg textarea::placeholder{color:var(--faint)}
-.dlg .counter{flex:none;text-align:right;font-size:11px;color:var(--faint);padding:8px 0 0}
-.dlg .counter.near{color:var(--overdue)}
+.dlg textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+/* ---------- 编辑窗（新建/编辑待办与模板） ---------- */
+/* 结构：标题行 / 内容区（状态条 + 输入框 + 计数）/ 底部操作条（整宽分隔线） */
+.ed-meta{display:flex;align-items:center;gap:8px;padding:2px 0 10px;flex:none;min-width:0}
+.ed-badge{flex:none;font-size:10.5px;font-weight:600;line-height:1;padding:4px 8px;border-radius:99px;
+  background:var(--accent-soft);color:var(--accent);letter-spacing:.2px}
+.ed-badge.od{background:var(--overdue-soft);color:var(--overdue)}
+.ed-time{font-size:11px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ed-count{flex:none;text-align:right;font-size:11px;color:var(--faint);
+  font-variant-numeric:tabular-nums;padding:6px 2px 0}
+.ed-count.near{color:var(--overdue)}
+.ed-foot{flex:none;display:flex;align-items:center;gap:4px;padding:12px 20px 16px;
+  border-top:1px solid var(--card-border)}
+.ed-foot .sp{flex:1}
+.ed-btn{height:30px;padding:0 12px;border:1px solid transparent;border-radius:6px;background:transparent;
+  color:var(--muted);font-family:inherit;font-size:12px;cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s}
+.ed-btn:hover{background:var(--row-hover);color:var(--text)}
+.ed-btn:active{transform:translateY(1px)}
+.ed-btn.danger{color:var(--overdue)}
+.ed-btn.danger:hover{background:var(--overdue-soft);color:var(--overdue)}
+.ed-btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);
+  font-weight:600;padding:0 18px}
+.ed-btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.ed-btn.primary:disabled{opacity:.45;cursor:default;background:var(--accent);transform:none}
+
 .dlg .dview{flex:1;min-height:0;overflow-y:scroll;overflow-x:hidden;font-size:13px;line-height:1.8;color:var(--text);
   padding:4px 5px 4px 0;white-space:pre-wrap;word-break:break-word}
 .dlg .detailrows{flex:none;padding:10px 0 4px}
@@ -328,7 +351,7 @@ body[data-theme="night"]{
 .dlg .drow2 .k{flex:none;width:60px;color:var(--faint)}
 .dlg .drow2 .v{color:var(--muted);font-variant-numeric:tabular-nums}
 .dlg .drow2 .v.od{color:var(--overdue)}
-.dlg .dactions{flex:none;display:flex;align-items:center;gap:8px;padding:12px 20px 16px}
+
 .dlg .sp{margin-left:auto}
 .btn{height:32px;padding:0 14px;border-radius:6px;border:1px solid var(--card-border);background:var(--card);
   color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;transition:background .15s,color .15s}
@@ -951,22 +974,22 @@ function openEditor({ mode, item, target }) {
       '<div class="dhead"><button class="backbtn" id="dBack" title="返回">' +
         '<svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>' +
         '<span class="dtitle">' + title + '</span></div>' +
-      '<div class="dbody">' +
+      '<div class="dbody ed">' +
         (isEdit && !isTpl
-          ? '<div class="state"><span class="badge' + (od ? ' od' : '') + '">' +
+          ? '<div class="ed-meta"><span class="ed-badge' + (od ? ' od' : '') + '">' +
             (item.completedAt ? (od ? '已逾期' : '已完成') : (od ? '已逾期' : '进行中')) +
-            '</span><span>创建于 ' + fmtDate(created) + ' ' + fmtHM(created) + '</span></div>'
+            '</span><span class="ed-time">创建于 ' + fmtDate(created) + ' ' + fmtHM(created) + '</span></div>'
           : '') +
         '<textarea id="dText" maxlength="300" placeholder="' +
           (isTpl ? '模板内容（≤300 字）' : '写点什么（≤300 字）') + '"></textarea>' +
-        '<div class="counter" id="dCounter">0/300</div>' +
-        '<div class="dactions">' +
-          (isEdit ? '<button class="btn ghost sm" id="dRestore">还原</button>' : '<button class="btn ghost sm" id="dClear">清空</button>') +
-          (isEdit && !isTpl ? '<button class="btn ghost sm" id="dToTpl">添加到模板</button>' : '') +
-          (isEdit ? '<button class="btn sm danger" id="dDel">删除</button>' : '') +
-          '<span class="sp"></span>' +
-          '<button class="btn primary" id="dSave">' + (isEdit ? '保存' : (isTpl ? '新建模板' : '新建')) + '</button>' +
-        '</div>' +
+        '<div class="ed-count" id="dCounter">0/300</div>' +
+      '</div>' +
+      '<div class="ed-foot">' +
+        (isEdit ? '<button class="ed-btn" id="dRestore">还原</button>' : '<button class="ed-btn" id="dClear">清空</button>') +
+        (isEdit && !isTpl ? '<button class="ed-btn" id="dToTpl">添加到模板</button>' : '') +
+        (isEdit ? '<button class="ed-btn danger" id="dDel">删除</button>' : '') +
+        '<span class="sp"></span>' +
+        '<button class="ed-btn primary" id="dSave">' + (isEdit ? '保存' : (isTpl ? '新建模板' : '新建')) + '</button>' +
       '</div>' +
       DIALOG_GRIP +
     '</div>';
