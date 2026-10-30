@@ -356,10 +356,13 @@ body[data-theme="night"]{
   color:var(--text);font-family:inherit;font-size:11px;padding:0 6px;outline:none}
 body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
 .dlg input[type=date]:disabled{opacity:.5}
-.histmeta{display:flex;align-items:center;gap:8px;padding:10px 0 2px;flex:none}
-.histmeta .d{font-size:11px;font-weight:600;color:var(--text)}
-.histmeta .n{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
-.histmeta .sp{flex:1}
+/* 历史动作行：常态与批量态同一行、同一高度（36px），切换时列表不上下跳；
+   排序按钮固定在行尾，两种状态下都不消失、不挪位 */
+.histbar{display:flex;align-items:center;gap:8px;height:36px;flex:none;margin:4px 0 2px}
+.histbar .d{font-size:11px;font-weight:600;color:var(--text)}
+.histbar .n{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;line-height:18px}
+.histbar .sp{flex:1}
+.histbar .sbtn{height:28px;line-height:26px}
 .histlist{flex:1;min-height:0;overflow-y:scroll;overflow-x:hidden;padding:4px 0;display:flex;flex-direction:column}
 .histrow{display:flex;align-items:center;gap:8px;height:36px;padding:0 6px;border-radius:6px}
 .histrow:hover{background:var(--row-hover)}
@@ -376,7 +379,6 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
 .histexport input[type=date]{width:102px}
 .histexport .btn{margin-left:auto}
 .histexport.frozen{opacity:.45;pointer-events:none}
-.histbatch{padding:2px 0 8px}
 
 /* 完成时间排序按钮（已完成段 / 历史页共用）：16px 宽，中心与行尾勾选框列对齐 */
 .sortbtn{width:16px;height:16px;flex:none;padding:0;border:none;background:transparent;
@@ -395,17 +397,20 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
 .cbox .b{margin-top:8px;font-size:12px;line-height:1.7;color:var(--muted);word-break:break-all}
 .cbox .acts{margin-top:20px;display:flex;justify-content:flex-end;gap:8px}
 
-/* 悬停气泡：仅内容被截断时显示全文。纯展示层（鼠标穿透），尺寸随内容自适应：
-   不设高度上限、不裁切、不省略、不滚动——正文上限 300 字，全量显示屏幕放得下。 */
-.bubble{position:fixed;z-index:320;left:0;top:0;max-width:300px;width:fit-content;
+/* 悬停气泡：仅内容被截断时显示全文。纯展示层（鼠标穿透）。
+   尺寸口径（2026-10-30 用户定）：水平方向固定 300，垂直方向随内容增减（同模板窗逻辑）；
+   整体跟随主窗等比缩放（--bubble-scale），避免主窗放大后气泡显得偏小。 */
+.bubble{position:fixed;z-index:320;left:0;top:0;width:300px;
   padding:9px 12px;background:var(--bubble-bg);color:var(--bubble-fg);
   border:1px solid var(--bubble-border);border-radius:8px;
   box-shadow:0 4px 12px rgba(10,20,40,.16);
   font-size:12px;line-height:1.5;
   word-break:break-all;white-space:normal;pointer-events:none;
-  opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;visibility:hidden}
+  opacity:0;visibility:hidden;
+  transform:scale(var(--bubble-scale,1));transform-origin:top left;
+  transition:opacity .15s}
 .bubble.on{visibility:visible}
-.bubble.show{opacity:1;transform:none}
+.bubble.show{opacity:1}
 .bubble::after{content:"";position:absolute;right:-6px;top:var(--arrow-top,50%);
   border:6px solid transparent;border-left-color:var(--bubble-bg)}
 .bubble[data-side="right"]::after{right:auto;left:-6px;border-left-color:transparent;
@@ -747,10 +752,13 @@ function showBubble(tx) {
   const row = tx.closest('.trow, .tplrow');
   if (!row || !tx.isConnected || !bubbleTruncated(tx)) return;
   bubbleText.textContent = tx.textContent;
+  // 气泡跟随主窗等比缩放（当前 1:1；真机若显得过大，改这里的系数即可）
+  const bs = state.mainScale || 1;
+  bubbleEl.style.setProperty('--bubble-scale', bs);
   bubbleEl.classList.remove('show');
   bubbleEl.classList.add('on');           // 先可见但透明：量真实内容尺寸
   const rr = row.getBoundingClientRect();
-  const bw = bubbleEl.offsetWidth, bh = bubbleEl.offsetHeight;
+  const bw = bubbleEl.offsetWidth * bs, bh = bubbleEl.offsetHeight * bs;  // 视觉尺寸
   const cy = rr.top + rr.height / 2;
   let side = 'left', x = rr.left - BUBBLE_GAP - bw;
   if (x < BUBBLE_EDGE) { side = 'right'; x = rr.right + BUBBLE_GAP; }
@@ -759,7 +767,8 @@ function showBubble(tx) {
   bubbleEl.style.left = x + 'px';
   bubbleEl.style.top = y + 'px';
   bubbleEl.dataset.side = side;
-  bubbleEl.style.setProperty('--arrow-top', Math.min(Math.max(cy - y - 6, 10), bh - 12) + 'px');
+  // 箭头在缩放后的元素内部，纵向坐标要先除回缩放系数
+  bubbleEl.style.setProperty('--arrow-top', Math.min(Math.max((cy - y) / bs - 6, 10), bh / bs - 12) + 'px');
   // 等一帧再淡入；若这期间已移开/收起则不要补上 show
   requestAnimationFrame(() => { if (bubbleFor === tx) bubbleEl.classList.add('show'); });
 }
@@ -1332,18 +1341,23 @@ function openHistory(dateKey, fromSettings) {
         '</div>';
       }
     }
-    const batchBar = batching.on
-      ? '<div class="batchbar on histbatch"><span class="n">已选 ' + batching.sel.size + ' 项</span>' +
-        '<button class="sbtn" id="histBatchExit">返回</button><span class="sp"></span>' +
-        '<button class="sbtn" id="histBatchAll">' +
-          (items.length && batching.sel.size === items.length ? '取消全选' : '全选') + '</button>' +
-        '<button class="sbtn danger" id="histBatchDel"' + (batching.sel.size ? '' : ' disabled') + '>删除所选</button></div>'
-      : '<div class="histmeta"><span class="d">' + fmtDate(keyDate(cur)) + '</span>' +
-        '<span class="n">' + items.length + ' 条</span><span class="sp"></span>' +
-        '<button class="sbtn" id="histBatch"' + (items.length ? '' : ' disabled') + '>批量删除</button>' +
-        '<button class="sortbtn" id="histSort" aria-label="按完成时间排序" title="' +
-          (state.doneSort === 'asc' ? '当前正序，点击切换为倒序' : '当前倒序，点击切换为正序') + '">' +
-          (state.doneSort === 'asc' ? SORT_ASC : SORT_DESC) + '</button></div>';
+    // 动作行与批量条合并为同一行（高度恒 36）：左组随状态切换，排序按钮永远钉在行尾。
+    // 批量态按钮顺序（用户 2026-10-30）：已选 n 项 · 删除所选 …… 全选 · 返回
+    const sortBtn = '<button class="sortbtn" id="histSort" aria-label="按完成时间排序" title="' +
+      (state.doneSort === 'asc' ? '当前正序，点击切换为倒序' : '当前倒序，点击切换为正序') + '">' +
+      (state.doneSort === 'asc' ? SORT_ASC : SORT_DESC) + '</button>';
+    const histBar = '<div class="histbar">' +
+      (batching.on
+        ? '<span class="n">已选 ' + batching.sel.size + ' 项</span>' +
+          '<button class="sbtn danger" id="histBatchDel"' + (batching.sel.size ? '' : ' disabled') + '>删除所选</button>' +
+          '<span class="sp"></span>' +
+          '<button class="sbtn" id="histBatchAll">' +
+            (items.length && batching.sel.size === items.length ? '取消全选' : '全选') + '</button>' +
+          '<button class="sbtn" id="histBatchExit">返回</button>'
+        : '<span class="d">' + fmtDate(keyDate(cur)) + '</span>' +
+          '<span class="n">' + items.length + ' 条</span><span class="sp"></span>' +
+          '<button class="sbtn" id="histBatch"' + (items.length ? '' : ' disabled') + '>批量删除</button>') +
+      sortBtn + '</div>';
 
     host.innerHTML =
       '<div class="dlg">' +
@@ -1357,7 +1371,7 @@ function openHistory(dateKey, fromSettings) {
             '<button class="sbtn" id="histNext"' + (batching.on || isToday ? ' disabled' : '') + '>后一天</button>' +
             '<button class="sbtn" id="histToday"' + (batching.on || isToday ? ' disabled' : '') + '>回到今天</button>' +
           '</div>' +
-          batchBar +
+          histBar +
           '<div class="histlist" id="histList">' + rows + '</div>' +
           '<div class="histexport' + (batching.on ? ' frozen' : '') + '">' +
             '<span class="lbl">导出</span><input type="date" id="expFrom" value="' + expFrom + '">' +
