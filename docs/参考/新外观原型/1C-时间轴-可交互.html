@@ -1039,17 +1039,20 @@ function openEditor({ mode, item, target }) {
     if (!text) return toast('内容为空，先写点什么');
     if (state.templates.length >= MAX_TPL) return toast('模板已达上限（' + MAX_TPL + ' 条）');
     if (state.templates.some(t => t.text === text)) return toast('已存在相同内容');
-    state.templates.push({ id: uid(), text });
-    save(); renderTpl(); toast('已添加到模板');
+    confirmBox({ title: '添加到模板？', body: '当前内容会保存为一条模板。', okText: '添加',
+      onOk: () => {
+        state.templates.push({ id: uid(), text });
+        save(); renderTpl(); toast('已添加到模板');
+      } });
   };
 
   const del = document.getElementById('dDel');
   if (del) del.onclick = () => {
     if (isTpl) {
-      confirmBox({ title: '删除这个模板？', body: esc(item.text), okText: '删除', danger: true,
+      confirmBox({ title: '删除这个模板？', okText: '删除', danger: true,
         onOk: () => { state.templates = state.templates.filter(t => t.id !== item.id); save(); renderTpl(); close(); toast('已删除模板'); } });
     } else {
-      confirmBox({ title: '删除这条待办？', body: esc(item.text), okText: '删除', danger: true,
+      confirmBox({ title: '删除这条待办？', okText: '删除', danger: true,
         onOk: () => { state.items = state.items.filter(i => i.id !== item.id); save(); renderAll(); close(); toast('已删除'); } });
     }
   };
@@ -1165,7 +1168,7 @@ function openDetail(it, opts = {}) {
   document.getElementById('dDel').onclick = () => {
     confirmBox({
       title: '删除这条' + (archived ? '历史' : '已完成') + '事项？',
-      body: esc(it.text), okText: '删除', danger: true,
+      okText: '删除', danger: true,
       onOk: () => {
         if (archived) {
           for (const k of Object.keys(state.archive)) {
