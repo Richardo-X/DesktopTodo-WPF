@@ -161,9 +161,9 @@ body[data-theme="night"]{
 .dlg .dview::-webkit-scrollbar-track,.histlist::-webkit-scrollbar-track{background:transparent}
 .trow{display:flex;align-items:center;height:36px;border-radius:var(--radius-row);position:relative}
 .trow:hover{background:var(--row-hover)}
-/* 待办行＝卡片，规格照 Electron（内边距按用户要求减半）：高 44、内边距 5×6、元素间距 8、圆角 8；
+/* 待办行＝卡片，规格直接照 Electron：高 44、内边距 11×12、元素间距 8、圆角 8；
    左右内边距相等，行内内容水平居中对称。已完成段不加卡、保留时间轴。 */
-.trow[data-kind="p"]{height:44px;padding:5px 6px;gap:8px;
+.trow[data-kind="p"]{height:44px;padding:11px 12px;gap:8px;
   background:var(--row-card);border:1px solid var(--row-card-border);
   border-radius:8px;margin:4px 0}
 /* 有 gap 之后行内元素自带的外边距要归零，否则一侧会多出 6~8px */
