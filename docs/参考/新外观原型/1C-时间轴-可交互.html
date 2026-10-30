@@ -16,7 +16,7 @@ body{
   --text:#33383f;--muted:#5c636c;--faint:#676d76;
   --card:#f7f8f9;--card-border:rgba(30,35,42,.12);--row-hover:rgba(30,35,42,.05);
   --shell:#eef1f6;
-  --chip:rgba(30,35,42,.06);--line:rgba(30,35,42,.26);--overdue:#a83a34;--overdue-soft:rgba(168,58,52,.10);--done-time:#5c636c;
+  --chip:rgba(30,35,42,.06);--line:rgba(30,35,42,.26);--overdue:#a83a34;--overdue-soft:rgba(168,58,52,.10);--overdue-border:rgba(168,58,52,.35);--done-time:#5c636c;
   --row-card:#ffffff;--row-card-border:rgba(30,35,42,.06);--row-card-hover:#f5f7f9;
   --field:#ffffff;--field-border:rgba(30,35,42,.10);
   --bubble-bg:#ffffff;--bubble-fg:#222222;--bubble-border:rgba(0,0,0,.09);
@@ -33,7 +33,7 @@ body[data-theme="night"]{
   --text:#dde2e8;--muted:#a8b0ba;--faint:#9099a3;
   --card:#1d2127;--card-border:rgba(255,255,255,.10);--row-hover:rgba(255,255,255,.06);
   --shell:#171a1f;
-  --chip:rgba(255,255,255,.08);--line:rgba(255,255,255,.22);--overdue:#e08a83;--overdue-soft:rgba(224,138,131,.14);--done-time:#a8b0ba;
+  --chip:rgba(255,255,255,.08);--line:rgba(255,255,255,.22);--overdue:#e08a83;--overdue-soft:rgba(224,138,131,.14);--overdue-border:rgba(224,138,131,.40);--done-time:#a8b0ba;
   --row-card:#252930;--row-card-border:rgba(255,255,255,.055);--row-card-hover:#2b3038;
   --field:#252930;--field-border:rgba(255,255,255,.09);
   --bubble-bg:#3a3a3c;--bubble-fg:#f0f0f0;--bubble-border:rgba(255,255,255,.11);
@@ -334,13 +334,14 @@ body[data-theme="night"]{
 .ed-count.near{color:var(--overdue)}
 .ed-foot{flex:none;display:flex;align-items:center;gap:4px;padding:10px 20px 16px}
 .ed-foot .sp{flex:1}
-.ed-btn{height:30px;padding:0 12px;border:1px solid transparent;border-radius:6px;background:transparent;
-  color:var(--muted);font-family:inherit;font-size:12px;cursor:pointer;
+/* 按钮三档：主操作＝主题色实心；次操作＝浅底细边；危险＝浅底细边 + 红字 */
+.ed-btn{height:30px;padding:0 12px;border:1px solid var(--card-border);border-radius:6px;background:var(--card);
+  color:var(--text);font-family:inherit;font-size:12px;cursor:pointer;
   transition:background .15s,color .15s,border-color .15s}
-.ed-btn:hover{background:var(--row-hover);color:var(--text)}
+.ed-btn:hover{background:var(--row-hover)}
 .ed-btn:active{transform:translateY(1px)}
-.ed-btn.danger{color:var(--overdue)}
-.ed-btn.danger:hover{background:var(--overdue-soft);color:var(--overdue)}
+.ed-btn.danger{color:var(--overdue);border-color:var(--overdue-border)}
+.ed-btn.danger:hover{background:var(--overdue-soft)}
 .ed-btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);
   font-weight:600;padding:0 18px}
 .ed-btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
