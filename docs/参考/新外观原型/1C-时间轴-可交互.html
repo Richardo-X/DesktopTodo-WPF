@@ -306,6 +306,8 @@ body[data-theme="night"]{
 /* 详情标题行右端「删除」按钮（与返回箭头同排）：标题绝对定位居中不受影响 */
 .dlg .dhead .btn{flex:none;margin-left:auto;margin-right:-6px}
 .dlg .dview.boxed{background:var(--row-hover);border-radius:8px;padding:12px;flex:none;max-height:300px}
+/* 详情窗底部操作行：删除按钮在内容框外、右下角；下边距同时给右下缩放手柄让位 */
+.dact{flex:none;display:flex;justify-content:flex-end;padding:10px 0 14px}
 .dlg .dtitle{position:absolute;left:0;right:0;text-align:center;font-size:13px;font-weight:600;
   pointer-events:none}
 .dlg .dbody{flex:1;min-height:0;display:flex;flex-direction:column;padding:8px 20px 0}
@@ -594,6 +596,9 @@ const MAIN_MIN = 0.7, MAIN_MAX = 1.15, CHILD_MIN = 0.7, CHILD_MAX = 1.2;
 // 主窗最小高度 = 模板窗装满 10 条时的自身高度（实测 448）：保证模板窗永远不会伸出主窗底边
 const MAIN_H_BASE = 640, MAIN_H_MIN = 448, MAIN_H_MAX = 1200;
 const CHILD_H_BASE = 560, CHILD_H_MIN = 360, CHILD_H_MAX = 900;
+// 详情窗默认高度：按 300 字满内容实测的自然高度
+// 2 边框 + 40 标题 + 8 上距 + 98 三属性 + 300 内容块 + 10 间距 + 28 删除按钮 + 14 下距 = 500
+const DETAIL_H_BASE = 500;
 
 const state = {
   theme: 'day', hour12: false,
@@ -605,7 +610,7 @@ const state = {
   batch: { on: false, sel: new Set() },
   tplBatch: { on: false, sel: new Set() },
   flashId: null, lastSettleDate: null,
-  detailSizeMigrated: false,
+  detailSizeVersion: 0,
 };
 
 const pad = n => String(n).padStart(2, '0');
@@ -662,7 +667,7 @@ function save() {
     maxItems: state.maxItems, autoStart: state.autoStart, doneSort: state.doneSort,
     mainScale: state.mainScale, childScales: state.childScales,
     mainH: state.mainH, childHeights: state.childHeights,
-    detailSizeMigrated: state.detailSizeMigrated,
+    detailSizeVersion: state.detailSizeVersion,
     items: state.items, archive: state.archive, templates: state.templates, tplOpen: state.tplOpen,
     lastSettleDate: state.lastSettleDate
   }));
@@ -694,12 +699,13 @@ function load() {
     };
     // 一次性迁移（2026-10-31 用户要求）：详情窗回到默认尺寸，清掉此前拖拽试验留下的值。
     // 只做一次：之后用户再拖详情窗，仍按二级窗分组记忆规则保存。
-    const resetDetailSize = !d.detailSizeMigrated;
+    // v2：详情窗默认高度改为 500（按 300 字满内容实测），旧存档重置一次
+    const resetDetailSize = d.detailSizeVersion !== 2;
     if (resetDetailSize) {
       state.childScales.detail = 1;
-      state.childHeights.detail = CHILD_H_BASE;
+      state.childHeights.detail = DETAIL_H_BASE;
     }
-    state.detailSizeMigrated = true;
+    state.detailSizeVersion = 2;
     state.archive = {};
     if (d.archive && typeof d.archive === 'object') {
       for (const k of Object.keys(d.archive)) {
@@ -748,8 +754,8 @@ function seed() {
   state.maxItems = MAX_ITEMS_CAP; state.autoStart = false; state.doneSort = 'asc';
   state.mainScale = 1; state.childScales = { edit: 1, detail: 1, settings: 1, history: 1 };
   state.mainH = MAIN_H_BASE;
-  state.childHeights = { edit: CHILD_H_BASE, detail: CHILD_H_BASE, settings: CHILD_H_BASE, history: CHILD_H_BASE };
-  state.detailSizeMigrated = true;
+  state.childHeights = { edit: CHILD_H_BASE, detail: DETAIL_H_BASE, settings: CHILD_H_BASE, history: CHILD_H_BASE };
+  state.detailSizeVersion = 2;
   state.lastSettleDate = todayKey();
 }
 
@@ -1175,8 +1181,7 @@ function openDetail(it, opts = {}) {
   host.innerHTML =
     '<div class="dlg">' +
       '<div class="dhead"><button class="backbtn" id="dBack" title="返回">' + BACK + '</button>' +
-        '<span class="dtitle">' + (archived ? '历史事项' : '已完成事项') + '</span>' +
-        '<button class="btn sm danger" id="dDel" title="删除该事项">删除</button></div>' +
+        '<span class="dtitle">' + (archived ? '历史事项' : '已完成事项') + '</span></div>' +
       '<div class="dbody">' +
         '<div class="detailrows">' +
           '<div class="drow2"><span class="k">创建时间</span><span class="v">' + fmtDate(created) + ' ' + fmtHM(created) + '</span></div>' +
@@ -1184,6 +1189,7 @@ function openDetail(it, opts = {}) {
           '<div class="drow2"><span class="k">状态</span><span class="v' + (od ? ' od' : '') + '">' + (od ? '已逾期' : '未逾期') + '</span></div>' +
         '</div>' +
         '<div class="dview boxed">' + esc(it.text) + '</div>' +
+        '<div class="dact"><button class="btn sm danger" id="dDel" title="删除该事项">删除</button></div>' +
       '</div>' +
       DIALOG_GRIP +
     '</div>';
@@ -1218,7 +1224,7 @@ function openDetail(it, opts = {}) {
 /* ---------- 设置 ---------- */
 function centerDialog(host, group) {
   const s = state.childScales[group] || 1;
-  const h = state.childHeights[group] || CHILD_H_BASE;
+  const h = state.childHeights[group] || (group === 'detail' ? DETAIL_H_BASE : CHILD_H_BASE);
   const mainRect = document.getElementById('mainWin').getBoundingClientRect();
   const dlg = host.querySelector('.dlg');
   dlg.dataset.group = group;
