@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="day">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>详情页方案 · 第三组（G-L，6 个）</title>
+<style>
+/* 与 1C 原型同一套令牌；本页只做方案对比，不接入主原型 */
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  --accent:#4f7391;--accent-hover:#5f86a5;--accent-fg:#f7fafc;--accent-soft:rgba(79,115,145,.14);
+  --text:#33383f;--muted:#5c636c;--faint:#676d76;
+  --card:#f7f8f9;--card-border:rgba(30,35,42,.12);--row-hover:rgba(30,35,42,.05);
+  --shell:#eef1f6;
+  --chip:rgba(30,35,42,.06);--line:rgba(30,35,42,.26);
+  --overdue:#a83a34;--overdue-soft:rgba(168,58,52,.10);--overdue-border:rgba(168,58,52,.35);
+  --row-card:#ffffff;--row-card-border:rgba(30,35,42,.06);
+  font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif;
+  font-size:13px;line-height:1.5;color:var(--text);
+  background:
+    radial-gradient(1180px 760px at 78% 12%, rgba(126,151,173,.12), transparent 62%),
+    radial-gradient(920px 640px at 10% 88%, rgba(110,124,142,.10), transparent 60%),
+    linear-gradient(160deg,#0d1116,#141a21 55%,#0d1116);
+  padding:18px 24px 36px;overflow:auto;
+}
+body[data-theme="night"]{
+  --accent:#8fb0c9;--accent-hover:#a3c0d6;--accent-fg:#0e1418;--accent-soft:rgba(143,176,201,.18);
+  --text:#dde2e8;--muted:#a8b0ba;--faint:#9099a3;
+  --card:#1d2127;--card-border:rgba(255,255,255,.10);--row-hover:rgba(255,255,255,.06);
+  --shell:#171a1f;
+  --chip:rgba(255,255,255,.08);--line:rgba(255,255,255,.22);
+  --overdue:#e08a83;--overdue-soft:rgba(224,138,131,.14);--overdue-border:rgba(224,138,131,.40);
+  --row-card:#252930;--row-card-border:rgba(255,255,255,.055);
+}
+
+.bar{display:flex;align-items:center;gap:12px;margin-bottom:16px;color:#cfd6e2}
+.bar b{font-size:13px;letter-spacing:.3px}
+.bar .sep{width:1px;height:16px;background:rgba(255,255,255,.16)}
+.bar button{height:26px;padding:0 10px;border-radius:6px;border:1px solid rgba(255,255,255,.16);
+  background:transparent;color:#cfd6e2;font-size:11.5px;font-family:inherit;cursor:pointer}
+.bar button:hover{background:rgba(255,255,255,.08)}
+.bar .hint{margin-left:auto;font-size:11px;color:rgba(255,255,255,.45)}
+
+.grid{display:grid;grid-template-columns:repeat(3,420px);gap:22px 28px}
+.col{display:flex;flex-direction:column;gap:8px}
+.tag{display:flex;align-items:baseline;gap:8px;color:#e7edf5}
+.tag b{font-size:12.5px;font-weight:600}
+.tag span{font-size:11px;color:rgba(255,255,255,.48)}
+
+.win{width:420px;height:462px;background:var(--shell);border:1px solid var(--card-border);
+  border-radius:10px;box-shadow:0 24px 56px -12px rgba(10,20,40,.5);
+  display:flex;flex-direction:column;overflow:hidden;position:relative}
+
+.head{height:40px;display:flex;align-items:center;padding:0 12px;flex:none;position:relative}
+.back{width:34px;height:40px;display:flex;align-items:center;justify-content:center;
+  color:var(--muted);margin-left:-12px;border-radius:6px}
+.back svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.title{position:absolute;left:0;right:0;text-align:center;font-size:13px;font-weight:600;pointer-events:none}
+.del{height:28px;padding:0 10px;border-radius:6px;border:1px solid var(--overdue-border);
+  background:transparent;color:var(--overdue);font-size:11px;font-family:inherit;cursor:pointer;
+  margin-left:auto;margin-right:-6px}
+.del:hover{background:var(--overdue-soft)}
+
+.badge{flex:none;font-size:10.5px;font-weight:600;line-height:1;padding:4px 8px;border-radius:99px;
+  background:var(--accent-soft);color:var(--accent);letter-spacing:.2px}
+
+.body{flex:1;min-height:0;display:flex;flex-direction:column;padding:8px 20px 14px}
+.content{flex:1;min-height:0;overflow-y:auto;font-size:13px;line-height:1.8;
+  white-space:pre-wrap;word-break:break-word;color:var(--text)}
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-thumb{background:var(--card-border);border-radius:99px}
+.content::-webkit-scrollbar-track{background:transparent}
+.rule{flex:none;height:1px;background:var(--card-border);margin-bottom:12px}
+
+/* ───── G 日期块 ───── */
+.g-top{display:flex;gap:14px;flex:none;padding:6px 0 12px}
+.g-date{flex:none;width:62px;text-align:center;border-right:1px solid var(--card-border);padding-right:12px}
+.g-date .d{font-size:28px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.g-date .m{font-size:10.5px;color:var(--faint);margin-top:4px;letter-spacing:.4px}
+.g-meta{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;font-size:11px;color:var(--muted)}
+.g-meta .row{display:flex;gap:8px}
+.g-meta .k{flex:none;width:28px;color:var(--faint)}
+.g-meta .v{font-variant-numeric:tabular-nums}
+.g-meta .badge{align-self:flex-start;margin-top:2px}
+
+/* ───── H 定义列表 ───── */
+.h-list{flex:none;padding:2px 0 10px}
+.h-row{display:flex;gap:10px;padding:4px 0;font-size:12px}
+.h-row .k{flex:none;width:56px;color:var(--faint);font-size:11px}
+.h-row .v{color:var(--muted);font-variant-numeric:tabular-nums}
+.h-badge{flex:none;padding:0 0 10px}
+
+/* ───── I 细信息条 ───── */
+.i-strip{flex:none;display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;margin-bottom:10px;
+  background:var(--chip);border-radius:6px;font-size:11px;color:var(--muted);
+  font-variant-numeric:tabular-nums;overflow:hidden;white-space:nowrap}
+.i-strip .sep{color:var(--faint)}
+.i-card{flex:1;min-height:0;background:var(--row-hover);border-radius:8px;padding:12px;display:flex;flex-direction:column}
+
+/* ───── J 浮起单卡 ───── */
+.j-lead{flex:none;display:flex;align-items:center;gap:6px;padding:2px 2px 10px;font-size:11px;color:var(--muted);
+  font-variant-numeric:tabular-nums}
+.j-card{flex:1;min-height:0;background:var(--row-card);border:1px solid var(--row-card-border);
+  border-radius:8px;box-shadow:0 6px 18px rgba(16,24,34,.10);padding:14px;margin:0 2px;
+  display:flex;flex-direction:column}
+.j-foot{flex:none;padding:10px 2px 0;font-size:10.5px;color:var(--faint)}
+
+/* ───── K 两端时间 ───── */
+.k-track{flex:none;display:flex;align-items:flex-end;padding:4px 0 12px}
+.k-end{flex:none;width:112px}
+.k-end.right{text-align:right}
+.k-end .k{font-size:10px;color:var(--faint);letter-spacing:.4px}
+.k-end .v{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:2px}
+.k-line{flex:1;height:1px;background:var(--card-border);position:relative;margin:0 10px 10px}
+.k-line::after{content:"";position:absolute;right:-1px;top:-3px;
+  border:3.5px solid transparent;border-left-color:var(--line)}
+.k-badge{flex:none;padding:0 0 12px}
+
+/* ───── L 底部属性条 ───── */
+.l-card{flex:1;min-height:0;background:var(--row-card);border:1px solid var(--row-card-border);
+  border-radius:8px;padding:12px;display:flex;flex-direction:column}
+.l-foot{flex:none;display:flex;align-items:center;gap:10px;padding-top:10px;
+  font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+.l-foot .badge{margin-left:auto}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <b>已完成事项 · 详情页方案（第三组 6 个）</b>
+  <span class="sep"></span>
+  <button id="themeBtn">切换夜间</button>
+  <span class="hint">同壳 420×462、同令牌；删除按钮本轮统一放标题栏右侧，便于比较内容区</span>
+</div>
+
+<div class="grid">
+
+  <!-- G -->
+  <section class="col">
+    <div class="tag"><b>G · 日期块</b><span>大日期做锚点，属性靠右，正文在下</span></div>
+    <div class="win">
+      <div class="head"><span class="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></span>
+        <span class="title">已完成事项</span><button class="del">删除</button></div>
+      <div class="body">
+        <div class="g-top">
+          <div class="g-date"><div class="d">30</div><div class="m">10月</div></div>
+          <div class="g-meta">
+            <div class="row"><span class="k">完成</span><span class="v">09:15</span></div>
+            <div class="row"><span class="k">创建</span><span class="v">10月29日 14:20</span></div>
+            <span class="badge">未逾期</span>
+          </div>
+        </div>
+        <div class="rule"></div>
+        <div class="content" id="gText"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- H -->
+  <section class="col">
+    <div class="tag"><b>H · 定义列表</b><span>属性像档案条目，正文无框直铺</span></div>
+    <div class="win">
+      <div class="head"><span class="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></span>
+        <span class="title">已完成事项</span><button class="del">删除</button></div>
+      <div class="body">
+        <div class="h-list">
+          <div class="h-row"><span class="k">创建</span><span class="v">10月29日 14:20</span></div>
+          <div class="h-row"><span class="k">完成</span><span class="v">10月30日 09:15</span></div>
+          <div class="h-row"><span class="k">状态</span><span class="v">未逾期</span></div>
+        </div>
+        <div class="rule"></div>
+        <div class="content" id="hText"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- I -->
+  <section class="col">
+    <div class="tag"><b>I · 细信息条</b><span>属性压成 30px 细条，正文装进浅底卡</span></div>
+    <div class="win">
+      <div class="head"><span class="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></span>
+        <span class="title">已完成事项</span><button class="del">删除</button></div>
+      <div class="body">
+        <div class="i-strip">
+          <span>创建 10-29 14:20</span><span class="sep">/</span>
+          <span>完成 10-30 09:15</span><span class="sep">/</span>
+          <span>未逾期</span>
+        </div>
+        <div class="i-card"><div class="content" id="iText"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- J -->
+  <section class="col">
+    <div class="tag"><b>J · 浮起单卡</b><span>正文是一张浮起的白卡，属性在卡外</span></div>
+    <div class="win">
+      <div class="head"><span class="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></span>
+        <span class="title">已完成事项</span><button class="del">删除</button></div>
+      <div class="body">
+        <div class="j-lead"><span>完成 10月30日 09:15</span><span class="badge">未逾期</span></div>
+        <div class="j-card"><div class="content" id="jText"></div></div>
+        <div class="j-foot">创建于 10月29日 14:20</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- K -->
+  <section class="col">
+    <div class="tag"><b>K · 两端时间</b><span>创建在左、完成在右，中间一条带箭头的线</span></div>
+    <div class="win">
+      <div class="head"><span class="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></span>
+        <span class="title">已完成事项</span><button class="del">删除</button></div>
+      <div class="body">
+        <div class="k-track">
+          <div class="k-end"><div class="k">创建</div><div class="v">10月29日 14:20</div></div>
+          <div class="k-line"></div>
+          <div class="k-end right"><div class="k">完成</div><div class="v">10月30日 09:15</div></div>
+        </div>
+        <div class="k-badge"><span class="badge">未逾期</span></div>
+        <div class="content" id="kText"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- L -->
+  <section class="col">
+    <div class="tag"><b>L · 底部属性条</b><span>正文占满，属性沉到窗口底部一行</span></div>
+    <div class="win">
+      <div class="head"><span class="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></span>
+        <span class="title">已完成事项</span><button class="del">删除</button></div>
+      <div class="body">
+        <div class="l-card"><div class="content" id="lText"></div></div>
+        <div class="l-foot">
+          <span>创建 10-29 14:20</span><span>完成 10-30 09:15</span>
+          <span class="badge">未逾期</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const TEXT = '整理第三季度项目复盘材料：把需求变更、延期原因、人力投入三块数据拉齐，和产品、测试各对一遍口径；' +
+  '输出一页结论给部门例会，附上下季度的三条改进项。会后把待办拆到每个人的周计划里，周五下班前回收第一轮进展。' +
+  '另外把复盘模板补进模板库，下次直接复用，省掉重复搭结构的时间。';
+for (const id of ['gText','hText','iText','jText','kText','lText']) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = TEXT;
+}
+const btn = document.getElementById('themeBtn');
+btn.onclick = () => {
+  const night = document.body.dataset.theme !== 'night';
+  document.body.dataset.theme = night ? 'night' : 'day';
+  btn.textContent = night ? '切换日间' : '切换夜间';
+};
+</script>
+</body>
+</html>
