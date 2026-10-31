@@ -442,7 +442,9 @@ body[data-theme=night] .dlg input[type=date]{color-scheme:dark}
 
 /* 确认框 */
 .cmodal{position:fixed;inset:0;z-index:350;display:none;background:rgba(0,0,0,.28)}
-.cmodal.on{display:flex;align-items:center;justify-content:center}
+.cmodal.on{display:flex}
+/* 确认框不按视口居中，而是对齐"打开它的那个窗口"的中心（坐标由 confirmBox 计算） */
+.cmodal.on .cbox{position:absolute}
 .cbox{width:340px;background:var(--shell);border:1px solid var(--card-border);border-radius:10px;
   box-shadow:0 24px 56px -12px rgba(10,20,40,.5);padding:20px}
 .cbox .t{font-size:13px;font-weight:600}
@@ -771,12 +773,28 @@ function toast(msg) {
 }
 function confirmBox({ title, body, okText = '确定', danger = false, onOk }) {
   hideBubble();
+  // 定位基准＝打开确认框的那个窗口：优先取当前焦点按钮所在窗口，
+  // 其次已打开的二级窗，最后主窗。确认框中心对齐该窗口中心，再夹进视口。
+  const focused = document.activeElement && document.activeElement.closest
+    ? document.activeElement.closest('.dlg, .win') : null;
+  const anchor = (focused && focused.isConnected && focused.getBoundingClientRect().width > 0)
+    ? focused
+    : (document.querySelector('#modal.on .dlg') || document.getElementById('mainWin'));
   const host = document.getElementById('cmodal');
   host.innerHTML = '<div class="cbox"><div class="t">' + title + '</div>' +
     (body ? '<div class="b">' + body + '</div>' : '') +
     '<div class="acts"><button class="btn ghost" data-no>取消</button>' +
     '<button class="btn ' + (danger ? 'danger' : 'primary') + '" data-yes>' + okText + '</button></div></div>';
   host.classList.add('on');
+  const box = host.querySelector('.cbox');
+  const ar = anchor.getBoundingClientRect();
+  const bw = box.offsetWidth, bh = box.offsetHeight, EDGE = 8;
+  let x = ar.left + ar.width / 2 - bw / 2;
+  let y = ar.top + ar.height / 2 - bh / 2;
+  x = Math.min(Math.max(x, EDGE), Math.max(EDGE, innerWidth - bw - EDGE));
+  y = Math.min(Math.max(y, EDGE), Math.max(EDGE, innerHeight - bh - EDGE));
+  box.style.left = Math.round(x) + 'px';
+  box.style.top = Math.round(y) + 'px';
   const yes = host.querySelector('[data-yes]');
   host.querySelector('[data-no]').onclick = () => host.classList.remove('on');
   yes.onclick = () => { host.classList.remove('on'); onOk && onOk(); };
