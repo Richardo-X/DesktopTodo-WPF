@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="day">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>详情页方案对比 · 第二组（D/E/F）</title>
+<style>
+/* 与 1C 原型同一套令牌：只做对比，不接入主原型 */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  --accent:#4f7391;--accent-hover:#5f86a5;--accent-fg:#f7fafc;--accent-soft:rgba(79,115,145,.14);
+  --text:#33383f;--muted:#5c636c;--faint:#676d76;
+  --card:#f7f8f9;--card-border:rgba(30,35,42,.12);--row-hover:rgba(30,35,42,.05);
+  --shell:#eef1f6;
+  --chip:rgba(30,35,42,.06);--line:rgba(30,35,42,.26);
+  --overdue:#a83a34;--overdue-soft:rgba(168,58,52,.10);--overdue-border:rgba(168,58,52,.35);
+  --row-card:#ffffff;--row-card-border:rgba(30,35,42,.06);
+  font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif;
+  font-size:13px;line-height:1.5;color:var(--text);
+  background:
+    radial-gradient(1180px 760px at 78% 12%, rgba(126,151,173,.12), transparent 62%),
+    radial-gradient(920px 640px at 10% 88%, rgba(110,124,142,.10), transparent 60%),
+    linear-gradient(160deg,#0d1116,#141a21 55%,#0d1116);
+  padding:18px 24px 32px;overflow:auto;
+}
+body[data-theme="night"]{
+  --accent:#8fb0c9;--accent-hover:#a3c0d6;--accent-fg:#0e1418;--accent-soft:rgba(143,176,201,.18);
+  --text:#dde2e8;--muted:#a8b0ba;--faint:#9099a3;
+  --card:#1d2127;--card-border:rgba(255,255,255,.10);--row-hover:rgba(255,255,255,.06);
+  --shell:#171a1f;
+  --chip:rgba(255,255,255,.08);--line:rgba(255,255,255,.22);
+  --overdue:#e08a83;--overdue-soft:rgba(224,138,131,.14);--overdue-border:rgba(224,138,131,.40);
+  --row-card:#252930;--row-card-border:rgba(255,255,255,.055);
+}
+
+.bar{display:flex;align-items:center;gap:12px;margin-bottom:18px;color:#cfd6e2}
+.bar b{font-size:13px;letter-spacing:.3px}
+.bar .sep{width:1px;height:16px;background:rgba(255,255,255,.16)}
+.bar button{height:26px;padding:0 10px;border-radius:6px;border:1px solid rgba(255,255,255,.16);
+  background:transparent;color:#cfd6e2;font-size:11.5px;font-family:inherit;cursor:pointer}
+.bar button:hover{background:rgba(255,255,255,.08)}
+.bar .hint{margin-left:auto;font-size:11px;color:rgba(255,255,255,.45)}
+
+.grid{display:flex;gap:28px;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:10px}
+.tag{display:flex;align-items:baseline;gap:8px;color:#e7edf5}
+.tag b{font-size:13px;font-weight:600}
+.tag span{font-size:11px;color:rgba(255,255,255,.48)}
+
+.win{width:420px;height:462px;background:var(--shell);border:1px solid var(--card-border);
+  border-radius:10px;box-shadow:0 24px 56px -12px rgba(10,20,40,.5);
+  display:flex;flex-direction:column;overflow:hidden;position:relative}
+
+.head{height:40px;display:flex;align-items:center;padding:0 12px;flex:none;position:relative}
+.back{width:34px;height:40px;display:flex;align-items:center;justify-content:center;
+  color:var(--muted);margin-left:-12px;border-radius:6px}
+.back svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.title{position:absolute;left:0;right:0;text-align:center;font-size:13px;font-weight:600;pointer-events:none}
+.del{height:28px;padding:0 10px;border-radius:6px;border:1px solid var(--overdue-border);
+  background:transparent;color:var(--overdue);font-size:11px;font-family:inherit;cursor:pointer;
+  margin-left:auto;margin-right:-6px}
+.del:hover{background:var(--overdue-soft)}
+
+.badge{flex:none;font-size:10.5px;font-weight:600;line-height:1;padding:4px 8px;border-radius:99px;
+  background:var(--accent-soft);color:var(--accent);letter-spacing:.2px}
+
+.body{flex:1;min-height:0;display:flex;flex-direction:column;padding:8px 20px 14px}
+.content{flex:1;min-height:0;overflow-y:auto;font-size:13px;line-height:1.8;
+  white-space:pre-wrap;word-break:break-word;color:var(--text)}
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-thumb{background:var(--card-border);border-radius:99px}
+.content::-webkit-scrollbar-track{background:transparent}
+
+/* ───────── D：左右分栏（属性侧栏） ───────── */
+.d-body{flex-direction:row}
+.d-side{flex:none;width:98px;padding:10px 12px 0 0;border-right:1px solid var(--card-border);
+  display:flex;flex-direction:column;gap:14px}
+.d-item .k{display:block;font-size:10px;color:var(--faint);letter-spacing:.4px;margin-bottom:2px}
+.d-item .v{display:block;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.45}
+.d-item .v.ok{color:var(--accent)}
+.d-main{flex:1;min-width:0;padding:10px 0 0 14px;display:flex;flex-direction:column}
+
+/* ───────── E：抬头式 + 无框正文 ───────── */
+.e-lead{flex:none;padding:4px 0 12px}
+.e-date{font-size:13px;font-weight:600;color:var(--text);letter-spacing:.3px}
+.e-sub{display:flex;align-items:center;gap:6px;margin-top:3px;font-size:11px;color:var(--muted);
+  font-variant-numeric:tabular-nums}
+.e-sub .sep{color:var(--faint)}
+.e-rule{flex:none;height:1px;background:var(--card-border);margin-bottom:12px}
+.e-text{padding:0}
+.e-foot{flex:none;padding-top:10px;font-size:10.5px;color:var(--faint)}
+
+/* ───────── F：上下双卡 ───────── */
+.f-meta{flex:none;background:var(--row-hover);border-radius:8px;padding:8px 12px;margin-bottom:10px}
+.f-row{display:flex;align-items:baseline;gap:10px;padding:2px 0}
+.f-row .k{flex:none;width:34px;font-size:10.5px;color:var(--faint)}
+.f-row .v{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.f-row .badge{margin-left:auto}
+.f-content{flex:1;min-height:0;background:var(--row-card);border:1px solid var(--row-card-border);
+  border-radius:8px;padding:12px;display:flex;flex-direction:column}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <b>已完成事项 · 详情页方案（第二组）</b>
+  <span class="sep"></span>
+  <button id="themeBtn">切换夜间</button>
+  <span class="hint">同壳 420×462、同令牌；D 分栏 / E 抬头 / F 双卡</span>
+</div>
+
+<div class="grid">
+
+  <!-- D 左右分栏 -->
+  <section class="col">
+    <div class="tag"><b>D · 左右分栏</b><span>属性做窄侧栏，正文独占主栏</span></div>
+    <div class="win">
+      <div class="head">
+        <span class="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></span>
+        <span class="title">已完成事项</span>
+        <button class="del">删除</button>
+      </div>
+      <div class="body d-body">
+        <aside class="d-side">
+          <div class="d-item"><span class="k">创建</span><span class="v">10月29日</span><span class="v">14:20</span></div>
+          <div class="d-item"><span class="k">完成</span><span class="v">10月30日</span><span class="v">09:15</span></div>
+          <div class="d-item"><span class="k">状态</span><span class="v ok">未逾期</span></div>
+        </aside>
+        <div class="d-main">
+          <div class="content" id="dText"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- E 抬头式 -->
+  <section class="col">
+    <div class="tag"><b>E · 抬头式</b><span>日期做抬头，正文无框，靠分隔线和留白</span></div>
+    <div class="win">
+      <div class="head">
+        <span class="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></span>
+        <span class="title">已完成事项</span>
+        <button class="del">删除</button>
+      </div>
+      <div class="body">
+        <div class="e-lead">
+          <div class="e-date">10月30日 星期五</div>
+          <div class="e-sub">
+            <span>09:15 完成</span><span class="sep">·</span><span>未逾期</span>
+          </div>
+        </div>
+        <div class="e-rule"></div>
+        <div class="content e-text" id="eText"></div>
+        <div class="e-foot">创建于 10月29日 14:20</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- F 上下双卡 -->
+  <section class="col">
+    <div class="tag"><b>F · 上下双卡</b><span>摘要卡 + 内容卡，两块各自成卡</span></div>
+    <div class="win">
+      <div class="head">
+        <span class="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></span>
+        <span class="title">已完成事项</span>
+        <button class="del">删除</button>
+      </div>
+      <div class="body">
+        <div class="f-meta">
+          <div class="f-row"><span class="k">创建</span><span class="v">10月29日 14:20</span></div>
+          <div class="f-row"><span class="k">完成</span><span class="v">10月30日 09:15</span><span class="badge">未逾期</span></div>
+        </div>
+        <div class="f-content">
+          <div class="content" id="fText"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const TEXT = '整理第三季度项目复盘材料：把需求变更、延期原因、人力投入三块数据拉齐，和产品、测试各对一遍口径；' +
+  '输出一页结论给部门例会，附上下季度的三条改进项。会后把待办拆到每个人的周计划里，周五下班前回收第一轮进展。' +
+  '另外把复盘模板补进模板库，下次直接复用，省掉重复搭结构的时间。';
+for (const id of ['dText', 'eText', 'fText']) {
+  document.getElementById(id).textContent = TEXT;
+}
+const btn = document.getElementById('themeBtn');
+btn.onclick = () => {
+  const night = document.body.dataset.theme !== 'night';
+  document.body.dataset.theme = night ? 'night' : 'day';
+  btn.textContent = night ? '切换日间' : '切换夜间';
+};
+</script>
+</body>
+</html>
