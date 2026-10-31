@@ -306,8 +306,9 @@ body[data-theme="night"]{
 /* 详情标题行右端「删除」按钮（与返回箭头同排）：标题绝对定位居中不受影响 */
 .dlg .dhead .btn{flex:none;margin-left:auto;margin-right:-6px}
 .dlg .dview.boxed{background:var(--row-hover);border-radius:8px;padding:12px;flex:none;max-height:300px}
-/* 详情窗底部操作行：删除按钮在内容框外、右下角；下边距同时给右下缩放手柄让位 */
-.dact{flex:none;display:flex;justify-content:flex-end;padding:10px 0 14px}
+/* 详情窗：删除按钮在内容框右上角（框外、紧贴框顶右对齐），不遮挡正文 */
+.dtop{flex:none;display:flex;justify-content:flex-end;padding:4px 0 6px}
+.dlg .dbody.dv{padding-bottom:14px}
 .dlg .dtitle{position:absolute;left:0;right:0;text-align:center;font-size:13px;font-weight:600;
   pointer-events:none}
 .dlg .dbody{flex:1;min-height:0;display:flex;flex-direction:column;padding:8px 20px 0}
@@ -597,7 +598,7 @@ const MAIN_MIN = 0.7, MAIN_MAX = 1.15, CHILD_MIN = 0.7, CHILD_MAX = 1.2;
 const MAIN_H_BASE = 640, MAIN_H_MIN = 448, MAIN_H_MAX = 1200;
 const CHILD_H_BASE = 560, CHILD_H_MIN = 360, CHILD_H_MAX = 900;
 // 详情窗默认高度：按 300 字满内容实测的自然高度
-// 2 边框 + 40 标题 + 8 上距 + 98 三属性 + 300 内容块 + 10 间距 + 28 删除按钮 + 14 下距 = 500
+// 2 边框 + 40 标题 + 8 上距 + 98 三属性 + 38 删除按钮行 + 300 内容块 + 14 下距 = 500
 const DETAIL_H_BASE = 500;
 
 const state = {
@@ -1182,14 +1183,14 @@ function openDetail(it, opts = {}) {
     '<div class="dlg">' +
       '<div class="dhead"><button class="backbtn" id="dBack" title="返回">' + BACK + '</button>' +
         '<span class="dtitle">' + (archived ? '历史事项' : '已完成事项') + '</span></div>' +
-      '<div class="dbody">' +
+      '<div class="dbody dv">' +
         '<div class="detailrows">' +
           '<div class="drow2"><span class="k">创建时间</span><span class="v">' + fmtDate(created) + ' ' + fmtHM(created) + '</span></div>' +
           '<div class="drow2"><span class="k">完成时间</span><span class="v">' + fmtDate(doneAt) + ' ' + fmtHM(doneAt) + '</span></div>' +
           '<div class="drow2"><span class="k">状态</span><span class="v' + (od ? ' od' : '') + '">' + (od ? '已逾期' : '未逾期') + '</span></div>' +
         '</div>' +
+        '<div class="dtop"><button class="btn sm danger" id="dDel" title="删除该事项">删除</button></div>' +
         '<div class="dview boxed">' + esc(it.text) + '</div>' +
-        '<div class="dact"><button class="btn sm danger" id="dDel" title="删除该事项">删除</button></div>' +
       '</div>' +
       DIALOG_GRIP +
     '</div>';
