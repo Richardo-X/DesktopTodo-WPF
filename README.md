@@ -33,7 +33,7 @@ src/TodoWpf.Tests/    单元测试（xunit）
 src/TodoWpf.DataCheck/ 只读验收探针（读 data.json 打印统计/结算预演/迁移预演）
 design/               设计层说明（design-taste-frontend 移交范围）
 docs/参考/            Electron 版文档与原型存档（只读）
-docs/                 批次体验说明书与流程文档
+docs/                 新外观规格、验收记录与流程文档；docs/归档/ 为旧外观批次记录与技术手册
 .agents/skills/       项目级技能（design-taste-frontend）
 需求文档-wpf.md        需求基线（含文末修订记录）
 开场白.md             新会话开场提示词
