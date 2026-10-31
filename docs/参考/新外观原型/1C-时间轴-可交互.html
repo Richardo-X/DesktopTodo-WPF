@@ -306,8 +306,9 @@ body[data-theme="night"]{
 /* 详情标题行右端「删除」按钮（与返回箭头同排）：标题绝对定位居中不受影响 */
 .dlg .dhead .btn{flex:none;margin-left:auto;margin-right:-6px}
 .dlg .dview.boxed{background:var(--row-hover);border-radius:8px;padding:12px;flex:none;max-height:300px}
-/* 详情窗：删除按钮在内容框右上角（框外、紧贴框顶右对齐），不遮挡正文 */
-.dtop{flex:none;display:flex;justify-content:flex-end;padding:4px 0 6px}
+/* 详情窗：删除按钮绝对定位在内容框右上角（框外、贴框顶右对齐），不占布局高度、不遮挡正文 */
+.dlg .detailrows{position:relative}
+.drow-del{position:absolute;right:0;bottom:0}
 .dlg .dbody.dv{padding-bottom:14px}
 .dlg .dtitle{position:absolute;left:0;right:0;text-align:center;font-size:13px;font-weight:600;
   pointer-events:none}
@@ -352,7 +353,7 @@ body[data-theme="night"]{
 
 .dlg .dview{flex:1;min-height:0;overflow-y:scroll;overflow-x:hidden;font-size:13px;line-height:1.8;color:var(--text);
   padding:4px 5px 4px 0;white-space:pre-wrap;word-break:break-word}
-.dlg .detailrows{flex:none;padding:10px 0 4px}
+.dlg .detailrows{flex:none;padding:10px 0 4px;position:relative}
 .dlg .drow2{display:flex;gap:12px;padding:5px 0;font-size:12px}
 .dlg .drow2 .k{flex:none;width:60px;color:var(--faint)}
 .dlg .drow2 .v{color:var(--muted);font-variant-numeric:tabular-nums}
@@ -598,8 +599,9 @@ const MAIN_MIN = 0.7, MAIN_MAX = 1.15, CHILD_MIN = 0.7, CHILD_MAX = 1.2;
 const MAIN_H_BASE = 640, MAIN_H_MIN = 448, MAIN_H_MAX = 1200;
 const CHILD_H_BASE = 560, CHILD_H_MIN = 360, CHILD_H_MAX = 900;
 // 详情窗默认高度：按 300 字满内容实测的自然高度
-// 2 边框 + 40 标题 + 8 上距 + 98 三属性 + 38 删除按钮行 + 300 内容块 + 14 下距 = 500
-const DETAIL_H_BASE = 500;
+// 2 边框 + 40 标题 + 8 上距 + 98 三属性 + 300 内容块 + 14 下距 = 462
+// 删除按钮绝对定位在内容框右上角，不占布局高度
+const DETAIL_H_BASE = 462;
 
 const state = {
   theme: 'day', hour12: false,
@@ -700,13 +702,13 @@ function load() {
     };
     // 一次性迁移（2026-10-31 用户要求）：详情窗回到默认尺寸，清掉此前拖拽试验留下的值。
     // 只做一次：之后用户再拖详情窗，仍按二级窗分组记忆规则保存。
-    // v2：详情窗默认高度改为 500（按 300 字满内容实测），旧存档重置一次
-    const resetDetailSize = d.detailSizeVersion !== 2;
+    // v3：详情窗删除按钮改为不占布局，默认高度 500 → 462；旧存档重置一次
+    const resetDetailSize = d.detailSizeVersion !== 3;
     if (resetDetailSize) {
       state.childScales.detail = 1;
       state.childHeights.detail = DETAIL_H_BASE;
     }
-    state.detailSizeVersion = 2;
+    state.detailSizeVersion = 3;
     state.archive = {};
     if (d.archive && typeof d.archive === 'object') {
       for (const k of Object.keys(d.archive)) {
@@ -756,7 +758,7 @@ function seed() {
   state.mainScale = 1; state.childScales = { edit: 1, detail: 1, settings: 1, history: 1 };
   state.mainH = MAIN_H_BASE;
   state.childHeights = { edit: CHILD_H_BASE, detail: DETAIL_H_BASE, settings: CHILD_H_BASE, history: CHILD_H_BASE };
-  state.detailSizeVersion = 2;
+  state.detailSizeVersion = 3;
   state.lastSettleDate = todayKey();
 }
 
@@ -1188,8 +1190,8 @@ function openDetail(it, opts = {}) {
           '<div class="drow2"><span class="k">创建时间</span><span class="v">' + fmtDate(created) + ' ' + fmtHM(created) + '</span></div>' +
           '<div class="drow2"><span class="k">完成时间</span><span class="v">' + fmtDate(doneAt) + ' ' + fmtHM(doneAt) + '</span></div>' +
           '<div class="drow2"><span class="k">状态</span><span class="v' + (od ? ' od' : '') + '">' + (od ? '已逾期' : '未逾期') + '</span></div>' +
+          '<button class="btn sm danger drow-del" id="dDel" title="删除该事项">删除</button>' +
         '</div>' +
-        '<div class="dtop"><button class="btn sm danger" id="dDel" title="删除该事项">删除</button></div>' +
         '<div class="dview boxed">' + esc(it.text) + '</div>' +
       '</div>' +
       DIALOG_GRIP +
