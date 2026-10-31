@@ -605,6 +605,7 @@ const state = {
   batch: { on: false, sel: new Set() },
   tplBatch: { on: false, sel: new Set() },
   flashId: null, lastSettleDate: null,
+  detailSizeMigrated: false,
 };
 
 const pad = n => String(n).padStart(2, '0');
@@ -661,6 +662,7 @@ function save() {
     maxItems: state.maxItems, autoStart: state.autoStart, doneSort: state.doneSort,
     mainScale: state.mainScale, childScales: state.childScales,
     mainH: state.mainH, childHeights: state.childHeights,
+    detailSizeMigrated: state.detailSizeMigrated,
     items: state.items, archive: state.archive, templates: state.templates, tplOpen: state.tplOpen,
     lastSettleDate: state.lastSettleDate
   }));
@@ -690,6 +692,14 @@ function load() {
       edit: clampChildH(ch.edit), detail: clampChildH(ch.detail),
       settings: clampChildH(ch.settings), history: clampChildH(ch.history)
     };
+    // 一次性迁移（2026-10-31 用户要求）：详情窗回到默认尺寸，清掉此前拖拽试验留下的值。
+    // 只做一次：之后用户再拖详情窗，仍按二级窗分组记忆规则保存。
+    const resetDetailSize = !d.detailSizeMigrated;
+    if (resetDetailSize) {
+      state.childScales.detail = 1;
+      state.childHeights.detail = CHILD_H_BASE;
+    }
+    state.detailSizeMigrated = true;
     state.archive = {};
     if (d.archive && typeof d.archive === 'object') {
       for (const k of Object.keys(d.archive)) {
@@ -700,6 +710,7 @@ function load() {
     // 上限不可低于当前待办数（旧档/异常数据兜底）
     state.maxItems = Math.min(MAX_ITEMS_CAP,
       Math.max(state.maxItems, state.items.filter(i => !i.completedAt).length));
+    if (resetDetailSize) save();
     return true;
   } catch (e) { return false; }
 }
@@ -738,6 +749,7 @@ function seed() {
   state.mainScale = 1; state.childScales = { edit: 1, detail: 1, settings: 1, history: 1 };
   state.mainH = MAIN_H_BASE;
   state.childHeights = { edit: CHILD_H_BASE, detail: CHILD_H_BASE, settings: CHILD_H_BASE, history: CHILD_H_BASE };
+  state.detailSizeMigrated = true;
   state.lastSettleDate = todayKey();
 }
 
