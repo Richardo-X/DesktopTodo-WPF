@@ -159,7 +159,8 @@ body[data-theme="night"]{
 .dlg .dview::-webkit-scrollbar-thumb,.histlist::-webkit-scrollbar-thumb,.dlg textarea::-webkit-scrollbar-thumb{background:var(--card-border);border-radius:99px}
 .tl::-webkit-scrollbar-track,.tplrows::-webkit-scrollbar-track,.dlg .dbody.scroll::-webkit-scrollbar-track,
 .dlg .dview::-webkit-scrollbar-track,.histlist::-webkit-scrollbar-track,.dlg textarea::-webkit-scrollbar-track{background:transparent}
-.trow{display:flex;align-items:center;height:36px;border-radius:var(--radius-row);position:relative}
+/* 行高 34：待办行与已完成行统一（待办行仍由 min-height 兜底） */
+.trow{display:flex;align-items:center;height:34px;border-radius:var(--radius-row);position:relative}
 .trow:hover{background:var(--row-hover)}
 /* 待办行＝卡片：高度自适应（最小 34）、内边距 上下3 / 左右8、元素间距 8、圆角 8。
    已完成段不加卡、保留时间轴。 */
@@ -184,7 +185,7 @@ body[data-theme="night"]{
 /* 时间轴：2px 宽 + opacity .55（观感仍是一条细线）。用 2px 而不是 1px，
    是因为 1px 在 125%/150% 缩放下只能吸附到某一条设备像素列，线心会偏到点的一侧；
    2px 以自身中心（left 41 → 中心 42）对称对齐实心点中心，任何缩放都居中。 */
-.doneblock::before{content:"";position:absolute;left:41px;top:52px;bottom:18px;width:2px;
+.doneblock::before{content:"";position:absolute;left:41px;top:51px;bottom:17px;width:2px;
   background:var(--card-border);opacity:.55}
 .trow .node{flex:none;width:16px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
 .dot{width:7px;height:7px;border-radius:50%}
@@ -593,7 +594,7 @@ const MAX_ITEMS_CAP = 10, MAX_TPL = 10, MAX_CHARS = 300;
 const MAIN_MIN = 0.7, MAIN_MAX = 1.15, CHILD_MIN = 0.7, CHILD_MAX = 1.2;
 // 布局高度（px）：下边框拖拽只动这一维；上限另受视口约束（主窗见 mainHeightLimit，二级窗在各组的 pointerdown 里算）
 // 主窗最小高度 = 模板窗装满 10 条时的自身高度（实测 448）：保证模板窗永远不会伸出主窗底边
-const PROTO_VERSION = '2.68';
+const PROTO_VERSION = '2.69';
 const MAIN_H_BASE = 640, MAIN_H_MIN = 448, MAIN_H_MAX = 1200;
 const CHILD_H_BASE = 560, CHILD_H_MIN = 360, CHILD_H_MAX = 900;
 // 详情窗默认高度（H 定义列表）：按 300 字满内容实测的自然高度
