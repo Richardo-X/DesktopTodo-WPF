@@ -594,6 +594,7 @@ const MAX_ITEMS_CAP = 10, MAX_TPL = 10, MAX_CHARS = 300;
 const MAIN_MIN = 0.7, MAIN_MAX = 1.15, CHILD_MIN = 0.7, CHILD_MAX = 1.2;
 // 布局高度（px）：下边框拖拽只动这一维；上限另受视口约束（主窗见 mainHeightLimit，二级窗在各组的 pointerdown 里算）
 // 主窗最小高度 = 模板窗装满 10 条时的自身高度（实测 448）：保证模板窗永远不会伸出主窗底边
+const PROTO_VERSION = '2.64';
 const MAIN_H_BASE = 640, MAIN_H_MIN = 448, MAIN_H_MAX = 1200;
 const CHILD_H_BASE = 560, CHILD_H_MIN = 360, CHILD_H_MAX = 900;
 // 详情窗默认高度（H 定义列表）：按 300 字满内容实测的自然高度
@@ -632,6 +633,9 @@ const clampNum = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const clampMainScale = v => clampNum(Number(v) || 1, MAIN_MIN, MAIN_MAX);
 const clampChildScale = v => clampNum(Number(v) || 1, CHILD_MIN, CHILD_MAX);
 const clampMainH = v => clampNum(Number(v) || MAIN_H_BASE, MAIN_H_MIN, MAIN_H_MAX);
+// 主窗默认高度：工作区高的一半，夹在 448 与 640 之间（规格 §4）。
+// 原型顶部 38px 工具条不属于产品，计算时先扣掉。
+const defaultMainH = () => clampNum((innerHeight - 38) / 2, MAIN_H_MIN, MAIN_H_BASE);
 const clampChildH = v => clampNum(Number(v) || CHILD_H_BASE, CHILD_H_MIN, CHILD_H_MAX);
 function applyMainScale() {
   document.documentElement.style.setProperty('--main-scale', state.mainScale);
@@ -753,7 +757,7 @@ function seed() {
   state.tplOpen = false; state.theme = 'day'; state.hour12 = false;
   state.maxItems = MAX_ITEMS_CAP; state.autoStart = false; state.doneSort = 'asc';
   state.mainScale = 1; state.childScales = { edit: 1, detail: 1, settings: 1, history: 1 };
-  state.mainH = MAIN_H_BASE;
+  state.mainH = defaultMainH();
   state.childHeights = { edit: CHILD_H_BASE, detail: DETAIL_H_BASE, settings: CHILD_H_BASE, history: CHILD_H_BASE };
   state.detailSizeVersion = 4;
   state.lastSettleDate = todayKey();
@@ -1352,7 +1356,7 @@ function openSettings() {
             '<span class="knob"></span></button>' +
         '</div>' +
         '<p class="setmeta">所有设置即时生效并保留。</p>' +
-        '<p class="setver">1C 新外观原型 · v2.18</p>' +
+        '<p class="setver">1C 新外观原型 · v' + PROTO_VERSION + '</p>' +
       '</div>' +
       DIALOG_GRIP +
     '</div>';
