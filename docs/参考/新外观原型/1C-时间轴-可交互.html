@@ -399,7 +399,7 @@ body[data-theme="night"]{
   background:var(--muted);transition:transform .16s,background .16s}
 .switch.on{background:var(--accent-soft);border-color:var(--accent)}
 .switch.on .knob{transform:translateX(16px);background:var(--accent)}
-.setver{margin-top:12px;font-size:10px;color:var(--faint);text-align:center}
+.setver{margin-top:12px;font-size:10px;color:var(--faint)}
 .setbtns{display:flex;gap:8px;flex:none}
 
 .histnav{display:flex;align-items:center;gap:6px;flex:none}
@@ -593,7 +593,7 @@ const MAX_ITEMS_CAP = 10, MAX_TPL = 10, MAX_CHARS = 300;
 const MAIN_MIN = 0.7, MAIN_MAX = 1.15, CHILD_MIN = 0.7, CHILD_MAX = 1.2;
 // 布局高度（px）：下边框拖拽只动这一维；上限另受视口约束（主窗见 mainHeightLimit，二级窗在各组的 pointerdown 里算）
 // 主窗最小高度 = 模板窗装满 10 条时的自身高度（实测 448）：保证模板窗永远不会伸出主窗底边
-const PROTO_VERSION = '2.67';
+const PROTO_VERSION = '2.68';
 const MAIN_H_BASE = 640, MAIN_H_MIN = 448, MAIN_H_MAX = 1200;
 const CHILD_H_BASE = 560, CHILD_H_MIN = 360, CHILD_H_MAX = 900;
 // 详情窗默认高度（H 定义列表）：按 300 字满内容实测的自然高度
