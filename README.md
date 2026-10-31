@@ -1,13 +1,13 @@
 # 桌面待办 · WPF 分支
 
 Windows 桌面待办组件的技术栈重写分支：从 Electron + Vue 迁移到 **C# / .NET 10 / WPF**。
-Electron 版（v1.1.1，`F:\AI\VBcode\worktrees\ToDoList`）已发布并冻结为只读参考；本分支只保留基础功能需求，设计层交给 design-taste-frontend 技能。
+Electron 版（v1.1.1，`F:\AI\VBcode\worktrees\ToDoList`）已发布并冻结为只读参考；本分支只保留基础功能需求。**2026-11-01 起视觉基准改为新外观原型** `docs/参考/新外观原型/1C-时间轴-可交互.html`，旧基准文档已标注作废。
 
 ## 阅读顺序（新会话必读）
 
 1. `开场白.md` —— 新会话从这里开始
 2. `需求文档-wpf.md` —— 需求基线（A 类定稿 + C 类判定 + 暂不做清单）
-3. `design/设计说明.md` —— 设计层范围与"技能→XAML"翻译表
+3. `docs/规格-窗口尺寸与缩放.md` —— 新外观尺寸与缩放规则；旧 `design/设计说明.md` 已作废
 4. `docs/参考/` —— 需要时查阅：Electron 版需求原文 v1.4、验收报告、问题记录、L1 体验说明书、交互原型 v3.4-L1（浏览器打开，应用 v1.1.1 视觉终态）
 
 ## 工具链
