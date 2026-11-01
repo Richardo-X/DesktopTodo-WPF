@@ -579,6 +579,16 @@ public sealed class ClusterController : IDisposable
         _main.SetTuckLock(_data.UiState.TuckLock);
     }
 
+    /// <summary>切换已完成排序（主窗「已完成」标题行右端按钮）。</summary>
+    public void ToggleDoneSort()
+    {
+        Mutate(d => d with
+        {
+            Settings = d.Settings with { DoneSort = d.Settings.DoneSort == "asc" ? "desc" : "asc" },
+        });
+        RefreshAllViews();
+    }
+
     public void ToggleTheme()
     {
         App.ApplyTheme(!App.IsNight);

@@ -183,6 +183,8 @@ public partial class MainTodoWindow : Window
 
     private void DoneBtn_Click(object sender, RoutedEventArgs e) => Controller?.ToggleDone();
 
+    private void DoneSort_Click(object sender, RoutedEventArgs e) => Controller?.ToggleDoneSort();
+
     /// <summary>协调器（创建后注入）。</summary>
     public ClusterController? Controller { get; set; }
 }
