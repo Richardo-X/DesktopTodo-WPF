@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using TodoWpf.Core.Models;
@@ -15,11 +14,15 @@ public partial class MainTodoWindow : Window
     /// <summary>待办行（真实数据投影；ItemsSource 绑定）。</summary>
     public ObservableCollection<TodoRowView> Rows { get; } = new();
 
+    /// <summary>已完成行（同窗下半段）。</summary>
+    public ObservableCollection<TodoRowView> DoneRows { get; } = new();
+
     public MainTodoWindow()
     {
         InitializeComponent();
         DataContext = this;
         EditRowCommand = new RelayCommand<TodoRowView>(row => row is not null, row => Controller?.OpenEditTodo(row.Id));
+        WindowShell.Apply(this);
     }
 
     public event EventHandler<MouseButtonEventArgs>? TitlebarPressed;
@@ -33,10 +36,7 @@ public partial class MainTodoWindow : Window
     /// <summary>卡面根。</summary>
     public Border Card => CardRoot;
 
-    /// <summary>
-    /// 内容按设计尺寸（470×640）绘制，缩放走 LayoutTransform：布局尺寸＝设计尺寸×scale。
-    /// 本窗左上角＝锚点（钉住角），窗口矩形按目标档逐帧摆位。
-    /// </summary>
+    /// <summary>内容按设计尺寸（360×当前布局高度）绘制，缩放走 LayoutTransform。</summary>
     public void SetContentScale(double scale)
     {
         var transform = (ScaleTransform)ContentScale;
@@ -47,10 +47,19 @@ public partial class MainTodoWindow : Window
         }
     }
 
+    /// <summary>设置设计画布高度（布局高度，不含缩放）。</summary>
+    public void SetContentHeight(double height)
+    {
+        if (Math.Abs(CardContent.Height - height) > 0.01)
+        {
+            CardContent.Height = height;
+        }
+    }
+
     /// <summary>卡面内容。</summary>
     public FrameworkElement CardBody => CardContent;
 
-    /// <summary>整批刷新待办行（替换式：行数少，整刷成本可忽略；避免逐条 diff 的复杂度）。</summary>
+    /// <summary>整批刷新待办行。</summary>
     public void SetRows(IReadOnlyList<TodoRowView> rows)
     {
         Rows.Clear();
@@ -60,6 +69,18 @@ public partial class MainTodoWindow : Window
         }
 
         TodoEmpty.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Hidden;
+    }
+
+    /// <summary>整批刷新已完成行。</summary>
+    public void SetDoneRows(IReadOnlyList<TodoRowView> rows)
+    {
+        DoneRows.Clear();
+        foreach (var row in rows)
+        {
+            DoneRows.Add(row);
+        }
+
+        DoneCount.Text = rows.Count.ToString();
     }
 
     private void AddBtn_Click(object sender, RoutedEventArgs e) => Controller?.OpenNewTodo();
@@ -75,11 +96,11 @@ public partial class MainTodoWindow : Window
 
         if (InBatch)
         {
-            Controller?.ToggleBatchSelection(row.Id); // 批量中：勾选=多选
+            Controller?.ToggleBatchSelection(row.Id);
         }
         else
         {
-            Controller?.CompleteRow(row.Id);          // 常态：勾选=完成
+            Controller?.CompleteRow(row.Id);
         }
     }
 
@@ -99,7 +120,7 @@ public partial class MainTodoWindow : Window
 
     private void BatchDelete_Click(object sender, RoutedEventArgs e) => Controller?.DeleteSelected();
 
-    /// <summary>双击行 → 编辑（XAML MouseBinding 绑到此命令；构造器注入自身）。</summary>
+    /// <summary>双击行 → 编辑。</summary>
     public System.Windows.Input.ICommand EditRowCommand { get; }
 
     private sealed class RelayCommand<T> : System.Windows.Input.ICommand
@@ -107,9 +128,17 @@ public partial class MainTodoWindow : Window
     {
         private readonly Func<T?, bool> _can;
         private readonly Action<T?> _run;
-        public RelayCommand(Func<T?, bool> can, Action<T?> run) { _can = can; _run = run; }
+
+        public RelayCommand(Func<T?, bool> can, Action<T?> run)
+        {
+            _can = can;
+            _run = run;
+        }
+
         public event EventHandler? CanExecuteChanged { add { } remove { } }
+
         public bool CanExecute(object? p) => _can(p as T);
+
         public void Execute(object? p) => _run(p as T);
     }
 
@@ -121,48 +150,37 @@ public partial class MainTodoWindow : Window
         ClockDate.Text = date;
     }
 
-    /// <summary>⚡/☑ 开关态：开启=主题色描边+图标（成品 .icon-btn.on 口径）。</summary>
+    /// <summary>模板窗开关态：开启时 ⚡ 用主题色。</summary>
     public void SetPanelToggles(bool quickVisible, bool doneVisible)
     {
-        ApplyToggleState(QuickBtn, quickVisible);
-        ApplyToggleState(DoneBtn, doneVisible);
+        QuickBtn.Foreground = quickVisible
+            ? (Brush)FindResource("Brush.Accent")
+            : (Brush)FindResource("Brush.Muted");
     }
 
     public void SetTopMost(bool on)
     {
         Topmost = on;
-        ApplyTitlebarOnState(PinBtn, on);
+        PinBtn.Foreground = on ? (Brush)FindResource("Brush.Accent") : (Brush)FindResource("Brush.Faint");
     }
 
     public void SetTuckLock(bool on)
     {
-        ApplyTitlebarOnState(TuckLockBtn, on);
+        TuckLockBtn.Foreground = on ? (Brush)FindResource("Brush.Accent") : (Brush)FindResource("Brush.Faint");
         TuckLockBtn.ToolTip = on ? "缩进锁定：已开启（贴边保持弹出）" : "缩进锁定";
     }
 
-    private void ApplyToggleState(Button button, bool on) =>
-        button.Style = (Style)FindResource(on ? "IconButtonOn" : "IconButton");
+    private void ThemeBtn_Click(object sender, RoutedEventArgs e) => Controller?.ToggleTheme();
 
-    private void ApplyTitlebarOnState(Button button, bool on) =>
-        button.Style = (Style)FindResource(on ? "TitlebarButtonOn" : "TitlebarButton");
+    private void PinBtn_Click(object sender, RoutedEventArgs e) => Controller?.ToggleTopMost();
 
-    private void ThemeBtn_Click(object sender, RoutedEventArgs e) =>
-        Controller?.ToggleTheme();
+    private void TuckLockBtn_Click(object sender, RoutedEventArgs e) => Controller?.ToggleTuckLock();
 
-    private void PinBtn_Click(object sender, RoutedEventArgs e) =>
-        Controller?.ToggleTopMost();
+    private void HideBtn_Click(object sender, RoutedEventArgs e) => Controller?.HideClusterToTray();
 
-    private void TuckLockBtn_Click(object sender, RoutedEventArgs e) =>
-        Controller?.ToggleTuckLock();
+    private void QuickBtn_Click(object sender, RoutedEventArgs e) => Controller?.ToggleQuick();
 
-    private void HideBtn_Click(object sender, RoutedEventArgs e) =>
-        Controller?.HideClusterToTray();
-
-    private void QuickBtn_Click(object sender, RoutedEventArgs e) =>
-        Controller?.ToggleQuick();
-
-    private void DoneBtn_Click(object sender, RoutedEventArgs e) =>
-        Controller?.ToggleDone();
+    private void DoneBtn_Click(object sender, RoutedEventArgs e) => Controller?.ToggleDone();
 
     /// <summary>协调器（创建后注入）。</summary>
     public ClusterController? Controller { get; set; }
