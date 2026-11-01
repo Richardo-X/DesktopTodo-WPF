@@ -78,11 +78,13 @@
                         <Border x:Name="bd" Width="16" Height="16" CornerRadius="4"
                                 BorderBrush="{DynamicResource Brush.Line}" BorderThickness="1"
                                 Background="Transparent">
-                            <Path x:Name="ck" Data="{StaticResource Icon.Check}"
-                                  Stroke="{DynamicResource Brush.AccentFg}" StrokeThickness="2.2"
-                                  Width="10" Height="10" Stretch="Uniform"
-                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                  Visibility="Collapsed"/>
+                            <Viewbox x:Name="ck" Width="12" Height="12" Visibility="Collapsed">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="{StaticResource Icon.Check}"
+                                          Stroke="{DynamicResource Brush.AccentFg}" StrokeThickness="2.2"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
@@ -114,9 +116,13 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Border Width="16" Height="16" CornerRadius="5"
                                 Background="{DynamicResource Brush.Accent}">
-                            <Path Data="{StaticResource Icon.Check}" Stroke="{DynamicResource Brush.AccentFg}"
-                                  StrokeThickness="2.4" Width="11" Height="11" Stretch="Uniform"
-                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <Viewbox Width="11" Height="11">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="{StaticResource Icon.Check}" Stroke="{DynamicResource Brush.AccentFg}"
+                                          StrokeThickness="2.4"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Border>
                         <TextBlock Text="桌面待办" FontSize="13" FontWeight="SemiBold"
                                    Foreground="{DynamicResource Brush.Text}" Margin="8,0,0,0"
@@ -125,29 +131,49 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                                 VerticalAlignment="Center">
                         <Button x:Name="ThemeBtn" Style="{StaticResource Ib}" ToolTip="切换日/夜主题" Click="ThemeBtn_Click">
-                            <Path Data="{StaticResource Icon.Moon}" Stroke="{DynamicResource Brush.Faint}"
-                                  StrokeThickness="1.8" Width="14" Height="14" Stretch="Uniform"
-                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <Viewbox Width="14" Height="14">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="{StaticResource Icon.Moon}" Stroke="{DynamicResource Brush.Faint}"
+                                          StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Button>
                         <Button x:Name="PinBtn" Style="{StaticResource Ib}" ToolTip="窗口置顶开关" Click="PinBtn_Click">
-                            <Path Data="{StaticResource Icon.Pin}" Stroke="{DynamicResource Brush.Faint}"
-                                  StrokeThickness="1.8" Width="14" Height="14" Stretch="Uniform"
-                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <Viewbox Width="14" Height="14">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="{StaticResource Icon.Pin}" Stroke="{DynamicResource Brush.Faint}"
+                                          StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Button>
                         <Button x:Name="TuckLockBtn" Style="{StaticResource Ib}" ToolTip="缩进锁定" Click="TuckLockBtn_Click">
-                            <Path Data="{StaticResource Icon.TuckLock}" Stroke="{DynamicResource Brush.Faint}"
-                                  StrokeThickness="1.8" Width="14" Height="14" Stretch="Uniform"
-                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <Viewbox Width="14" Height="14">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="{StaticResource Icon.TuckLock}" Stroke="{DynamicResource Brush.Faint}"
+                                          StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Button>
                         <Button Style="{StaticResource Ib}" ToolTip="设置">
-                            <Path Data="{StaticResource Icon.Gear}" Stroke="{DynamicResource Brush.Faint}"
-                                  StrokeThickness="1.8" Width="14" Height="14" Stretch="Uniform"
-                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <Viewbox Width="14" Height="14">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="{StaticResource Icon.Gear}" Stroke="{DynamicResource Brush.Faint}"
+                                          StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Button>
                         <Button x:Name="HideBtn" Style="{StaticResource Ib}" ToolTip="最小化到系统状态栏" Click="HideBtn_Click">
-                            <Path Data="{StaticResource Icon.X}" Stroke="{DynamicResource Brush.Faint}"
-                                  StrokeThickness="1.8" Width="14" Height="14" Stretch="Uniform"
-                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <Viewbox Width="14" Height="14">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="{StaticResource Icon.X}" Stroke="{DynamicResource Brush.Faint}"
+                                          StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Button>
                     </StackPanel>
                 </Grid>
@@ -165,7 +191,7 @@
                                    Foreground="{DynamicResource Brush.Text}"
                                    Typography.NumeralAlignment="Tabular"
                                    HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="ClockDate" Text="2026年10月12日 星期一" FontSize="11"
+                        <TextBlock x:Name="ClockDate" Text="2026年10月12日 星期一" FontSize="13"
                                    Foreground="{DynamicResource Brush.Faint}" Margin="0,2,0,0"
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
@@ -180,9 +206,13 @@
                             </Border>
                             <Button Style="{StaticResource Sq}" Margin="8,0,0,0" ToolTip="批量删除待办"
                                     Click="BatchToggle_Click">
-                                <Path Data="{StaticResource Icon.Trash}" Stroke="{DynamicResource Brush.Muted}"
-                                      StrokeThickness="1.8" Width="14" Height="14" Stretch="Uniform"
-                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                <Viewbox Width="14" Height="14">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="{StaticResource Icon.Trash}" Stroke="{DynamicResource Brush.Muted}"
+                                              StrokeThickness="1.8"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    </Canvas>
+                                </Viewbox>
                             </Button>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
@@ -191,18 +221,26 @@
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border Background="{TemplateBinding Background}" CornerRadius="6">
-                                            <Path Data="{StaticResource Icon.Plus}" Stroke="{DynamicResource Brush.AccentFg}"
-                                                  StrokeThickness="2.2" Width="15" Height="15" Stretch="Uniform"
-                                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                            <Viewbox Width="15" Height="15">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="{StaticResource Icon.Plus}" Stroke="{DynamicResource Brush.AccentFg}"
+                                                          StrokeThickness="2.2"
+                                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
                                         </Border>
                                     </ControlTemplate>
                                 </Button.Template>
                             </Button>
                             <Button x:Name="QuickBtn" Style="{StaticResource Sq}" Margin="8,0,0,0"
                                     ToolTip="显示 / 隐藏模板窗" Click="QuickBtn_Click">
-                                <Path Data="{StaticResource Icon.Bolt}" Stroke="{DynamicResource Brush.Muted}"
-                                      StrokeThickness="1.8" Width="14" Height="14" Stretch="Uniform"
-                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                <Viewbox Width="14" Height="14">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="{StaticResource Icon.Bolt}" Stroke="{DynamicResource Brush.Muted}"
+                                              StrokeThickness="1.8"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    </Canvas>
+                                </Viewbox>
                             </Button>
                         </StackPanel>
                     </Grid>
@@ -236,10 +274,12 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                     <ColumnDefinition Width="16"/>
                                                 </Grid.ColumnDefinitions>
-                                                <Path Data="{StaticResource Icon.Grip}"
-                                                      Fill="{DynamicResource Brush.Faint}" Width="14" Height="14"
-                                                      Margin="-5,0,0,0"
-                                                      Stretch="Uniform" VerticalAlignment="Center"/>
+                                                <Viewbox Width="14" Height="14" Margin="-5,0,0,0" VerticalAlignment="Center">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Data="{StaticResource Icon.Grip}"
+                                                              Fill="{DynamicResource Brush.Faint}"/>
+                                                    </Canvas>
+                                                </Viewbox>
                                                 <TextBlock Grid.Column="1" Text="{Binding Content}"
                                                            FontSize="13" Foreground="{DynamicResource Brush.Text}"
                                                            TextTrimming="CharacterEllipsis"
@@ -294,10 +334,13 @@
                                 <Button Grid.Column="2" Width="16" Height="16" Background="Transparent"
                                         BorderThickness="0" Cursor="Hand" ToolTip="按完成时间排序"
                                         Click="DoneSort_Click">
-                                    <Path Data="{StaticResource Icon.SortAsc}"
-                                          Stroke="{DynamicResource Brush.Faint}" StrokeThickness="1.8"
-                                          Width="12" Height="12" Stretch="Uniform"
-                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    <Viewbox Width="12" Height="12">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="{StaticResource Icon.SortAsc}"
+                                                  Stroke="{DynamicResource Brush.Faint}" StrokeThickness="1.8"
+                                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                        </Canvas>
+                                    </Viewbox>
                                 </Button>
                             </Grid>
 

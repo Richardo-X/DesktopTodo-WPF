@@ -64,9 +64,13 @@
                         </Border>
                         <Button Style="{StaticResource Sq}" Margin="8,0,0,0" ToolTip="新建模板"
                                 Click="AddTemplate_Click">
-                            <Path Data="{StaticResource Icon.Plus}" Stroke="{DynamicResource Brush.Muted}"
-                                  StrokeThickness="1.8" Width="14" Height="14" Stretch="Uniform"
-                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <Viewbox Width="14" Height="14">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="{StaticResource Icon.Plus}" Stroke="{DynamicResource Brush.Muted}"
+                                          StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Button>
                     </StackPanel>
                 </Grid>
@@ -91,10 +95,14 @@
                                                 Background="Transparent" BorderThickness="0"
                                                 Cursor="Hand" ToolTip="加入今日待办"
                                                 Click="ApplyTemplate_Click">
-                                            <Path Data="{StaticResource Icon.Plus}"
-                                                  Stroke="{DynamicResource Brush.Faint}"
-                                                  StrokeThickness="2" Width="11" Height="11" Stretch="Uniform"
-                                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                            <Viewbox Width="12" Height="12">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="{StaticResource Icon.Plus}"
+                                                          Stroke="{DynamicResource Brush.Faint}"
+                                                          StrokeThickness="2.2"
+                                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
                                         </Button>
                                         <Grid.InputBindings>
                                             <MouseBinding Gesture="LeftDoubleClick"
