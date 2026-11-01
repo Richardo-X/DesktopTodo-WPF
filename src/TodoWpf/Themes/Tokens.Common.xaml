@@ -106,9 +106,10 @@
         </Setter>
     </Style>
 
-    <!-- 全应用细滚动条：6px、无箭头、透明轨道；垂直滚动条常驻槽位 -->
+    <!-- 全应用滚动条：8px 命中区、3px 视觉细条、无箭头、透明轨道；
+         不溢出（Maximum=0）时整条透明，不显示任何滑块。 -->
     <Style TargetType="ScrollBar">
-        <Setter Property="Width" Value="3"/>
+        <Setter Property="Width" Value="8"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -119,8 +120,11 @@
                                 <Thumb>
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
-                                            <Border Background="{DynamicResource Brush.CardBorder}"
-                                                    CornerRadius="1.5" Margin="0"/>
+                                            <Grid Background="Transparent">
+                                                <Border Width="3" HorizontalAlignment="Center"
+                                                        Background="{DynamicResource Brush.CardBorder}"
+                                                        CornerRadius="1.5"/>
+                                            </Grid>
                                         </ControlTemplate>
                                     </Thumb.Template>
                                 </Thumb>
@@ -130,5 +134,10 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <Trigger Property="Maximum" Value="0">
+                <Setter Property="Opacity" Value="0"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 </ResourceDictionary>
