@@ -15,21 +15,6 @@ internal static class WindowShell
 
     private const int DwmwcpRound = 2;
 
-    /// <summary>挂上系统外壳：底边可拖拽改高，其余三边不可拖。</summary>
-    public static void Apply(Window window)
-    {
-        WindowChrome.SetWindowChrome(window, new WindowChrome
-        {
-            CaptionHeight = 0,
-            ResizeBorderThickness = new Thickness(0, 0, 0, 8),
-            GlassFrameThickness = new Thickness(0),
-            CornerRadius = new CornerRadius(0),
-            UseAeroCaptionButtons = false,
-        });
-
-        window.SourceInitialized += (_, _) => ApplyRoundCorners(window);
-    }
-
     /// <summary>固定尺寸窗口：无缩放边框，仅系统圆角。</summary>
     public static void ApplyFixed(Window window)
     {

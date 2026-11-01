@@ -22,7 +22,7 @@ public partial class MainTodoWindow : Window
         InitializeComponent();
         DataContext = this;
         EditRowCommand = new RelayCommand<TodoRowView>(row => row is not null, row => Controller?.OpenEditTodo(row.Id));
-        WindowShell.Apply(this);
+        WindowShell.ApplyFixed(this);
     }
 
     public event EventHandler<MouseButtonEventArgs>? TitlebarPressed;

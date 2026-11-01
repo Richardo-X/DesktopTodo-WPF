@@ -534,6 +534,7 @@ public sealed class ClusterController : IDisposable
 
     public void ToggleQuick()
     {
+        ExitTuckBeforeLayout();
         Mutate(d => d with { UiState = d.UiState with { QuickVisible = !d.UiState.QuickVisible } });
         _main.SetPanelToggles(_data.UiState.QuickVisible, _data.UiState.DoneVisible);
         ApplyLayout();
@@ -541,9 +542,27 @@ public sealed class ClusterController : IDisposable
 
     public void ToggleDone()
     {
+        ExitTuckBeforeLayout();
         Mutate(d => d with { UiState = d.UiState with { DoneVisible = !d.UiState.DoneVisible } });
         _main.SetPanelToggles(_data.UiState.QuickVisible, _data.UiState.DoneVisible);
         ApplyLayout();
+    }
+
+    /// <summary>
+    /// 缩进动画用 BeginAnimation 持有窗口 Top 属性；显隐模板/已完成窗前若不清除，
+    /// 随后的布局设置会被动画覆盖，出现两窗错位。这里先结束动画并复位缩进状态。
+    /// </summary>
+    private void ExitTuckBeforeLayout()
+    {
+        _tuck.NotifyUntuckCompleted();
+        _tuck.SetSnapped(false);
+        _main.BeginAnimation(Window.TopProperty, null);
+        _quick.BeginAnimation(Window.TopProperty, null);
+        _done.BeginAnimation(Window.TopProperty, null);
+        _main.Top = _anchor.Y;
+        _quick.Top = _anchor.Y;
+        _done.Top = _anchor.Y;
+        _tuck.SetSnapped(_anchor.Y <= WorkArea().Y);
     }
 
     // ---------- 置顶 / 缩进锁定 / 主题 ----------
@@ -771,7 +790,10 @@ public sealed class ClusterController : IDisposable
 
         _data = result.Data;
         RefreshAllViews();
-        ApplyLayout(saveState: false);
+        // 下一帧再改窗口高度：让列表先完成追加/删除，避免窗口 resize 与列表更新同帧造成闪烁。
+        _main.Dispatcher.BeginInvoke(
+            new Action(() => ApplyLayout(saveState: false)),
+            DispatcherPriority.Loaded);
         _ = _repository.SaveAsync(_data);
     }
 
