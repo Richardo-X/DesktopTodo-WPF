@@ -78,10 +78,34 @@ public partial class QuickWindow : Window
     /// <summary>整批刷新模板行 + 计数 + 空态。</summary>
     public void SetTemplateRows(IReadOnlyList<TemplateRowView> rows, int maxTemplates)
     {
-        TemplateRows.Clear();
-        foreach (var row in rows)
+        // 增量同步：新列表是旧列表的延长时只追加新增项，避免整表清空重建导致闪烁。
+        var appendOnly = rows.Count >= TemplateRows.Count;
+        if (appendOnly)
         {
-            TemplateRows.Add(row);
+            for (var i = 0; i < TemplateRows.Count; i++)
+            {
+                if (TemplateRows[i].Id != rows[i].Id)
+                {
+                    appendOnly = false;
+                    break;
+                }
+            }
+        }
+
+        if (appendOnly)
+        {
+            for (var i = TemplateRows.Count; i < rows.Count; i++)
+            {
+                TemplateRows.Add(rows[i]);
+            }
+        }
+        else
+        {
+            TemplateRows.Clear();
+            foreach (var row in rows)
+            {
+                TemplateRows.Add(row);
+            }
         }
 
         TemplateCount.Text = $"{rows.Count}/{maxTemplates}";
