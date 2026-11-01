@@ -154,9 +154,13 @@ public partial class MainTodoWindow : Window
     /// <summary>模板窗开关态：开启时 ⚡ 用主题色。</summary>
     public void SetPanelToggles(bool quickVisible, bool doneVisible)
     {
+        // 原型 .sidebtn.on：边框与图标同时变强调色；仅改图标时夜间 Muted→Accent 差异过小，看不出来
         QuickBtn.Foreground = quickVisible
             ? (Brush)FindResource("Brush.Accent")
             : (Brush)FindResource("Brush.Muted");
+        QuickBtn.BorderBrush = quickVisible
+            ? (Brush)FindResource("Brush.Accent")
+            : (Brush)FindResource("Brush.CardBorder");
     }
 
     public void SetTopMost(bool on)

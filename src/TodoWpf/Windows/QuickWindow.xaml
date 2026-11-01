@@ -57,8 +57,10 @@
 
                 <Grid Grid.Row="1" Margin="14,0,14,8">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="{DynamicResource Brush.CounterChip}" CornerRadius="99" Padding="9,3">
+                        <!-- 圆角 = 高度 24 的一半（见主窗同处注释：WPF 超大圆角会被截断成椭圆角） -->
+                        <Border Background="{DynamicResource Brush.CounterChip}" CornerRadius="12" Height="24" Padding="9,0">
                             <TextBlock x:Name="TemplateCount" Text="0/10" FontSize="11"
+                                       VerticalAlignment="Center"
                                        Foreground="{DynamicResource Brush.Muted}"
                                        Typography.NumeralAlignment="Tabular"/>
                         </Border>

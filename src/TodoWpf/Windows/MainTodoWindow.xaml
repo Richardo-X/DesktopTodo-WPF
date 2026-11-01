@@ -142,7 +142,8 @@
                         <Button x:Name="PinBtn" Style="{StaticResource Ib}" ToolTip="窗口置顶开关" Click="PinBtn_Click">
                             <Viewbox Width="14" Height="14">
                                 <Canvas Width="24" Height="24">
-                                    <Path Data="{StaticResource Icon.Pin}" Stroke="{DynamicResource Brush.Faint}"
+                                    <Path Data="{StaticResource Icon.Pin}"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                           StrokeThickness="1.8"
                                           StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                                 </Canvas>
@@ -198,9 +199,12 @@
 
                     <Grid x:Name="ActionBar" Grid.Row="1" Margin="16,2,16,12">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border Background="{DynamicResource Brush.CounterChip}" CornerRadius="99"
-                                    Padding="9,3" VerticalAlignment="Center">
+                            <!-- 圆角显式 = 高度 24 的一半：WPF 对超大 CornerRadius 会 X/Y 独立截断成椭圆角，
+                                 与浏览器按比例缩放的胶囊不同（原型 border-radius:99px 实际得到半径 12 的圆角） -->
+                            <Border Background="{DynamicResource Brush.CounterChip}" CornerRadius="12"
+                                    Height="24" Padding="9,0" VerticalAlignment="Center">
                                 <TextBlock x:Name="CountText" Text="0/10" FontSize="11"
+                                           VerticalAlignment="Center"
                                            Foreground="{DynamicResource Brush.Muted}"
                                            Typography.NumeralAlignment="Tabular"/>
                             </Border>
@@ -236,7 +240,8 @@
                                     ToolTip="显示 / 隐藏模板窗" Click="QuickBtn_Click">
                                 <Viewbox Width="14" Height="14">
                                     <Canvas Width="24" Height="24">
-                                        <Path Data="{StaticResource Icon.Bolt}" Stroke="{DynamicResource Brush.Muted}"
+                                        <Path Data="{StaticResource Icon.Bolt}"
+                                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                               StrokeThickness="1.8"
                                               StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                                     </Canvas>
