@@ -17,15 +17,15 @@ public class DesignTokenTests
     {
         var tokens = XamlTokenReader.LoadKeyed("src", "TodoWpf", "Themes", "Tokens.Day.xaml");
 
-        Assert.Equal("#0A63B8", Hex(tokens["Color.Accent"]));
-        Assert.Equal("#0D6FC9", Hex(tokens["Color.AccentHover"]));
-        Assert.Equal("#FFFFFF", Hex(tokens["Color.AccentFg"]));
+        Assert.Equal("#4F7391", Hex(tokens["Color.Accent"]));
+        Assert.Equal("#5F86A5", Hex(tokens["Color.AccentHover"]));
+        Assert.Equal("#F7FAFC", Hex(tokens["Color.AccentFg"]));
         Assert.Equal("#F3F6FB", Hex(tokens["Color.WinBgBase"]));
-        Assert.Equal("#1A1C20", Hex(tokens["Color.Text"]));
-        Assert.Equal("#5D616B", Hex(tokens["Color.Muted"]));
-        Assert.Equal("#8B8F99", Hex(tokens["Color.Faint"]));
+        Assert.Equal("#33383F", Hex(tokens["Color.Text"]));
+        Assert.Equal("#5C636C", Hex(tokens["Color.Muted"]));
+        Assert.Equal("#676D76", Hex(tokens["Color.Faint"]));
         Assert.Equal("#C42B1C", Hex(tokens["Color.Danger"]));
-        Assert.Equal("#D13438", Hex(tokens["Color.Overdue"]));
+        Assert.Equal("#A83A34", Hex(tokens["Color.Overdue"]));
         Assert.Equal("#F9FAFC", Hex(tokens["Color.CardSolid"]));
         Assert.Equal("#222222", Hex(tokens["Color.BubbleFg"]));
     }
@@ -35,13 +35,13 @@ public class DesignTokenTests
     {
         var tokens = XamlTokenReader.LoadKeyed("src", "TodoWpf", "Themes", "Tokens.Night.xaml");
 
-        Assert.Equal("#4CC2FF", Hex(tokens["Color.Accent"]));
-        Assert.Equal("#6FCDFF", Hex(tokens["Color.AccentHover"]));
-        Assert.Equal("#06131C", Hex(tokens["Color.AccentFg"]));
+        Assert.Equal("#8FB0C9", Hex(tokens["Color.Accent"]));
+        Assert.Equal("#A3C0D6", Hex(tokens["Color.AccentHover"]));
+        Assert.Equal("#0E1418", Hex(tokens["Color.AccentFg"]));
         Assert.Equal("#1E1E21", Hex(tokens["Color.WinBgBase"]));
-        Assert.Equal("#F2F3F5", Hex(tokens["Color.Text"]));
-        Assert.Equal("#ABAFB8", Hex(tokens["Color.Muted"]));
-        Assert.Equal("#7D818C", Hex(tokens["Color.Faint"]));
+        Assert.Equal("#DDE2E8", Hex(tokens["Color.Text"]));
+        Assert.Equal("#A8B0BA", Hex(tokens["Color.Muted"]));
+        Assert.Equal("#9099A3", Hex(tokens["Color.Faint"]));
         Assert.Equal("#2C2C2E", Hex(tokens["Color.CardSolid"]));
         Assert.Equal("#3A3A3C", Hex(tokens["Color.BubbleBg"]));
     }
@@ -52,9 +52,10 @@ public class DesignTokenTests
         var day = XamlTokenReader.LoadKeyed("src", "TodoWpf", "Themes", "Tokens.Day.xaml");
         var night = XamlTokenReader.LoadKeyed("src", "TodoWpf", "Themes", "Tokens.Night.xaml");
 
-        // 原型夜间未覆盖 danger/overdue → 两主题同值（继承日间）
+        // danger 两主题同值；overdue 在新外观里日夜各一档（1C 原型）
         Assert.Equal(Hex(day["Color.Danger"]), Hex(night["Color.Danger"]));
-        Assert.Equal(Hex(day["Color.Overdue"]), Hex(night["Color.Overdue"]));
+        Assert.Equal("#A83A34", Hex(day["Color.Overdue"]));
+        Assert.Equal("#E08A83", Hex(night["Color.Overdue"]));
     }
 
     [Fact]

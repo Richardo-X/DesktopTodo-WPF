@@ -3,15 +3,15 @@
 
     <!-- 设计令牌 · 白天主题（逐值对齐原型 v3.4 :root；#AARRGGBB，α 由 CSS rgba 换算） -->
 
-    <Color x:Key="Color.Accent">#0A63B8</Color>
-    <Color x:Key="Color.AccentHover">#0D6FC9</Color>
-    <Color x:Key="Color.AccentFg">#FFFFFF</Color>
+    <Color x:Key="Color.Accent">#4F7391</Color>
+    <Color x:Key="Color.AccentHover">#5F86A5</Color>
+    <Color x:Key="Color.AccentFg">#F7FAFC</Color>
     <Color x:Key="Color.WinBgBase">#F3F6FB</Color>
-    <Color x:Key="Color.Text">#1A1C20</Color>
-    <Color x:Key="Color.Muted">#5D616B</Color>
-    <Color x:Key="Color.Faint">#8B8F99</Color>
+    <Color x:Key="Color.Text">#33383F</Color>
+    <Color x:Key="Color.Muted">#5C636C</Color>
+    <Color x:Key="Color.Faint">#676D76</Color>
     <Color x:Key="Color.Danger">#C42B1C</Color>
-    <Color x:Key="Color.Overdue">#D13438</Color>
+    <Color x:Key="Color.Overdue">#A83A34</Color>
     <Color x:Key="Color.CardSolid">#F9FAFC</Color>
     <Color x:Key="Color.BubbleBg">#FFFFFF</Color>
     <Color x:Key="Color.BubbleFg">#222222</Color>
@@ -49,5 +49,19 @@
     <!-- 缩进白条（原型 #tuckBar：白 α.28，悬停亮 α.5，日夜同值） -->
     <SolidColorBrush x:Key="Brush.TuckBar" Color="#47FFFFFF"/>
     <SolidColorBrush x:Key="Brush.TuckBarHover" Color="#80FFFFFF"/>
+
+    <!-- 新外观（1C）表面令牌：新窗口引用；旧外观窗口删除后清理旧键 -->
+    <SolidColorBrush x:Key="Brush.Shell" Color="#FFEEF1F6"/>
+    <SolidColorBrush x:Key="Brush.RowCard" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.RowCardBorder" Color="#0F1E232A"/>
+    <SolidColorBrush x:Key="Brush.RowCardHover" Color="#FFF5F7F9"/>
+    <SolidColorBrush x:Key="Brush.FieldSurface" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.FieldSurfaceBorder" Color="#1A1E232A"/>
+    <SolidColorBrush x:Key="Brush.SoftAccent" Color="#244F7391"/>
+    <SolidColorBrush x:Key="Brush.SoftOverdue" Color="#1AA83A34"/>
+    <SolidColorBrush x:Key="Brush.OverdueEdge" Color="#59A83A34"/>
+    <SolidColorBrush x:Key="Brush.CounterChip" Color="#0F1E232A"/>
+    <SolidColorBrush x:Key="Brush.Hairline" Color="#1F1E232A"/>
+    <SolidColorBrush x:Key="Brush.DoneStamp" Color="#FF5C636C"/>
 
 </ResourceDictionary>

@@ -3,15 +3,15 @@
 
     <!-- 设计令牌 · 夜间主题（逐值对齐原型 v3.4 [data-theme="night"]；danger/overdue 继承日间） -->
 
-    <Color x:Key="Color.Accent">#4CC2FF</Color>
-    <Color x:Key="Color.AccentHover">#6FCDFF</Color>
-    <Color x:Key="Color.AccentFg">#06131C</Color>
+    <Color x:Key="Color.Accent">#8FB0C9</Color>
+    <Color x:Key="Color.AccentHover">#A3C0D6</Color>
+    <Color x:Key="Color.AccentFg">#0E1418</Color>
     <Color x:Key="Color.WinBgBase">#1E1E21</Color>
-    <Color x:Key="Color.Text">#F2F3F5</Color>
-    <Color x:Key="Color.Muted">#ABAFB8</Color>
-    <Color x:Key="Color.Faint">#7D818C</Color>
+    <Color x:Key="Color.Text">#DDE2E8</Color>
+    <Color x:Key="Color.Muted">#A8B0BA</Color>
+    <Color x:Key="Color.Faint">#9099A3</Color>
     <Color x:Key="Color.Danger">#C42B1C</Color>
-    <Color x:Key="Color.Overdue">#D13438</Color>
+    <Color x:Key="Color.Overdue">#E08A83</Color>
     <Color x:Key="Color.CardSolid">#2C2C2E</Color>
     <Color x:Key="Color.BubbleBg">#3A3A3C</Color>
     <Color x:Key="Color.BubbleFg">#F0F0F0</Color>
@@ -48,5 +48,19 @@
     <!-- 缩进白条（日夜同值，继承日间定义） -->
     <SolidColorBrush x:Key="Brush.TuckBar" Color="#47FFFFFF"/>
     <SolidColorBrush x:Key="Brush.TuckBarHover" Color="#80FFFFFF"/>
+
+    <!-- 新外观（1C）表面令牌：新窗口引用；旧外观窗口删除后清理旧键 -->
+    <SolidColorBrush x:Key="Brush.Shell" Color="#FF171A1F"/>
+    <SolidColorBrush x:Key="Brush.RowCard" Color="#FF252930"/>
+    <SolidColorBrush x:Key="Brush.RowCardBorder" Color="#0EFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.RowCardHover" Color="#FF2B3038"/>
+    <SolidColorBrush x:Key="Brush.FieldSurface" Color="#FF252930"/>
+    <SolidColorBrush x:Key="Brush.FieldSurfaceBorder" Color="#17FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.SoftAccent" Color="#2E8FB0C9"/>
+    <SolidColorBrush x:Key="Brush.SoftOverdue" Color="#24E08A83"/>
+    <SolidColorBrush x:Key="Brush.OverdueEdge" Color="#66E08A83"/>
+    <SolidColorBrush x:Key="Brush.CounterChip" Color="#14FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Hairline" Color="#1AFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.DoneStamp" Color="#FFA8B0BA"/>
 
 </ResourceDictionary>
