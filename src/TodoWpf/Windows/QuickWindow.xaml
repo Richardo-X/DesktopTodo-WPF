@@ -72,7 +72,7 @@
                 </Grid>
 
                 <Grid Grid.Row="2">
-                    <ScrollViewer VerticalScrollBarVisibility="Visible"
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled"
                                   Padding="8,4,2,8">
                         <ItemsControl x:Name="TemplateList" ItemsSource="{Binding TemplateRows}">

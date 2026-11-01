@@ -220,7 +220,7 @@ public sealed class ClusterController : IDisposable
     private double TemplateWindowHeight()
     {
         var rows = _data.Templates.Count;
-        return Math.Clamp(41.5 + 36 + rows * 36 + 8, 100, 448);
+        return Math.Clamp(rows * 36 + 88, 100, 448);
     }
 
     /// <summary>按锚点+缩放+开关重排三窗（隐藏窗同时就位但不出场）。</summary>
