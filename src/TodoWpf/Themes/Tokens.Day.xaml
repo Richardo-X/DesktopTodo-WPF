@@ -62,6 +62,7 @@
     <SolidColorBrush x:Key="Brush.OverdueEdge" Color="#59A83A34"/>
     <SolidColorBrush x:Key="Brush.CounterChip" Color="#0F1E232A"/>
     <SolidColorBrush x:Key="Brush.Hairline" Color="#1F1E232A"/>
+    <SolidColorBrush x:Key="Brush.Line" Color="#421E232A"/>
     <SolidColorBrush x:Key="Brush.DoneStamp" Color="#FF5C636C"/>
 
 </ResourceDictionary>

@@ -75,7 +75,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
                         <Border x:Name="bd" Width="16" Height="16" CornerRadius="4"
-                                BorderBrush="{DynamicResource Brush.CbBorder}" BorderThickness="1.5"
+                                BorderBrush="{DynamicResource Brush.Line}" BorderThickness="1"
                                 Background="Transparent">
                             <Path x:Name="ck" Data="{StaticResource Icon.Check}"
                                   Stroke="{DynamicResource Brush.AccentFg}" StrokeThickness="2.2"
@@ -304,8 +304,8 @@
                                     <DataTemplate>
                                         <Grid Height="34">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="38"/>
-                                                <ColumnDefinition Width="14"/>
+                                                <ColumnDefinition Width="34"/>
+                                                <ColumnDefinition Width="16"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="16"/>
                                             </Grid.ColumnDefinitions>
