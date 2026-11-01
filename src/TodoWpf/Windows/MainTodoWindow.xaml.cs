@@ -15,7 +15,7 @@ public partial class MainTodoWindow : Window
     public ObservableCollection<TodoRowView> Rows { get; } = new();
 
     /// <summary>已完成行（同窗下半段）。</summary>
-    public ObservableCollection<TodoRowView> DoneRows { get; } = new();
+    public ObservableCollection<DoneRowView> DoneRows { get; } = new();
 
     public MainTodoWindow()
     {
@@ -72,7 +72,7 @@ public partial class MainTodoWindow : Window
     }
 
     /// <summary>整批刷新已完成行。</summary>
-    public void SetDoneRows(IReadOnlyList<TodoRowView> rows)
+    public void SetDoneRows(IReadOnlyList<DoneRowView> rows)
     {
         DoneRows.Clear();
         foreach (var row in rows)
@@ -108,6 +108,7 @@ public partial class MainTodoWindow : Window
     public void SetBatchBar(bool visible, int selected, bool canDelete)
     {
         InBatch = visible;
+        ActionBar.Visibility = visible ? Visibility.Hidden : Visibility.Visible;
         BatchBar.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
         BatchCount.Text = $"已选 {selected} 项";
         BatchDeleteBtn.IsEnabled = canDelete;

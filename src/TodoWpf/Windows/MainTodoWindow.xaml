@@ -169,7 +169,7 @@
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
 
-                    <Grid Grid.Row="1" Margin="16,0,16,12">
+                    <Grid x:Name="ActionBar" Grid.Row="1" Margin="16,0,16,12">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Border Background="{DynamicResource Brush.CounterChip}" CornerRadius="99"
                                     Padding="9,3" VerticalAlignment="Center">
@@ -269,11 +269,11 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <StackPanel x:Name="TodoEmpty" Visibility="Hidden" Height="34">
+                            <Grid x:Name="TodoEmpty" Visibility="Hidden" Height="34">
                                 <TextBlock Text="今天还没有待办" FontSize="11"
                                            Foreground="{DynamicResource Brush.Faint}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </StackPanel>
+                            </Grid>
 
                             <Grid Margin="0,10,0,4">
                                 <Grid.ColumnDefinitions>
@@ -296,17 +296,22 @@
                                         <Border Style="{StaticResource RowCard}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="38"/>
                                                     <ColumnDefinition Width="12"/>
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="16"/>
                                                 </Grid.ColumnDefinitions>
-                                                <Ellipse Width="7" Height="7" Fill="{DynamicResource Brush.Accent}"
+                                                <TextBlock Text="{Binding CompletedTimeText}" FontSize="11"
+                                                           Foreground="{DynamicResource Brush.DoneStamp}"
+                                                           VerticalAlignment="Center"/>
+                                                <Ellipse Grid.Column="1" Width="7" Height="7"
+                                                         Fill="{DynamicResource Brush.Accent}"
                                                          VerticalAlignment="Center"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding Content}"
+                                                <TextBlock Grid.Column="2" Text="{Binding Content}"
                                                            FontSize="13" Foreground="{DynamicResource Brush.Muted}"
                                                            TextTrimming="CharacterEllipsis"
                                                            VerticalAlignment="Center" Margin="8,0,8,0"/>
-                                                <CheckBox Grid.Column="2" Style="{StaticResource RowCheck}"
+                                                <CheckBox Grid.Column="3" Style="{StaticResource RowCheck}"
                                                           IsChecked="True" IsEnabled="False"
                                                           VerticalAlignment="Center"/>
                                             </Grid>

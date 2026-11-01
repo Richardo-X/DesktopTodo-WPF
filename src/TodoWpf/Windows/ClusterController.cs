@@ -122,6 +122,13 @@ public sealed class ClusterController : IDisposable
     /// <summary>初始化：应用记忆、接互锁、显示窗口。</summary>
     public void Start()
     {
+        // 批次04：新外观只有主窗（模板窗后续接入）；旧侧窗不再显示，缩放回到基准 1.0
+        _data = _data with
+        {
+            UiState = _data.UiState with { QuickVisible = false, DoneVisible = false, ClusterScale = 1 },
+        };
+        _scale = 1;
+
         ApplyThemeState();
         _main.Controller = this;
         _quick.Controller = this;
@@ -158,9 +165,9 @@ public sealed class ClusterController : IDisposable
         var todayKey = LocalDate.Key(DateTimeOffset.Now);
         _main.SetRows(MainViewService.TodoRows(_data, todayKey));
         _main.SetCount(_data.Todos.Count, _data.Settings.MaxItems);
-        _done.SetDoneRows(
-            MainViewService.DoneRows(_data, _data.Settings.DoneSort),
-            _data.Completed.Count);
+        var doneRows = MainViewService.DoneRows(_data, _data.Settings.DoneSort);
+        _done.SetDoneRows(doneRows, _data.Completed.Count);
+        _main.SetDoneRows(doneRows);
         _quick.SetTemplateRows(MainViewService.TemplateRows(_data), Core.Models.TemplateLimit.Max);
     }
 
