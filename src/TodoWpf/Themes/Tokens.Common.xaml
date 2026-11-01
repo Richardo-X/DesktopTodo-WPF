@@ -108,7 +108,7 @@
 
     <!-- 全应用细滚动条：6px、无箭头、透明轨道；垂直滚动条常驻槽位 -->
     <Style TargetType="ScrollBar">
-        <Setter Property="Width" Value="6"/>
+        <Setter Property="Width" Value="3"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -120,7 +120,7 @@
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
                                             <Border Background="{DynamicResource Brush.CardBorder}"
-                                                    CornerRadius="3" Margin="1,0"/>
+                                                    CornerRadius="1.5" Margin="0"/>
                                         </ControlTemplate>
                                     </Thumb.Template>
                                 </Thumb>

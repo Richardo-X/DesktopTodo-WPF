@@ -105,16 +105,16 @@
                 </Grid.LayoutTransform>
 
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="Titlebar_MouseDown">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                <Grid Grid.Row="0" Background="Transparent" Margin="16,12,16,4" MouseLeftButtonDown="Titlebar_MouseDown">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Border Width="16" Height="16" CornerRadius="5"
                                 Background="{DynamicResource Brush.Accent}">
                             <Path Data="{StaticResource Icon.Check}" Stroke="{DynamicResource Brush.AccentFg}"
-                                  StrokeThickness="2.4" Width="9" Height="9" Stretch="Uniform"
+                                  StrokeThickness="2.4" Width="11" Height="11" Stretch="Uniform"
                                   StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                         </Border>
                         <TextBlock Text="桌面待办" FontSize="13" FontWeight="SemiBold"
@@ -122,7 +122,7 @@
                                    VerticalAlignment="Center"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
-                                VerticalAlignment="Center" Margin="0,0,8,0">
+                                VerticalAlignment="Center">
                         <Button x:Name="ThemeBtn" Style="{StaticResource Ib}" ToolTip="切换日/夜主题" Click="ThemeBtn_Click">
                             <Path Data="{StaticResource Icon.Moon}" Stroke="{DynamicResource Brush.Faint}"
                                   StrokeThickness="1.8" Width="14" Height="14" Stretch="Uniform"
@@ -158,7 +158,7 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,6,0,12">
+                    <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,6,0,14">
                         <TextBlock x:Name="ClockTime" Text="14:32" FontSize="28" FontWeight="Medium"
                                    FontFamily="{StaticResource Font.Display}"
                                    Foreground="{DynamicResource Brush.Text}"
@@ -169,7 +169,7 @@
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
 
-                    <Grid x:Name="ActionBar" Grid.Row="1" Margin="16,0,16,12">
+                    <Grid x:Name="ActionBar" Grid.Row="1" Margin="16,2,16,12">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Border Background="{DynamicResource Brush.CounterChip}" CornerRadius="99"
                                     Padding="9,3" VerticalAlignment="Center">
@@ -207,7 +207,7 @@
                     </Grid>
 
                     <StackPanel x:Name="BatchBar" Grid.Row="1" Orientation="Horizontal"
-                                Visibility="Hidden" Margin="16,0,16,12" VerticalAlignment="Center">
+                                Visibility="Hidden" Margin="16,2,16,12" VerticalAlignment="Center">
                         <TextBlock x:Name="BatchCount" Text="已选 0 项" FontSize="11"
                                    Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Center"/>
                         <Button x:Name="BatchExitBtn" Content="返回" Click="BatchExit_Click"
@@ -222,7 +222,7 @@
 
                     <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Visible"
                                   HorizontalScrollBarVisibility="Disabled"
-                                  Padding="12,0,3,26">
+                                  Padding="12,0,6,26">
                         <StackPanel>
                             <ItemsControl x:Name="TodoList" ItemsSource="{Binding Rows}">
                                 <ItemsControl.ItemTemplate>
@@ -237,6 +237,7 @@
                                                 </Grid.ColumnDefinitions>
                                                 <Path Data="{StaticResource Icon.Grip}"
                                                       Fill="{DynamicResource Brush.Faint}" Width="14" Height="14"
+                                                      Margin="-5,0,0,0"
                                                       Stretch="Uniform" VerticalAlignment="Center"/>
                                                 <TextBlock Grid.Column="1" Text="{Binding Content}"
                                                            FontSize="13" Foreground="{DynamicResource Brush.Text}"
@@ -311,6 +312,7 @@
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding CompletedTimeText}" FontSize="11"
                                                        Foreground="{DynamicResource Brush.DoneStamp}"
+                                                       TextAlignment="Right" Padding="0,0,8,0"
                                                        VerticalAlignment="Center"/>
                                             <Grid Grid.Column="1">
                                                 <Border Width="2" HorizontalAlignment="Center"
