@@ -10,7 +10,7 @@ public class ClusterLayoutTests
     [Fact]
     public void BaseDimensions_MatchPrototype()
     {
-        Assert.Equal(470, ClusterLayout.MainWidth);
+        Assert.Equal(360, ClusterLayout.MainWidth);
         Assert.Equal(640, ClusterLayout.MainHeight);
         Assert.Equal(310, ClusterLayout.SideWidth);
         Assert.Equal(640, ClusterLayout.SideHeight);
@@ -33,9 +33,9 @@ public class ClusterLayoutTests
         // 主窗：锚点即主窗左上角
         Assert.Equal(720, frame.Main.X);
         Assert.Equal(100, frame.Main.Y);
-        Assert.Equal(470, frame.Main.Width);
+        Assert.Equal(360, frame.Main.Width);
         // 已完成窗：左缘 = 主窗右缘 + 缝隙
-        Assert.Equal(720 + 470 + 4, frame.Done.X);
+        Assert.Equal(720 + 360 + 4, frame.Done.X);
         Assert.Equal(640, frame.Done.Height);
     }
 
@@ -54,7 +54,7 @@ public class ClusterLayoutTests
         var withDone = ClusterLayout.Arrange(WorkArea, anchor, 1.0, quickVisible: false, doneVisible: true);
         Assert.False(withDone.Quick.Visible);
         Assert.True(withDone.Done.Visible);
-        Assert.Equal(anchor.X + 470 + 4, withDone.Done.X);
+        Assert.Equal(anchor.X + 360 + 4, withDone.Done.X);
     }
 
     [Fact]
@@ -63,12 +63,12 @@ public class ClusterLayoutTests
         var anchor = new WinPoint(800, 100);
         var frame = ClusterLayout.Arrange(WorkArea, anchor, 1.25, quickVisible: true, doneVisible: true);
 
-        Assert.Equal(470 * 1.25, frame.Main.Width);
+        Assert.Equal(360 * 1.25, frame.Main.Width);
         Assert.Equal(640 * 1.25, frame.Main.Height);
         Assert.Equal(310 * 1.25, frame.Quick.Width);
         // 缝隙固定 4px（不随缩放）
         Assert.Equal(anchor.X - 4, frame.Quick.Right);
-        Assert.Equal(anchor.X + 470 * 1.25 + 4, frame.Done.X);
+        Assert.Equal(anchor.X + 360 * 1.25 + 4, frame.Done.X);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class ClusterLayoutTests
     {
         // 高屏（高度限制不生效）：三窗全开总宽（含 2 条缝隙）= 1098 → s ≤ 1000/1098
         var clamped = ClusterLayout.ClampScale(1.2, new WinRect(0, 0, 1000, 2080), true, true);
-        Assert.Equal(1000 / 1098.0, clamped, 10);
+        Assert.Equal(1000 / 988.0, clamped, 10);
 
         // 1080p 全开：高度限制（0.8125）比宽度限制（0.9107）更紧
         var on1080p = ClusterLayout.ClampScale(1.2, new WinRect(0, 0, 1920, 1040), true, true);
@@ -115,7 +115,7 @@ public class ClusterLayoutTests
     {
         var anchor = ClusterLayout.FirstLaunchAnchor(WorkArea, 1.0, true, true);
 
-        var totalWidth = (470 + 310 + 310) + 2 * ClusterLayout.Gap;
+        var totalWidth = (360 + 310 + 310) + 2 * ClusterLayout.Gap;
         Assert.Equal(WorkArea.Right - 40 - totalWidth, anchor.X);
         Assert.Equal(WorkArea.Y + 80, anchor.Y);
         // 不贴边：与上边缘留出距离
@@ -127,7 +127,7 @@ public class ClusterLayoutTests
     {
         var anchor = ClusterLayout.FirstLaunchAnchor(new WinRect(0, 0, 1000, 1040), 1.0, true, true);
 
-        var totalWidth = (470 + 310 + 310) + 2 * ClusterLayout.Gap;
+        var totalWidth = (360 + 310 + 310) + 2 * ClusterLayout.Gap;
         Assert.Equal((1000 - totalWidth) / 2.0, anchor.X, 10);
     }
 }

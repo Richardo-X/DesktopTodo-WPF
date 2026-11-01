@@ -35,7 +35,7 @@
     <sys:Double x:Key="Size.IconCheck" xmlns:sys="clr-namespace:System;assembly=mscorlib">12</sys:Double>
 
     <!-- 窗口基准（v3.4 布局口径） -->
-    <sys:Double x:Key="Size.MainWindowWidth" xmlns:sys="clr-namespace:System;assembly=mscorlib">470</sys:Double>
+    <sys:Double x:Key="Size.MainWindowWidth" xmlns:sys="clr-namespace:System;assembly=mscorlib">360</sys:Double>
     <sys:Double x:Key="Size.MainWindowHeight" xmlns:sys="clr-namespace:System;assembly=mscorlib">640</sys:Double>
     <sys:Double x:Key="Size.SideWindowWidth" xmlns:sys="clr-namespace:System;assembly=mscorlib">310</sys:Double>
     <sys:Double x:Key="Size.ClusterGap" xmlns:sys="clr-namespace:System;assembly=mscorlib">4</sys:Double>

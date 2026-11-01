@@ -7,7 +7,7 @@ namespace TodoWpf.Core.Windows;
 /// </summary>
 public static class ClusterLayout
 {
-    public const double MainWidth = 470;
+    public const double MainWidth = 360;
 
     public const double MainHeight = 640;
 

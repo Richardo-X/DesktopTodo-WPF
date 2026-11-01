@@ -198,7 +198,7 @@ public class DesignTokenTests
     {
         var common = XamlTokenReader.LoadKeyed("src", "TodoWpf", "Themes", "Tokens.Common.xaml");
 
-        Assert.Equal("470", Text(common["Size.MainWindowWidth"]));
+        Assert.Equal("360", Text(common["Size.MainWindowWidth"]));
         Assert.Equal("640", Text(common["Size.MainWindowHeight"]));
         Assert.Equal("310", Text(common["Size.SideWindowWidth"]));
         Assert.Equal("4", Text(common["Size.ClusterGap"]));
