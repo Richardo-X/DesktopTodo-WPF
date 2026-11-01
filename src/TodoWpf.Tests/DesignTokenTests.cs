@@ -322,7 +322,7 @@ public class DesignTokenTests
             Assert.True(card is not null, $"{relative} 缺少令牌化背景 Border（Brush.WinBg 或 Brush.Shell）");
 
             // 新主窗走系统外壳（WindowChrome + DWM 圆角），不再自绘玻璃窗沿与圆角
-            if (relative.Contains("MainTodoWindow"))
+            if (relative.Contains("MainTodoWindow") || relative.Contains("QuickWindow"))
             {
                 continue;
             }

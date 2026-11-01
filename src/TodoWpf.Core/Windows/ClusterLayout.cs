@@ -11,7 +11,7 @@ public static class ClusterLayout
 
     public const double MainHeight = 640;
 
-    public const double SideWidth = 310;
+    public const double SideWidth = 260;
 
     public const double SideHeight = 640;
 
@@ -58,8 +58,8 @@ public static class ClusterLayout
         var sideH = SideHeight * scale;
 
         var main = new ClusterPanelFrame(new WinRect(anchor.X, anchor.Y, mainW, mainH), true);
-        var quick = new ClusterPanelFrame(new WinRect(anchor.X - Gap - sideW, anchor.Y, sideW, sideH), quickVisible);
-        var done = new ClusterPanelFrame(new WinRect(anchor.X + mainW + Gap, anchor.Y, sideW, sideH), doneVisible);
+        var quick = new ClusterPanelFrame(new WinRect(anchor.X + mainW + Gap, anchor.Y, sideW, sideH), quickVisible);
+        var done = new ClusterPanelFrame(new WinRect(anchor.X + mainW + Gap + sideW + Gap, anchor.Y, sideW, sideH), doneVisible);
 
         return new ClusterFrame(main, quick, done);
     }

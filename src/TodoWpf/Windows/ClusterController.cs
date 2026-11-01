@@ -216,23 +216,11 @@ public sealed class ClusterController : IDisposable
         return physical / dpi.DpiScaleX / designWidth;
     }
 
-    /// <summary>
-    /// 快捷窗的"画布矩形"：窗口矩形恒定不变的那块地方（右缘钉主窗左缘减缝隙、上缘钉锚点）。
-    /// 尺寸取 max(设计尺寸, 设计尺寸×缩放上限) —— 保证卡面（固定设计尺寸 310×640，靠渲染层缩放
-    /// 表现大小）在窗口内不被父级夹小。窗口矩形永不改变 ⇒ 合成器不会重贴旧表面
-    /// ⇒ 无拖影、无按下/松手闪动。
-    /// 主窗与已完成窗仍在"逐帧改窗口矩形"的老路上（用户 2026-10-13 裁定）。
-    /// </summary>
-    private WinRect QuickCanvasRect()
+    /// <summary>模板窗设计高度：标题 + 动作行 + 行 × 36，夹在 160 与 448 之间。</summary>
+    private double TemplateWindowHeight()
     {
-        var ui = _data.UiState;
-        var workArea = WorkArea();
-        var maxScale = ClusterLayout.MaxScale(workArea, ui.QuickVisible, ui.DoneVisible);
-        var span = Math.Max(1, maxScale);
-        var w = ClusterLayout.SideWidth * span;
-        var h = ClusterLayout.SideHeight * span;
-        var anchor = SnappedAnchor();
-        return new WinRect(anchor.X - ClusterLayout.Gap - w, anchor.Y, w, h);
+        var rows = _data.Templates.Count;
+        return Math.Clamp(41.5 + 36 + rows * 36 + 8, 160, 448);
     }
 
     /// <summary>按锚点+缩放+开关重排三窗（隐藏窗同时就位但不出场）。</summary>
@@ -243,10 +231,11 @@ public sealed class ClusterController : IDisposable
         var frame = ClusterLayout.Arrange(workArea, SnappedAnchor(), _scale, ui.QuickVisible, ui.DoneVisible);
 
         // 快捷窗用固定画布（零矩形变更）；主窗/已完成窗逐帧摆位。
+        var tplRect = frame.Quick.Rect with { Height = TemplateWindowHeight() * _scale };
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
-            (QuickCanvasRect(), _quick, frame.Quick.Visible, PinEdge.Right),
-            (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
+            (tplRect, _quick, frame.Quick.Visible, PinEdge.Left),
+            (frame.Done.Rect, _done, false, PinEdge.Left));
 
         // 内容缩放比不从 _scale 直接取，而是从"窗口矩形取整后的实际尺寸"反推：
         // 窗口宽度要落到整数物理像素（PlaceBatch 里 round），若内容仍按原始 _scale 排版，
@@ -255,6 +244,7 @@ public sealed class ClusterController : IDisposable
         // 反推后 内容布局尺寸 ≡ 窗口客户区尺寸，卡面边缘逐帧与窗口边缘重合。
         _main.SetContentScale(NormalizedScale(frame.Main.Rect.Width, ClusterLayout.MainWidth));
         _quick.SetContentScale(NormalizedScale(frame.Quick.Rect.Width, ClusterLayout.SideWidth));
+        _quick.SetContentHeight(TemplateWindowHeight());
         // 已完成窗维持在"逐帧改窗口矩形 + LayoutTransform"这条老路上（用户 2026-10-13 裁定回退）
         _done.SetContentScale(NormalizedScale(frame.Done.Rect.Width, ClusterLayout.SideWidth));
 
@@ -268,8 +258,8 @@ public sealed class ClusterController : IDisposable
         }
 
         // 白条定位：可见组水平中心、贴屏顶
-        var left = frame.Quick.Visible ? frame.Quick.Rect.X : frame.Main.Rect.X;
-        var right = frame.Done.Visible ? frame.Done.Rect.Right : frame.Main.Rect.Right;
+        var left = frame.Main.Rect.X;
+        var right = frame.Quick.Visible ? frame.Quick.Rect.Right : frame.Main.Rect.Right;
         _tuckBar.Left = (left + right) / 2 - _tuckBar.Width / 2;
         _tuckBar.Top = workArea.Y;
 
@@ -296,13 +286,14 @@ public sealed class ClusterController : IDisposable
         // 它是个固定设计尺寸 + 渲染层缩放的窗，卡面比目标档宽（310 设计宽）。
         // 这里若用目标矩形（缩放后的实际宽度）摆它，卡片就被塞进更窄的窗口里 ⇒ 移动过程中被裁；
         // 松手走 ApplyLayout 又换回画布矩形 ⇒ 于是"移动时被裁、松手恢复"（用户 2026-10-13 实测）。
+        var tplRect = frame.Quick.Rect with { Height = TemplateWindowHeight() * _scale };
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
-            (QuickCanvasRect(), _quick, frame.Quick.Visible, PinEdge.Right),
-            (frame.Done.Rect, _done, frame.Done.Visible, PinEdge.Left));
+            (tplRect, _quick, frame.Quick.Visible, PinEdge.Left),
+            (frame.Done.Rect, _done, false, PinEdge.Left));
 
-        var left = frame.Quick.Visible ? frame.Quick.Rect.X : frame.Main.Rect.X;
-        var right = frame.Done.Visible ? frame.Done.Rect.Right : frame.Main.Rect.Right;
+        var left = frame.Main.Rect.X;
+        var right = frame.Quick.Visible ? frame.Quick.Rect.Right : frame.Main.Rect.Right;
         var barLeft = (left + right) / 2 - _tuckBar.Width / 2;
         if (_tuckBar.IsVisible && _tuckBar.Left != barLeft) { _tuckBar.Left = barLeft; }
     }
@@ -650,7 +641,8 @@ public sealed class ClusterController : IDisposable
 
         if (frame.Quick.Visible)
         {
-            targets.Add((_quick, frame.Quick.Rect.Y, workArea.Y - frame.Quick.Rect.Height - 8));
+            var tplH = TemplateWindowHeight() * _scale;
+            targets.Add((_quick, frame.Quick.Rect.Y, workArea.Y - tplH - 8));
         }
 
         if (frame.Done.Visible)

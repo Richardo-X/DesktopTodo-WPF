@@ -30,6 +30,21 @@ internal static class WindowShell
         window.SourceInitialized += (_, _) => ApplyRoundCorners(window);
     }
 
+    /// <summary>固定尺寸窗口：无缩放边框，仅系统圆角。</summary>
+    public static void ApplyFixed(Window window)
+    {
+        WindowChrome.SetWindowChrome(window, new WindowChrome
+        {
+            CaptionHeight = 0,
+            ResizeBorderThickness = new Thickness(0),
+            GlassFrameThickness = new Thickness(0),
+            CornerRadius = new CornerRadius(0),
+            UseAeroCaptionButtons = false,
+        });
+
+        window.SourceInitialized += (_, _) => ApplyRoundCorners(window);
+    }
+
     /// <summary>Win11 系统圆角；Win10 上调用失败即保持直角。</summary>
     private static void ApplyRoundCorners(Window window)
     {
