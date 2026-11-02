@@ -239,4 +239,30 @@ public class TodoOpsServiceTests
         Assert.False(again.Ok);
         Assert.Equal(TodoOpsService.ReasonNotFound, again.Reason);
     }
+
+    [Fact]
+    public void 详情删除_已完成与历史归档()
+    {
+        var done = Done("A", "2026-10-13T01:00:00.000Z");
+        var archived = Done("B", "2026-10-12T05:00:00.000Z");
+        var data = new AppData
+        {
+            Completed = [done],
+            Archive = new Dictionary<string, List<TodoItem>>
+            {
+                ["2026-10-12"] = [archived],
+            },
+        };
+
+        var r1 = TodoOpsService.DeleteCompleted(data, done.Id);
+        Assert.True(r1.Ok);
+        Assert.Empty(r1.Data.Completed);
+
+        var r2 = TodoOpsService.DeleteArchived(data, archived.Id);
+        Assert.True(r2.Ok);
+        Assert.Empty(r2.Data.Archive); // 删空分组随之移除
+
+        Assert.False(TodoOpsService.DeleteCompleted(data, "nope").Ok);
+        Assert.False(TodoOpsService.DeleteArchived(data, "nope").Ok);
+    }
 }

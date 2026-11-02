@@ -1,0 +1,103 @@
+<Window x:Class="TodoWpf.Windows.DetailDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="桌面待办"
+        Width="420" Height="438"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False"
+        WindowStartupLocation="Manual"
+        UseLayoutRounding="True" TextOptions.TextRenderingMode="ClearType"
+        FontFamily="{StaticResource Font.Text}"
+        Effect="{StaticResource Effect.DialogShadowMain}">
+
+    <!-- 详情窗（方案 H 定稿：420×438，体验说明书 ③.2）：
+         三行属性（创建/完成/状态）+ 1px 分隔线 + 无框正文（只读）；
+         标题栏右端「删除」（确认框），删除后关闭详情。 -->
+    <Window.Resources>
+        <!-- 危险小按钮（原型 .btn.sm.danger：28 高、字 11、红字红边） -->
+        <Style x:Key="DangerSm" TargetType="Button">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Overdue}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.OverdueEdge}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.SoftOverdue}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border x:Name="CardRoot" Background="{DynamicResource Brush.Shell}"
+            BorderBrush="{DynamicResource Brush.CardBorder}" BorderThickness="1"
+            CornerRadius="{StaticResource Radius.Dialog}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseDown">
+                <Button x:Name="BackBtn" Style="{StaticResource BackButton}" Tag="{StaticResource Icon.ChevL}"
+                        ToolTip="返回" Click="Back_Click" HorizontalAlignment="Left" Margin="-12,0,0,0"/>
+                <TextBlock x:Name="TitleText" Text="已完成事项" FontSize="13" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Brush.Text}"
+                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                           IsHitTestVisible="False"/>
+                <Button x:Name="DeleteBtn" Content="删除" Style="{StaticResource DangerSm}"
+                        HorizontalAlignment="Right" Margin="0,0,6,0" Click="Delete_Click"/>
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="20,8,20,14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- 三行属性（原型 .drow2：k 60 宽 faint / v muted tabular；状态逾期变红） -->
+                <StackPanel Grid.Row="0" Margin="0,10,0,0">
+                    <Grid Margin="0,5">
+                        <TextBlock Text="创建时间" FontSize="12" Foreground="{DynamicResource Brush.Faint}"/>
+                        <TextBlock x:Name="CreatedValue" FontSize="12" Margin="72,0,0,0"
+                                   Foreground="{DynamicResource Brush.Muted}"
+                                   Typography.NumeralAlignment="Tabular"/>
+                    </Grid>
+                    <Grid Margin="0,5">
+                        <TextBlock Text="完成时间" FontSize="12" Foreground="{DynamicResource Brush.Faint}"/>
+                        <TextBlock x:Name="CompletedValue" FontSize="12" Margin="72,0,0,0"
+                                   Foreground="{DynamicResource Brush.Muted}"
+                                   Typography.NumeralAlignment="Tabular"/>
+                    </Grid>
+                    <Grid Margin="0,5">
+                        <TextBlock Text="状态" FontSize="12" Foreground="{DynamicResource Brush.Faint}"/>
+                        <TextBlock x:Name="StateValue" Text="未逾期" FontSize="12" Margin="72,0,0,0"
+                                   Foreground="{DynamicResource Brush.Muted}"/>
+                    </Grid>
+                </StackPanel>
+
+                <Border Grid.Row="1" Height="1" Margin="0,2,0,12"
+                        Background="{DynamicResource Brush.CardBorder}"/>
+
+                <!-- 无框正文（只读；原型 .dview 13px lh1.8） -->
+                <TextBlock Grid.Row="2" x:Name="ContentView" FontSize="13" LineHeight="23"
+                           Foreground="{DynamicResource Brush.Text}" TextWrapping="Wrap"
+                           VerticalAlignment="Top"/>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

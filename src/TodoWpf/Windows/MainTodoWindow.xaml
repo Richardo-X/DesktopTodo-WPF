@@ -483,6 +483,11 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Grid Height="34">
+                                                    <Grid.InputBindings>
+                                                        <!-- 双击已完成行 → 只读详情窗（需求 §2.6） -->
+                                                        <MouseBinding Gesture="LeftDoubleClick"
+                                                                      Command="{Binding DataContext.DoneDetailCommand, ElementName=DoneList}"/>
+                                                    </Grid.InputBindings>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="34"/>
                                                         <ColumnDefinition Width="16"/>

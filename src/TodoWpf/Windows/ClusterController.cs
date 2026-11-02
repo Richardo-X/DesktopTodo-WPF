@@ -1276,6 +1276,52 @@ public sealed class ClusterController : IDisposable
         return $"{local.Month}月{local.Day}日 星期{Weekdays[(int)local.DayOfWeek]} {local:HH:mm}";
     }
 
+    /// <summary>点已完成行 → 只读详情窗（方案 H 420×438；删除走确认框后关闭）。</summary>
+    public void OpenDoneDetail(string id)
+    {
+        var item = _data.Completed.Find(t => t.Id == id);
+        var archived = false;
+        if (item is null)
+        {
+            foreach (var kv in _data.Archive)
+            {
+                item = kv.Value.Find(t => t.Id == id);
+                if (item is not null)
+                {
+                    archived = true;
+                    break;
+                }
+            }
+        }
+
+        if (item is null)
+        {
+            return;
+        }
+
+        BeginModal();
+        DetailDialog.Show(
+            archived ? "历史事项" : "已完成事项",
+            CreatedTimeText(item.CreatedAt),
+            CreatedTimeText(item.CompletedAt ?? item.CreatedAt),
+            OverdueService.IsCompletedOverdue(item),
+            item.Content,
+            d =>
+            {
+                var r = archived
+                    ? TodoOpsService.DeleteArchived(_data, id)
+                    : TodoOpsService.DeleteCompleted(_data, id);
+                if (r.Ok)
+                {
+                    ApplyOps(r);
+                    ShowToast("已删除");
+                }
+
+                d.Close();
+            });
+        EndModal();
+    }
+
     // ---------- 托盘显隐 / 退出 ----------
 
     public void HideClusterToTray()

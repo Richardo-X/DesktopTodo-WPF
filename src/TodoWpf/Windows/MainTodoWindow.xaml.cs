@@ -24,6 +24,9 @@ public partial class MainTodoWindow : Window
         EditRowCommand = new RelayCommand<TodoRowView>(
             row => row is not null && !InBatch, // 批量中禁用双击编辑（原型口径）
             row => Controller?.OpenEditTodo(row.Id));
+        DoneDetailCommand = new RelayCommand<DoneRowView>(
+            row => row is not null,
+            row => Controller?.OpenDoneDetail(row.Id));
         WindowShell.ApplyFixed(this);
         _drag = new RowDragHelper(this);
         _toastTimer.Tick += (_, _) =>
@@ -208,6 +211,9 @@ public partial class MainTodoWindow : Window
 
     /// <summary>双击行 → 编辑。</summary>
     public System.Windows.Input.ICommand EditRowCommand { get; }
+
+    /// <summary>双击已完成行 → 只读详情窗。</summary>
+    public System.Windows.Input.ICommand DoneDetailCommand { get; }
 
     private sealed class RelayCommand<T> : System.Windows.Input.ICommand
         where T : class

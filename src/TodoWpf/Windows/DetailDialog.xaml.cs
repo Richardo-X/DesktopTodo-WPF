@@ -1,0 +1,72 @@
+using System.Windows;
+using System.Windows.Input;
+
+namespace TodoWpf.Windows;
+
+/// <summary>
+/// 详情窗（方案 H 420×438；体验说明书 ③.2）：已完成/历史事项只读查看。
+/// 三行属性（创建/完成/状态）+ 1px 分隔线 + 无框正文；标题栏右端「删除」走确认框，
+/// 删除由调用方回调执行（数据删除 + 关闭）。
+/// </summary>
+public partial class DetailDialog : Window
+{
+    private DetailDialog(string title, string createdText, string completedText,
+                         bool overdue, string content, Action<DetailDialog> onConfirmedDelete)
+    {
+        InitializeComponent();
+        TitleText.Text = title;
+        CreatedValue.Text = createdText;
+        CompletedValue.Text = completedText;
+        StateValue.Text = overdue ? "已逾期" : "未逾期";
+        StateValue.SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty,
+            overdue ? "Brush.Overdue" : "Brush.Muted");
+        ContentView.Text = content;
+        DeleteBtn.Click += (_, _) =>
+        {
+            if (ConfirmDialog.Confirm(
+                    $"删除这条{(title.Contains("历史") ? "历史" : "已完成")}事项？",
+                    "删除后无法恢复。", "删除", danger: true, anchor: this))
+            {
+                onConfirmedDelete(this);
+            }
+        };
+    }
+
+    /// <summary>打开详情（模态，与主窗视觉矩形两轴居中）。</summary>
+    public static void Show(string title, string createdText, string completedText,
+                            bool overdue, string content, Action<DetailDialog> onConfirmedDelete)
+    {
+        var dialog = new DetailDialog(title, createdText, completedText, overdue, content, onConfirmedDelete)
+        {
+            Owner = System.Windows.Application.Current.Windows
+                .OfType<Window>().FirstOrDefault(w => w.Title == "桌面待办"),
+        };
+        CenterOnOwner(dialog);
+        dialog.ShowDialog();
+    }
+
+    /// <summary>与主窗当前视觉矩形两轴居中（越界钳回所在屏工作区，需求 R2）。</summary>
+    private static void CenterOnOwner(DetailDialog dialog)
+    {
+        var anchor = dialog.Owner ?? System.Windows.Application.Current.Windows
+            .OfType<Window>().FirstOrDefault(w => w.Title == "桌面待办");
+        if (anchor is null)
+        {
+            return;
+        }
+
+        dialog.Loaded += (_, _) =>
+        {
+            var workArea = MonitorLayout.WorkAreaDips(anchor);
+            const double edge = 8;
+            var x = anchor.Left + (anchor.ActualWidth - dialog.ActualWidth) / 2;
+            var y = anchor.Top + (anchor.ActualHeight - dialog.ActualHeight) / 2;
+            dialog.Left = Math.Min(Math.Max(x, workArea.X + edge), Math.Max(workArea.X + edge, workArea.Right - dialog.ActualWidth - edge));
+            dialog.Top = Math.Min(Math.Max(y, workArea.Y + edge), Math.Max(workArea.Y + edge, workArea.Bottom - dialog.ActualHeight - edge));
+        };
+    }
+
+    private void Back_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e) => DragMove();
+}

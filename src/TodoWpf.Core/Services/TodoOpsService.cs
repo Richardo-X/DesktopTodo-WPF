@@ -138,6 +138,40 @@ public static class TodoOpsService
         return new(next, true);
     }
 
+    /// <summary>删除已完成（详情窗「删除」；批次05③）。</summary>
+    public static TodoOpsResult DeleteCompleted(AppData data, string id)
+    {
+        var index = data.Completed.FindIndex(t => t.Id == id);
+        if (index < 0)
+        {
+            return new(data, false, ReasonNotFound);
+        }
+
+        var next = data.DeepCopy();
+        next.Completed.RemoveAt(index);
+        return new(next, true);
+    }
+
+    /// <summary>删除历史归档项（在 Archive 各日分组中查找删除；删空分组随之移除；批次05③）。</summary>
+    public static TodoOpsResult DeleteArchived(AppData data, string id)
+    {
+        var next = data.DeepCopy();
+        foreach (var key in next.Archive.Keys.ToList())
+        {
+            if (next.Archive[key].RemoveAll(t => t.Id == id) > 0)
+            {
+                if (next.Archive[key].Count == 0)
+                {
+                    next.Archive.Remove(key);
+                }
+
+                return new(next, true);
+            }
+        }
+
+        return new(data, false, ReasonNotFound);
+    }
+
     /// <summary>从模板一键加入今日待办（模板保留；受待办上限；内容=模板内容）。</summary>
     public static TodoOpsResult ApplyTemplate(AppData data, string templateId, DateTimeOffset now) =>
         data.Templates.FindIndex(t => t.Id == templateId) is var index and >= 0
