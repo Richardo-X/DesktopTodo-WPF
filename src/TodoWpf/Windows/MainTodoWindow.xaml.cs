@@ -179,16 +179,27 @@ public partial class MainTodoWindow : Window
     /// <summary>是否处于批量模式（勾选行为分支用）。</summary>
     public bool InBatch { get; private set; }
 
+    /// <summary>
+    /// 模板批量时主窗整窗冻结（原型 .frozen-win：可读不可点，opacity .7）。
+    /// 缩放柄在卡面外，一并断命中（原型缩放柄在窗内、随整窗冻结）。
+    /// </summary>
+    public void SetFrozen(bool frozen)
+    {
+        CardRoot.IsHitTestVisible = !frozen;
+        CardRoot.Opacity = frozen ? 0.7 : 1.0;
+        ScaleGrip.IsHitTestVisible = !frozen;
+    }
+
     private void BatchExit_Click(object sender, RoutedEventArgs e) => Controller?.ExitBatch();
 
     private void BatchDelete_Click(object sender, RoutedEventArgs e) => Controller?.DeleteSelected();
 
     private void BatchAll_Click(object sender, RoutedEventArgs e) => Controller?.ToggleBatchAll();
 
-    /// <summary>Esc 退出批量（原型全局 Esc；二级窗/确认框开着时不在本窗路由，无冲突）。</summary>
+    /// <summary>Esc 退出批量（原型全局 Esc；主窗批量与模板批量都走控制器出口）。</summary>
     private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
-        if (e.Key == System.Windows.Input.Key.Escape && InBatch)
+        if (e.Key == System.Windows.Input.Key.Escape && Controller?.IsBatchActive == true)
         {
             Controller?.ExitBatch();
             e.Handled = true;

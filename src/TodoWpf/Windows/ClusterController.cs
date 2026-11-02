@@ -174,11 +174,14 @@ public sealed class ClusterController : IDisposable
     {
         EndHover(); // 行整表重建，悬停目标已失效
         var todayKey = LocalDate.Key(DateTimeOffset.Now);
-        _main.SetRows(MainViewService.TodoRows(_data, todayKey, _batch));
+        var mainBatch = _batch.IsActive && _batch.Target == "todos";
+        var tplBatch = _batch.IsActive && _batch.Target == "templates";
+        _main.SetRows(MainViewService.TodoRows(_data, todayKey, mainBatch ? _batch : null));
         _main.SetCount(_data.Todos.Count, _data.Settings.MaxItems);
         var doneRows = MainViewService.DoneRows(_data, _data.Settings.DoneSort);
         _main.SetDoneRows(doneRows);
-        _quick.SetTemplateRows(MainViewService.TemplateRows(_data), Core.Models.TemplateLimit.Max);
+        _quick.SetTemplateRows(
+            MainViewService.TemplateRows(_data, tplBatch ? _batch : null), Core.Models.TemplateLimit.Max);
     }
 
     // ---------- 布局 ----------
@@ -981,11 +984,40 @@ public sealed class ClusterController : IDisposable
     /// <summary>「全选 / 取消全选」切换（原型 batchAll 口径）。</summary>
     public void ToggleBatchAll()
     {
-        _batch.ToggleAll(_data.Todos.Select(t => t.Id));
+        _batch.ToggleAll(_batch.Target == "templates"
+            ? _data.Templates.Select(t => t.Id)
+            : _data.Todos.Select(t => t.Id));
         PushBatchBar();
     }
 
-    /// <summary>「删除所选」：确认框 → 永久删除 → 退出批量。</summary>
+    /// <summary>进入/退出 模板批量（模板窗「批量删除」按钮）。
+    /// 空列表不进入（原型 toast「还没有模板」）。</summary>
+    public void ToggleTemplateBatch()
+    {
+        if (_batch.IsActive && _batch.Target == "templates")
+        {
+            _batch.Exit();
+            PushBatchBar();
+            return;
+        }
+
+        if (_data.Templates.Count == 0)
+        {
+            ShowToast("还没有模板");
+            return;
+        }
+
+        _batch.Enter("templates");
+        PushBatchBar();
+    }
+
+    /// <summary>当前是否模板批量态（模板窗行点击/双击分支用）。</summary>
+    public bool IsTemplateBatch => _batch.Target == "templates";
+
+    /// <summary>当前是否任一批量态（Esc 出口用）。</summary>
+    public bool IsBatchActive => _batch.IsActive;
+
+    /// <summary>「删除所选」：确认框 → 永久删除 → 退出批量（按目标分支：待办 / 模板）。</summary>
     public void DeleteSelected()
     {
         if (!_batch.CanDelete)
@@ -993,15 +1025,20 @@ public sealed class ClusterController : IDisposable
             return;
         }
 
+        var isTemplates = _batch.Target == "templates";
         if (!ConfirmDialog.Confirm(
-                "删除所选待办",
-                $"确定删除所选的 {_batch.SelectedCount} 项吗？删除后无法恢复。",
+                isTemplates ? "删除所选模板" : "删除所选待办",
+                isTemplates
+                    ? $"确定删除所选的 {_batch.SelectedCount} 个模板吗？删除后无法恢复。"
+                    : $"确定删除所选的 {_batch.SelectedCount} 项吗？删除后无法恢复。",
                 "删除"))
         {
             return;
         }
 
-        var r = TodoOpsService.DeleteTodos(_data, _batch.SelectedIds);
+        var r = isTemplates
+            ? TodoOpsService.DeleteTemplates(_data, _batch.SelectedIds)
+            : TodoOpsService.DeleteTodos(_data, _batch.SelectedIds);
         if (r.Ok)
         {
             ApplyOps(r);
@@ -1019,14 +1056,23 @@ public sealed class ClusterController : IDisposable
     }
 
     /// <summary>
-    /// 批量态视觉推送（唯一入口，进入/切换/退出都走这里）：
-    /// 批量条 + 行选中投影 + 已完成段变暗 + 模板窗冻结 + 标题栏设置冻结 + 缩进门槛。
+    /// 批量态视觉推送（唯一入口，进入/切换/退出都走这里）。单目标互斥（原型口径）：
+    /// 主窗批量 ⇒ 模板窗整窗冻结；模板批量 ⇒ 主窗整窗冻结（＋新建冻结、设置钮随整窗冻结）。
     /// </summary>
     private void PushBatchBar()
     {
-        _main.SetBatchBar(_batch.IsActive, _batch.SelectedCount, _batch.CanDelete, _data.Todos.Count);
-        _main.SetRows(MainViewService.TodoRows(_data, LocalDate.Key(DateTimeOffset.Now), _batch));
-        _quick.SetFrozen(_batch.IsActive);
+        var mainBatch = _batch.IsActive && _batch.Target == "todos";
+        var tplBatch = _batch.IsActive && _batch.Target == "templates";
+
+        _main.SetBatchBar(mainBatch, _batch.SelectedCount, _batch.CanDelete, _data.Todos.Count);
+        _main.SetRows(MainViewService.TodoRows(_data, LocalDate.Key(DateTimeOffset.Now), mainBatch ? _batch : null));
+        _main.SetFrozen(tplBatch);
+
+        _quick.SetTemplateBatch(tplBatch, _batch.SelectedCount, _batch.CanDelete, _data.Templates.Count);
+        _quick.SetTemplateRows(
+            MainViewService.TemplateRows(_data, tplBatch ? _batch : null), Core.Models.TemplateLimit.Max);
+        _quick.SetFrozen(mainBatch);
+
         _tuck.SetBatching(_batch.IsActive);
     }
 

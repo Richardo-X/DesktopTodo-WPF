@@ -21,7 +21,8 @@ public partial class QuickWindow : Window
         InitializeComponent();
         DataContext = this;
         EditTemplateCommand = new RelayCommand<TemplateRowView>(
-            row => row is not null, row => Controller?.OpenEditTemplate(row.Id));
+            row => row is not null && Controller?.IsTemplateBatch != true, // 批量中禁用双击编辑
+            row => Controller?.OpenEditTemplate(row.Id));
         WindowShell.ApplyFixed(this);
     }
 
@@ -78,8 +79,8 @@ public partial class QuickWindow : Window
     /// <summary>内容缩放比（气泡定位/尺寸换算用）。</summary>
     public double ContentScaleFactor => ((ScaleTransform)ContentScale).ScaleX;
 
-    /// <summary>整批刷新模板行 + 计数 + 空态。</summary>
-    public void SetTemplateRows(IReadOnlyList<TemplateRowView> rows, int maxTemplates)
+    /// <summary>整批刷新模板行 + 计数 + 空态。批量为 true 时行投影带选中/批量标志。</summary>
+    public void SetTemplateRows(IReadOnlyList<TemplateRowView> rows, int maxTemplates, bool batchActive = false)
     {
         // 增量同步：新列表是旧列表的延长时只追加新增项，避免整表清空重建导致闪烁。
         var appendOnly = rows.Count >= TemplateRows.Count;
@@ -113,6 +114,29 @@ public partial class QuickWindow : Window
 
         TemplateCount.Text = $"{rows.Count}/{maxTemplates}";
         TemplateEmpty.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        // 满 10 条：计数胶囊变强调色（原型 .cntchip.full）
+        var full = rows.Count >= maxTemplates;
+        TemplateCount.Foreground = full
+            ? (Brush)FindResource("Brush.Accent")
+            : (Brush)FindResource("Brush.Muted");
+        TemplateCountChip.Background = full
+            ? (Brush)FindResource("Brush.SoftAccent")
+            : (Brush)FindResource("Brush.CounterChip");
+    }
+
+    /// <summary>
+    /// 模板批量条推送（原型 #tplBatchbar 与 .tplfoot 同位等高替换）：
+    /// 计数/删除可用性/全选文案 + ＋新建冻结（原型 btnTplNew.disabled = tplBatch）。
+    /// </summary>
+    public void SetTemplateBatch(bool active, int selected, bool canDelete, int total)
+    {
+        TemplateBatchBar.Visibility = active ? Visibility.Visible : Visibility.Hidden;
+        ActionRow.Visibility = active ? Visibility.Hidden : Visibility.Visible;
+        TemplateBatchCount.Text = $"已选 {selected} 项";
+        TemplateBatchDeleteBtn.IsEnabled = canDelete;
+        TemplateBatchAllBtn.Content = active && total > 0 && selected == total ? "取消全选" : "全选";
+        AddTemplateBtn.IsEnabled = !active;
     }
 
     private void ApplyTemplate_Click(object sender, RoutedEventArgs e)
@@ -121,6 +145,28 @@ public partial class QuickWindow : Window
         {
             Controller?.ApplyTemplateRow(row.Id);
         }
+    }
+
+    // ---------- 模板批量（批次05②） ----------
+
+    private void TemplateBatchBtn_Click(object sender, RoutedEventArgs e) => Controller?.ToggleTemplateBatch();
+
+    private void TemplateBatchAll_Click(object sender, RoutedEventArgs e) => Controller?.ToggleBatchAll();
+
+    private void TemplateBatchExit_Click(object sender, RoutedEventArgs e) => Controller?.ExitBatch();
+
+    private void TemplateBatchDelete_Click(object sender, RoutedEventArgs e) => Controller?.DeleteSelected();
+
+    /// <summary>批量中点行任意处 = 切换选中（与主窗同构；常规态交给行内按钮/双击）。</summary>
+    private void TplRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (Controller is not { IsTemplateBatch: true } || (sender as System.Windows.Controls.Grid)?.DataContext is not TemplateRowView row)
+        {
+            return;
+        }
+
+        Controller.ToggleBatchSelection(row.Id);
+        e.Handled = true;
     }
 
     // ---------- 悬停气泡（批次05①） ----------

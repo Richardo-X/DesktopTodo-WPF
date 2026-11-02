@@ -9,8 +9,7 @@
         FontFamily="{StaticResource Font.Text}">
 
     <Window.Resources>
-        <Style x:Key="Sq" TargetType="Button">
-            <Setter Property="Width" Value="28"/>
+        <Style x:Key="Sq" TargetType="Button">            <Setter Property="Width" Value="28"/>
             <Setter Property="Height" Value="28"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.CardBorder}"/>
@@ -32,6 +31,105 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <!-- ＋新建（原型 .addbtn）：28×28 r6 accent 实心，svg 15/2.2，悬停 accent-hover -->
+        <Style x:Key="AddBtn" TargetType="Button">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.AccentHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 勾选框（与主窗同款 16×16 r4）：模板批量行尾槽位用 -->
+        <Style x:Key="RowCheck" TargetType="CheckBox">
+            <Setter Property="Width" Value="16"/>
+            <Setter Property="Height" Value="16"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="bd" Width="16" Height="16" CornerRadius="4"
+                                BorderBrush="{DynamicResource Brush.Line}" BorderThickness="1"
+                                Background="Transparent">
+                            <Viewbox x:Name="ck" Width="12" Height="12" Visibility="Collapsed">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="{StaticResource Icon.Check}"
+                                          Stroke="{DynamicResource Brush.AccentFg}" StrokeThickness="2.2"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                </Canvas>
+                            </Viewbox>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Accent}"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+                                <Setter TargetName="ck" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 批量条按钮（原型 .sbtn，260 窄窗收窄：padding 0 7px；样式同主窗） -->
+        <Style x:Key="BatchSbtn" TargetType="Button">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="7,0"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.CardBorder}"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="BatchSbtnDanger" TargetType="Button" BasedOn="{StaticResource BatchSbtn}">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Overdue}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.OverdueEdge}"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.Overdue}"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </Window.Resources>
 
@@ -55,25 +153,61 @@
                                Margin="14,0,0,0" VerticalAlignment="Center"/>
                 </Grid>
 
-                <Grid Grid.Row="1" Margin="14,0,14,8">
+                <!-- 动作行（原型 .tplfoot：padding 2 10 6 → 高 2+28+6=36）：
+                     计数 → ＋新建（左移 2px 对齐行文字）→ 弹性空白 → 批量删除（贴最右） -->
+                <Grid Grid.Row="1" x:Name="ActionRow" Margin="10,2,10,6">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- 圆角 = 高度 24 的一半（见主窗同处注释：WPF 超大圆角会被截断成椭圆角） -->
-                        <Border Background="{DynamicResource Brush.CounterChip}" CornerRadius="12" Height="24" Padding="9,0">
+                        <!-- 圆角 = 高度 24 的一半（WPF 超大圆角截断成椭圆角，见主窗注释）；
+                             满 10 条变强调色（原型 .cntchip.full），由 SetTemplateRows 切换 -->
+                        <Border x:Name="TemplateCountChip" Background="{DynamicResource Brush.CounterChip}"
+                                CornerRadius="12" Height="24" Padding="9,0">
                             <TextBlock x:Name="TemplateCount" Text="0/10" FontSize="11"
                                        VerticalAlignment="Center"
                                        Foreground="{DynamicResource Brush.Muted}"
                                        Typography.NumeralAlignment="Tabular"/>
                         </Border>
-                        <Button Style="{StaticResource Sq}" Margin="8,0,0,0" ToolTip="新建模板"
-                                Click="AddTemplate_Click">
-                            <Viewbox Width="14" Height="14">
+                        <Button x:Name="AddTemplateBtn" Style="{StaticResource AddBtn}"
+                                Margin="-2,0,0,0" ToolTip="新建模板" Click="AddTemplate_Click">
+                            <Viewbox Width="15" Height="15">
                                 <Canvas Width="24" Height="24">
-                                    <Path Data="{StaticResource Icon.Plus}" Stroke="{DynamicResource Brush.Muted}"
-                                          StrokeThickness="1.8"
+                                    <Path Data="{StaticResource Icon.Plus}"
+                                          Stroke="{DynamicResource Brush.AccentFg}"
+                                          StrokeThickness="2.2"
                                           StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                                 </Canvas>
                             </Viewbox>
                         </Button>
+                    </StackPanel>
+                    <Button x:Name="TemplateBatchBtn" Style="{StaticResource Sq}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                            ToolTip="批量删除模板" Click="TemplateBatchBtn_Click">
+                        <Viewbox Width="14" Height="14">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="{StaticResource Icon.Trash}" Stroke="{DynamicResource Brush.Muted}"
+                                      StrokeThickness="1.8"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            </Canvas>
+                        </Viewbox>
+                    </Button>
+                </Grid>
+
+                <!-- 模板批量条（原型 #tplBatchbar）：与动作行同位等高替换、按钮贴右；
+                     顺序（原型）：已选 n 项 · 删除所选 …… 全选 · 返回 -->
+                <Grid Grid.Row="1" x:Name="TemplateBatchBar" Visibility="Hidden" Margin="10,2,10,6">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock x:Name="TemplateBatchCount" Text="已选 0 项" FontSize="10"
+                                   Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Center"
+                                   Typography.NumeralAlignment="Tabular"/>
+                        <Button x:Name="TemplateBatchDeleteBtn" Content="删除所选"
+                                Style="{StaticResource BatchSbtnDanger}" Margin="6,0,0,0"
+                                IsEnabled="False" Click="TemplateBatchDelete_Click"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button x:Name="TemplateBatchAllBtn" Content="全选"
+                                Style="{StaticResource BatchSbtn}" Click="TemplateBatchAll_Click"/>
+                        <Button x:Name="TemplateBatchExitBtn" Content="返回"
+                                Style="{StaticResource BatchSbtn}" Margin="6,0,0,0"
+                                Click="TemplateBatchExit_Click"/>
                     </StackPanel>
                 </Grid>
 
@@ -86,7 +220,22 @@
                         <ItemsControl x:Name="TemplateList" ItemsSource="{Binding TemplateRows}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Height="36">
+                                    <Grid Height="36" MouseLeftButtonDown="TplRow_Click">
+                                        <Grid.Style>
+                                            <Style TargetType="Grid">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Style.Triggers>
+                                                    <!-- 行悬停（原型 .tplrow:hover） -->
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                                                    </Trigger>
+                                                    <!-- 批量选中（原型 .tplrow.picked：accent-soft 底） -->
+                                                    <DataTrigger Binding="{Binding Selected}" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource Brush.SoftAccent}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Grid.Style>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="22"/>
@@ -96,19 +245,73 @@
                                                    TextTrimming="CharacterEllipsis"
                                                    VerticalAlignment="Center" Margin="6,0,8,0"
                                                    MouseEnter="TplText_MouseEnter" MouseLeave="TplText_MouseLeave"/>
+                                        <!-- 常规态：行尾 ＋（原型 .plus：22×22 r5、svg 12/2.2、悬停淡底+accent）；
+                                             批量态：同一槽位原位替换为勾选框（行内容位置不变，用户定稿） -->
                                         <Button Grid.Column="1" Width="22" Height="22"
-                                                Background="Transparent" BorderThickness="0"
                                                 Cursor="Hand" ToolTip="加入今日待办"
                                                 Click="ApplyTemplate_Click">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Setter Property="BorderThickness" Value="0"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource Brush.Faint}"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                                        CornerRadius="5">
+                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.SoftAccent}"/>
+                                                                    </Trigger>
+                                                                    <Trigger Property="IsEnabled" Value="False">
+                                                                        <Setter Property="Cursor" Value="Arrow"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                    <Setter Property="IsEnabled" Value="True"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}"/>
+                                                        </Trigger>
+                                                        <DataTrigger Binding="{Binding BatchMode}" Value="True">
+                                                            <Setter Property="IsEnabled" Value="False"/>
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
                                             <Viewbox Width="12" Height="12">
                                                 <Canvas Width="24" Height="24">
-                                                    <Path Data="{StaticResource Icon.Plus}"
-                                                          Stroke="{DynamicResource Brush.Faint}"
+                                                    <Path x:Name="PlusIcon" Data="{StaticResource Icon.Plus}"
+                                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                                           StrokeThickness="2.2"
                                                           StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                                                 </Canvas>
                                             </Viewbox>
                                         </Button>
+                                        <CheckBox Grid.Column="1" Width="16" Height="16"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  Margin="0,0,1,0"
+                                                  Style="{StaticResource RowCheck}"
+                                                  IsChecked="{Binding Selected, Mode=OneWay}">
+                                            <!-- 批量态显示（默认隐藏）；Visibility 只能在样式层设，
+                                                 本地属性会压过样式触发器 -->
+                                            <CheckBox.Style>
+                                                <Style TargetType="CheckBox" BasedOn="{StaticResource RowCheck}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding BatchMode}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </CheckBox.Style>
+                                        </CheckBox>
                                         <Grid.InputBindings>
                                             <MouseBinding Gesture="LeftDoubleClick"
                                                           Command="{Binding DataContext.EditTemplateCommand, ElementName=TemplateList}"/>
@@ -118,10 +321,16 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
-                    <TextBlock x:Name="TemplateEmpty" Text="还没有模板" FontSize="11"
-                               Foreground="{DynamicResource Brush.Faint}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                               Visibility="Collapsed"/>
+                    <!-- 空态（原型 .empty 双行竖排） -->
+                    <StackPanel x:Name="TemplateEmpty" HorizontalAlignment="Center"
+                                Visibility="Collapsed" IsHitTestVisible="False">
+                        <TextBlock Text="还没有模板" FontSize="13"
+                                   Foreground="{DynamicResource Brush.Muted}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="点下面 ＋ 新建模板" FontSize="11" Margin="0,8,0,0"
+                                   Foreground="{DynamicResource Brush.Faint}"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
                 </Grid>
             </Grid>
         </Grid>
