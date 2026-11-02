@@ -186,11 +186,9 @@ public sealed class ClusterController : IDisposable
         return ClusterLayout.FirstLaunchAnchor(WorkArea(), scale, ui.QuickVisible, ui.DoneVisible);
     }
 
-    private static WinRect WorkArea()
-    {
-        var wa = SystemParameters.WorkArea;
-        return new WinRect(wa.Left, wa.Top, wa.Width, wa.Height);
-    }
+    /// <summary>窗口所在显示器的工作区（DIP）。旧实现用 SystemParameters.WorkArea 只取主屏，
+    /// 拖到副屏/竖屏后仍按主屏高度钳制，表现为"屏幕中间一条界线"。</summary>
+    private WinRect WorkArea() => MonitorLayout.WorkAreaDips(_main);
 
     /// <summary>
     /// 锚点对齐到整数物理像素后再派生三窗几何：
