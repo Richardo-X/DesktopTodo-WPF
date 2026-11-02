@@ -394,10 +394,33 @@ public sealed class ClusterController : IDisposable
             _dragStartAnchor.X + mouse.X - _dragStartMouse.X,
             _dragStartAnchor.Y + mouse.Y - _dragStartMouse.Y);
 
-        // 上边缘吸附：顶边真正触碰屏幕上缘 → 贴齐 y=工作区顶
-        if (anchor.Y <= WorkArea().Y)
+        // 四缘吸附（体验说明书 ④.3）：距工作区边缘 ≤8 DIP 贴齐。
+        // 顶边=贴顶触发缩进的原有语义（真正触碰上缘才贴齐）；左右下为贴合不触发缩进。
+        var area = WorkArea();
+        var ui = _data.UiState;
+        var clusterW = PanelLayout.MainWidth * _scale
+            + (ui.QuickVisible ? PanelLayout.Gap + PanelLayout.TemplateWidth * _scale : 0);
+        var clusterH = Math.Max(
+            PanelLayout.MainBaseHeight * _scale,
+            ui.QuickVisible ? TemplateWindowHeight() * _scale : 0);
+        const double snap = 8;
+
+        if (anchor.Y <= area.Y)
         {
-            anchor = anchor with { Y = WorkArea().Y };
+            anchor = anchor with { Y = area.Y }; // 顶边：真正触碰才贴（缩进触发门槛）
+        }
+        else if (anchor.Y + clusterH >= area.Bottom - snap)
+        {
+            anchor = anchor with { Y = Math.Max(area.Y, area.Bottom - clusterH) };
+        }
+
+        if (anchor.X <= area.X + snap)
+        {
+            anchor = anchor with { X = area.X };
+        }
+        else if (anchor.X + clusterW >= area.Right - snap)
+        {
+            anchor = anchor with { X = Math.Max(area.X, area.Right - clusterW) };
         }
 
         _anchor = anchor;
@@ -764,6 +787,21 @@ public sealed class ClusterController : IDisposable
     private void UpdateClock()
     {
         var now = DateTimeOffset.Now;
+
+        // 跨天结算（需求 §2.9，全程静默）：日期变化（含挂起唤醒跨天）时自动归档昨日已完成
+        // + 重算未完成逾期标；启动补结算由 AppBootstrap 负责，这里管运行期。
+        var todayKey = LocalDate.Key(now);
+        if (_data.UiState.LastSettleDate != todayKey)
+        {
+            var settle = SettlementService.Settle(_data, now);
+            if (settle.Changed)
+            {
+                _data = settle.Data;
+                RefreshAllViews();
+                _ = _repository.SaveAsync(_data);
+            }
+        }
+
         _main.SetClock(
             MainViewService.ClockText(now, _data.Settings.Hour12),
             $"{now.Year}年{now.Month}月{now.Day}日 星期{Weekdays[(int)now.DayOfWeek]}");
@@ -1572,6 +1610,13 @@ public sealed class ClusterController : IDisposable
     public void HideClusterToTray()
     {
         EndHover();
+        // 隐藏前先退出批量态（原型 minimizeToTray 口径：恢复即一般态；贴边缩进不在此列）
+        if (_batch.IsActive)
+        {
+            _batch.Exit();
+            PushBatchBar();
+        }
+
         _clusterHidden = true;
         _main.Hide();
         _quick.Hide();
