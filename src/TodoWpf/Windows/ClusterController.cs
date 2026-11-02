@@ -117,16 +117,14 @@ public sealed class ClusterController : IDisposable
     /// <summary>初始化：应用记忆、接互锁、显示窗口。</summary>
     public void Start()
     {
-        // 批次04：新外观只有主窗（模板窗后续接入）；旧侧窗不再显示，缩放回到基准 1.0
+        // 批次04：旧侧窗不再显示。决议（2026-11-03）：重启回到关闭前的尺寸与位置——
+        // 倍数取存档 ClusterScale（每次布局落盘），按当前屏钳制到 1/4~2/3；位置由 Pos 恢复。
         _data = _data with
         {
-            UiState = _data.UiState with { QuickVisible = false, DoneVisible = false, ClusterScale = 1 },
+            UiState = _data.UiState with { QuickVisible = false, DoneVisible = false },
         };
         var startupArea = WorkArea();
-        _scale = PanelLayout.ClampScale(
-            PanelLayout.DefaultMainHeight(startupArea.Height) / PanelLayout.MainBaseHeight,
-            startupArea,
-            _anchor);
+        _scale = PanelLayout.ClampScale(_scale, startupArea, _anchor);
 
         ApplyThemeState();
         _main.Controller = this;
