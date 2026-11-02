@@ -176,4 +176,46 @@ public class TodoOpsServiceTests
         Assert.False(r2.Ok);
         Assert.Equal(TodoOpsService.ReasonLimitReached, r2.Reason);
     }
+
+    // ---- 拖拽排序（批次05①） ----
+    [Fact]
+    public void 排序_中间移到首位()
+    {
+        var data = WithTodos(Todo("A"), Todo("B"), Todo("C"));
+        var r = TodoOpsService.MoveTodo(data, data.Todos[2].Id, 0);
+
+        Assert.True(r.Ok);
+        Assert.Equal(["C", "A", "B"], r.Data.Todos.Select(t => t.Content));
+    }
+
+    [Fact]
+    public void 排序_首位移到末尾()
+    {
+        var data = WithTodos(Todo("A"), Todo("B"), Todo("C"));
+        var r = TodoOpsService.MoveTodo(data, data.Todos[0].Id, 2);
+
+        Assert.True(r.Ok);
+        Assert.Equal(["B", "C", "A"], r.Data.Todos.Select(t => t.Content));
+    }
+
+    [Fact]
+    public void 排序_原位不变_返回原数据_越界钳回()
+    {
+        var data = WithTodos(Todo("A"), Todo("B"));
+        var same = TodoOpsService.MoveTodo(data, data.Todos[0].Id, 0);
+        Assert.True(same.Ok);
+        Assert.Same(data, same.Data);
+
+        var clamped = TodoOpsService.MoveTodo(data, data.Todos[0].Id, 99); // 越界 → 末尾
+        Assert.True(clamped.Ok);
+        Assert.Equal(["B", "A"], clamped.Data.Todos.Select(t => t.Content));
+    }
+
+    [Fact]
+    public void 排序_找不到id_拒绝()
+    {
+        var r = TodoOpsService.MoveTodo(WithTodos(Todo("A")), "nope", 0);
+        Assert.False(r.Ok);
+        Assert.Equal(TodoOpsService.ReasonNotFound, r.Reason);
+    }
 }

@@ -329,7 +329,7 @@
                         </StackPanel>
                     </Grid>
 
-                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Visible"
+                    <ScrollViewer x:Name="ListScroll" Grid.Row="2" VerticalScrollBarVisibility="Visible"
                                   HorizontalScrollBarVisibility="Disabled"
                                   Padding="12,0,4,26">
                         <StackPanel>
@@ -344,13 +344,17 @@
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="16"/>
                                             </Grid.ColumnDefinitions>
-                                            <Viewbox Width="14" Height="14" Margin="-5,0,0,0" VerticalAlignment="Center">
+                                            <Viewbox Width="14" Height="14" Margin="-5,0,0,0"
+                                                     VerticalAlignment="Center"
+                                                     MouseLeftButtonDown="Grip_MouseDown">
                                                 <Viewbox.Style>
                                                     <Style TargetType="Viewbox">
+                                                        <Setter Property="Cursor" Value="Hand"/>
                                                         <Style.Triggers>
-                                                            <!-- 批量中点阵禁用（原型 .grip.disabled） -->
+                                                            <!-- 批量中点阵禁用（原型 .grip.disabled；WPF 光标无 NotAllowed，用 No=⊘） -->
                                                             <DataTrigger Binding="{Binding BatchMode}" Value="True">
                                                                 <Setter Property="Opacity" Value="0.4"/>
+                                                                <Setter Property="Cursor" Value="No"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>

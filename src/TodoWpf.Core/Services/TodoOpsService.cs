@@ -71,6 +71,28 @@ public static class TodoOpsService
         return new(next, true);
     }
 
+    /// <summary>拖拽排序：把待办移到目标下标（0 起；越界钳回段内；原下标不变=无变化）。</summary>
+    public static TodoOpsResult MoveTodo(AppData data, string id, int newIndex)
+    {
+        var index = data.Todos.FindIndex(t => t.Id == id);
+        if (index < 0)
+        {
+            return new(data, false, ReasonNotFound);
+        }
+
+        newIndex = Math.Clamp(newIndex, 0, data.Todos.Count - 1);
+        if (newIndex == index)
+        {
+            return new(data, true);
+        }
+
+        var next = data.DeepCopy();
+        var item = next.Todos[index];
+        next.Todos.RemoveAt(index);
+        next.Todos.Insert(newIndex, item);
+        return new(next, true);
+    }
+
     /// <summary>批量永久删除待办（只删存在的 id；顺序保留）。</summary>
     public static TodoOpsResult DeleteTodos(AppData data, IReadOnlyCollection<string> ids)
     {

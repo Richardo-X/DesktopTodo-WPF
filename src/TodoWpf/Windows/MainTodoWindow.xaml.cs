@@ -25,6 +25,7 @@ public partial class MainTodoWindow : Window
             row => row is not null && !InBatch, // 批量中禁用双击编辑（原型口径）
             row => Controller?.OpenEditTodo(row.Id));
         WindowShell.ApplyFixed(this);
+        _drag = new RowDragHelper(this);
         _toastTimer.Tick += (_, _) =>
         {
             _toastTimer.Stop();
@@ -265,6 +266,15 @@ public partial class MainTodoWindow : Window
     private void DoneBtn_Click(object sender, RoutedEventArgs e) => Controller?.ToggleDone();
 
     private void DoneSort_Click(object sender, RoutedEventArgs e) => Controller?.ToggleDoneSort();
+
+    /// <summary>内容缩放比（拖拽把屏幕位移换算回内容坐标用）。</summary>
+    public double ContentScaleFactor => ((ScaleTransform)ContentScale).ScaleX;
+
+    private readonly RowDragHelper _drag;
+
+    /// <summary>行首点阵按下 → 进入拖拽排序。</summary>
+    private void Grip_MouseDown(object sender, MouseButtonEventArgs e) =>
+        _drag.Begin((FrameworkElement)sender, e);
 
     /// <summary>协调器（创建后注入）。</summary>
     public ClusterController? Controller { get; set; }

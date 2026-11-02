@@ -791,6 +791,16 @@ public sealed class ClusterController : IDisposable
         }
     }
 
+    /// <summary>拖拽排序落位（批次05①；松手归位动画结束后调用）。</summary>
+    public void MoveTodo(string id, int newIndex)
+    {
+        var r = TodoOpsService.MoveTodo(_data, id, newIndex);
+        if (r.Ok)
+        {
+            ApplyOps(r);
+        }
+    }
+
     /// <summary>＋ 新建模板（快捷窗；上限 10、同内容查重）。</summary>
     public void OpenNewTemplate()
     {

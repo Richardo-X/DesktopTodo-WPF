@@ -20,6 +20,8 @@
     <Using Include="MouseEventArgs = System.Windows.Input.MouseEventArgs" />
     <Using Include="Button = System.Windows.Controls.Button" />
     <Using Include="Brush = System.Windows.Media.Brush" />
+    <Using Include="Panel = System.Windows.Controls.Panel" />
+    <Using Include="VisualTreeHelper = System.Windows.Media.VisualTreeHelper" />
   </ItemGroup>
 
 </Project>
