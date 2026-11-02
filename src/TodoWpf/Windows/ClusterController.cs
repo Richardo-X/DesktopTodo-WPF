@@ -873,13 +873,14 @@ public sealed class ClusterController : IDisposable
         BeginModal();
         TextEditDialog.Open(b =>
         {
-            b.Title("新建模板").CounterTotal(ContentRules.MaxLength)
-             .Action("save", "新建", primary: true, enabled: false, onClick: d =>
+            b.Title("新建模板").Placeholder("模板内容（≤300 字）")
+             .Action("save", "新建模板", primary: true, enabled: false, autoClose: false, onClick: d =>
              {
                  var r = TodoOpsService.AddTemplate(_data, d.Editor.Text, DateTimeOffset.Now);
                  if (r.Ok)
                  {
                      ApplyOps(r);
+                     ShowToast("模板已新建");
                      d.Close();
                  }
                  else
@@ -912,26 +913,29 @@ public sealed class ClusterController : IDisposable
         BeginModal();
         TextEditDialog.Open(b =>
         {
-            b.Title("编辑模板").Text(item.Content).CounterTotal(ContentRules.MaxLength)
-             .Action("delete", "删除", onClick: d =>
+            b.Title("编辑模板").Text(item.Content).Placeholder("模板内容（≤300 字）")
+             .LeftAction("delete", "删除", danger: true, onClick: d =>
              {
                  if (ConfirmDialog.Confirm("删除模板", "确定删除这个模板吗？", "删除", danger: true, anchor: d))
                  {
                      saved = true;
                      ApplyOps(TodoOpsService.DeleteTemplate(_data, id));
+                     ShowToast("已删除模板");
+                     d.Close();
                  }
              })
-             .Action("save", "保存", primary: true, onClick: d =>
+             .Action("save", "保存", primary: true, autoClose: false, onClick: d =>
              {
                  var r = TodoOpsService.EditTemplate(_data, id, d.Editor.Text);
                  if (!r.Ok)
                  {
-                     ShowOpsError(r.Reason);
+                     ShowOpsError(r.Reason); // 保存失败（查重/空内容等）：提示且不关闭
                      return;
                  }
 
                  saved = true;
                  ApplyOps(r);
+                 ShowToast("模板已保存");
                  d.Close();
              })
              .OnTextChanged(d =>
@@ -942,9 +946,14 @@ public sealed class ClusterController : IDisposable
         });
         EndModal();
 
-        if (!saved && dirty && ConfirmDialog.Confirm("未保存的修改", "内容已修改，保存吗？", "保存"))
+        if (!saved && dirty && ConfirmDialog.Confirm("未保存的修改", "内容已修改，保存吗？", "保存", anchor: _main))
         {
-            ApplyOps(TodoOpsService.EditTemplate(_data, id, latestText));
+            var r = TodoOpsService.EditTemplate(_data, id, latestText);
+            if (r.Ok)
+            {
+                ApplyOps(r);
+                ShowToast("模板已保存");
+            }
         }
     }
 
@@ -1131,17 +1140,20 @@ public sealed class ClusterController : IDisposable
         BeginModal();
         TextEditDialog.Open(b =>
         {
-            b.Title("新建待办").CounterTotal(ContentRules.MaxLength)
-             .Action("save", "新建", primary: true, enabled: false, onClick: d =>
+            b.Title("新建待办").Placeholder("写点什么（≤300 字）")
+             .LeftAction("clear", "清空", onClick: d => d.Editor.Clear())
+             .Action("save", "新建", primary: true, enabled: false, autoClose: false, onClick: d =>
              {
                  var r = TodoOpsService.AddTodo(_data, d.Editor.Text, DateTimeOffset.Now);
                  if (r.Ok)
                  {
                      ApplyOps(r);
+                     ShowToast("已新建");
+                     d.Close();
                  }
                  else
                  {
-                     ShowOpsError(r.Reason);
+                     ShowOpsError(r.Reason); // 达上限等：提示且不关闭
                  }
              })
              .OnTextChanged(d =>
@@ -1153,7 +1165,7 @@ public sealed class ClusterController : IDisposable
         EndModal();
     }
 
-    /// <summary>编辑待办（双击行；返回时已改询问）。</summary>
+    /// <summary>编辑待办（双击行；返回时已改询问；删除有确认框）。</summary>
     public void OpenEditTodo(string id)
     {
         var item = _data.Todos.Find(t => t.Id == id);
@@ -1171,18 +1183,21 @@ public sealed class ClusterController : IDisposable
         {
             b.Title("编辑待办")
              .StateBadge(item.Overdue ? "已逾期" : "进行中",
-                         $"创建于 {LocalDate.KeyOfIso(item.CreatedAt)}", item.Overdue)
-             .Text(item.Content)
-             .CounterTotal(ContentRules.MaxLength)
-             .Action("delete", "删除", onClick: d =>
+                         $"创建于 {CreatedTimeText(item.CreatedAt)}", item.Overdue)
+             .RestoreButton()
+             .Text(item.Content).Placeholder("写点什么（≤300 字）")
+             .LeftAction("delete", "删除", danger: true, onClick: d =>
              {
                  if (ConfirmDialog.Confirm("删除待办", "确定删除这条待办吗？删除后无法恢复。", "删除", danger: true, anchor: d))
                  {
                      saved = true;
                      ApplyOps(TodoOpsService.DeleteTodo(_data, id));
+                     ShowToast("已删除");
+                     d.Close();
                  }
              })
-             .Action("save", "保存", primary: true, onClick: d =>
+             .Action("toTpl", "添加到模板", onClick: d => AddToTemplateFromEditor(d.Editor.Text, d))
+             .Action("save", "保存", primary: true, autoClose: false, onClick: d =>
              {
                  var r = TodoOpsService.EditTodo(_data, id, d.Editor.Text);
                  if (!r.Ok)
@@ -1193,6 +1208,7 @@ public sealed class ClusterController : IDisposable
 
                  saved = true;
                  ApplyOps(r);
+                 ShowToast("已保存");
                  d.Close();
              })
              .OnTextChanged(d =>
@@ -1203,10 +1219,61 @@ public sealed class ClusterController : IDisposable
         });
         EndModal();
 
-        if (!saved && dirty && ConfirmDialog.Confirm("未保存的修改", "内容已修改，保存吗？", "保存"))
+        if (!saved && dirty && ConfirmDialog.Confirm("未保存的修改", "内容已修改，保存吗？", "保存", anchor: _main))
         {
-            ApplyOps(TodoOpsService.EditTodo(_data, id, latestText));
+            var r = TodoOpsService.EditTodo(_data, id, latestText);
+            if (r.Ok)
+            {
+                ApplyOps(r);
+                ShowToast("已保存");
+            }
         }
+    }
+
+    /// <summary>编辑待办「添加到模板」（原型 dToTpl：空内容/上限/查重提示 + 确认框）。</summary>
+    private void AddToTemplateFromEditor(string text, System.Windows.Window anchor)
+    {
+        var trimmed = text.Trim();
+        if (trimmed.Length == 0)
+        {
+            ShowToast("内容为空，先写点什么");
+            return;
+        }
+
+        if (_data.Templates.Count >= TemplateLimit.Max)
+        {
+            ShowToast($"模板已达上限（{TemplateLimit.Max} 条）");
+            return;
+        }
+
+        if (_data.Templates.Any(t => t.Content == trimmed))
+        {
+            ShowToast("已存在相同内容");
+            return;
+        }
+
+        if (!ConfirmDialog.Confirm("添加到模板？", "当前内容会保存为一条模板。", "添加", anchor: anchor))
+        {
+            return;
+        }
+
+        var r = TodoOpsService.AddTemplate(_data, trimmed, DateTimeOffset.Now);
+        if (r.Ok)
+        {
+            ApplyOps(r);
+            ShowToast("已添加到模板");
+        }
+        else
+        {
+            ShowOpsError(r.Reason);
+        }
+    }
+
+    /// <summary>创建时间展示（原型 fmtDate + fmtHM：x月x日 星期x HH:mm）。</summary>
+    private static string CreatedTimeText(string createdAtIso)
+    {
+        var local = IsoTime.ParseLocal(createdAtIso);
+        return $"{local.Month}月{local.Day}日 星期{Weekdays[(int)local.DayOfWeek]} {local:HH:mm}";
     }
 
     // ---------- 托盘显隐 / 退出 ----------

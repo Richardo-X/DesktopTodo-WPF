@@ -5,58 +5,149 @@
         Width="420" Height="560"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="NoResize" ShowInTaskbar="False"
-        WindowStartupLocation="CenterScreen"
+        WindowStartupLocation="Manual"
         UseLayoutRounding="True" TextOptions.TextRenderingMode="ClearType"
-        FontFamily="{StaticResource Font.Text}">
+        FontFamily="{StaticResource Font.Text}"
+        Effect="{StaticResource Effect.DialogShadowMain}"
+        PreviewKeyDown="Window_PreviewKeyDown">
 
-    <!-- 二级窗统一 3:4（420×560，需求 §2.10）：标题栏(返回/标题) → 内容区 → 底部操作。
-         用于：新建待办 / 编辑待办 / 模板编辑（兼新建）。 -->
-    <Border x:Name="CardRoot" Background="{DynamicResource Brush.WinBg}"
-            BorderBrush="{DynamicResource Brush.GlassEdge}" BorderThickness="1"
+    <!-- 编辑窗（原型 openEditor，二级窗 3:4=420×560）：
+         标题栏 40（返回箭头 34 宽 + 标题绝对居中）→ 内容区（状态行 + 输入框）→ 底部操作条。
+         用于：新建待办 / 编辑待办 / 新建模板 / 编辑模板。 -->
+    <Window.Resources>
+        <!-- 三档按钮（原型 .ed-btn：30 高、r6、字 12）：次操作=浅底细边 / 主=accent 实心 / 危险=红字红边 -->
+        <Style x:Key="EdBtn" TargetType="Button">
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+            <Setter Property="Background" Value="{DynamicResource Brush.CardSolid}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.CardBorder}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="EdBtnPrimary" TargetType="Button" BasedOn="{StaticResource EdBtn}">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.AccentFg}"/>
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="18,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.AccentHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="EdBtnDanger" TargetType="Button" BasedOn="{StaticResource EdBtn}">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Overdue}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.OverdueEdge}"/>
+        </Style>
+    </Window.Resources>
+
+    <Border x:Name="CardRoot" Background="{DynamicResource Brush.Shell}"
+            BorderBrush="{DynamicResource Brush.CardBorder}" BorderThickness="1"
             CornerRadius="{StaticResource Radius.Dialog}">
-        <Grid Margin="18,12,18,18">
+        <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="36"/>
-                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="40"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- 标题栏：返回（左） + 标题 -->
+            <!-- 标题栏：返回箭头（左，34×40）+ 标题绝对居中（不受按钮宽度影响） -->
             <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseDown">
                 <Button x:Name="BackBtn" Style="{StaticResource BackButton}" Tag="{StaticResource Icon.ChevL}"
-                        ToolTip="返回" Click="Back_Click" HorizontalAlignment="Left"/>
-                <TextBlock x:Name="TitleText" Text="新建待办" FontSize="{StaticResource Size.PanelTitleFont}"
-                           FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"
-                           VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        ToolTip="返回" Click="Back_Click" HorizontalAlignment="Left" Margin="-12,0,0,0"/>
+                <TextBlock x:Name="TitleText" Text="新建待办" FontSize="13" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Brush.Text}"
+                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                           IsHitTestVisible="False"/>
             </Grid>
 
-            <!-- 编辑态区（仅编辑模式显示）：状态 + 创建时间 -->
-            <StackPanel Grid.Row="1" x:Name="StatePanel" Visibility="Collapsed" Margin="0,4,0,10">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock x:Name="StateBadge" Text="进行中" FontSize="{StaticResource Size.TagFont}"
-                               Foreground="{DynamicResource Brush.Muted}"/>
-                    <TextBlock x:Name="CreatedAtText" FontSize="{StaticResource Size.MicroFont}"
-                               Foreground="{DynamicResource Brush.Muted}" Margin="12,0,0,0"/>
-                </StackPanel>
-            </StackPanel>
+            <!-- 内容区 -->
+            <Grid Grid.Row="1" Margin="20,8,20,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-            <!-- 输入区 -->
-            <TextBox Grid.Row="2" x:Name="InputBox" AcceptsReturn="True" TextWrapping="Wrap"
-                     FontSize="{StaticResource Size.RowFont}" Foreground="{DynamicResource Brush.Text}"
-                     Background="Transparent" BorderThickness="0"
-                     VerticalContentAlignment="Top" Padding="0,8,0,0"
-                     TextChanged="Input_Changed"/>
+                <!-- 顶行：左=状态胶囊+创建时间（编辑待办），右=还原 + 字数计数 -->
+                <Grid Grid.Row="0" Margin="0,2,0,8">
+                    <StackPanel x:Name="StatePanel" Orientation="Horizontal" Visibility="Collapsed"
+                                VerticalAlignment="Center">
+                        <Border x:Name="StateBadgeBorder" CornerRadius="99" Padding="8,4">
+                            <TextBlock x:Name="StateBadge" Text="进行中" FontSize="10.5" FontWeight="SemiBold"
+                                       Typography.NumeralAlignment="Tabular"/>
+                        </Border>
+                        <TextBlock x:Name="CreatedAtText" FontSize="11"
+                                   Foreground="{DynamicResource Brush.Faint}" Margin="8,0,0,0"
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button x:Name="RestoreBtn" Content="还原" Style="{StaticResource EdBtn}"
+                                Visibility="Collapsed" Click="Restore_Click"/>
+                        <TextBlock x:Name="CounterText" Text="0/300" FontSize="11"
+                                   Foreground="{DynamicResource Brush.Faint}" Margin="8,0,2,0"
+                                   VerticalAlignment="Center" Typography.NumeralAlignment="Tabular"/>
+                    </StackPanel>
+                </Grid>
 
-            <!-- 字数计数（将满变红） -->
-            <TextBlock Grid.Row="3" x:Name="CounterText" Text="0/300" HorizontalAlignment="Right"
-                       FontSize="{StaticResource Size.MicroFont}"
-                       Foreground="{DynamicResource Brush.Muted}" Margin="0,6,0,0"/>
+                <!-- 输入框（field 面 + 细边 + r8；占位与滚动条槽常驻不挤压） -->
+                <Grid Grid.Row="1" Margin="0,0,0,0">
+                    <TextBox x:Name="InputBox" AcceptsReturn="True" TextWrapping="Wrap"
+                             FontSize="13" Foreground="{DynamicResource Brush.Text}"
+                             Background="{DynamicResource Brush.FieldSurface}"
+                             BorderBrush="{DynamicResource Brush.FieldSurfaceBorder}" BorderThickness="1"
+                             VerticalContentAlignment="Top" Padding="12,10,12,10"
+                             VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                             LineHeight="23" LineStackingStrategy="BlockLineHeight"
+                             TextChanged="Input_Changed"/>
+                    <TextBlock x:Name="PlaceholderText" Text="" FontSize="13" LineHeight="23"
+                               Foreground="{DynamicResource Brush.Faint}" IsHitTestVisible="False"
+                               Margin="13,11,13,0" VerticalAlignment="Top" Visibility="Collapsed"/>
+                </Grid>
+            </Grid>
 
-            <!-- 底部操作（按钮组由打开方注入） -->
-            <StackPanel Grid.Row="4" x:Name="ActionsPanel" Orientation="Horizontal"
-                        HorizontalAlignment="Right" Margin="0,14,0,0"/>
+            <!-- 底部操作条：左槽（删除/清空）+ 弹性空白 + 右槽（添加到模板/保存） -->
+            <Grid Grid.Row="2" x:Name="ActionsPanel" Margin="20,10,20,16">
+                <StackPanel x:Name="LeftActions" Orientation="Horizontal" HorizontalAlignment="Left"/>
+                <StackPanel x:Name="RightActions" Orientation="Horizontal" HorizontalAlignment="Right"/>
+            </Grid>
         </Grid>
     </Border>
 </Window>
