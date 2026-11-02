@@ -1,10 +1,12 @@
 namespace TodoWpf.Core.Windows;
 
 /// <summary>
-/// 新外观两窗布局（主窗 + 模板窗）：
-/// 主窗宽 360、布局高度 448 到 640（默认按工作区一半）；
-/// 模板窗宽 260、贴主窗右侧、缝隙固定 4；只跟随等比缩放，不跟随主窗高度。
-/// 纯计算，不含 UI。
+/// 新外观两窗布局（主窗 + 模板窗），纯计算、不含 UI。
+///
+/// 尺寸规则（用户 2026-11-02 裁定，替换此前的「半屏 + clamp 448~640」）：
+/// - 默认布局高 = 当前所在屏工作区高 ÷ 3；
+/// - 最大布局高 = 工作区高 × 2/3，且不越过工作区底部留白；
+/// - 四边不缩放，只保留右下角等比缩放（UI 层约束，不在此类）。
 /// </summary>
 public static class PanelLayout
 {
@@ -12,47 +14,54 @@ public static class PanelLayout
 
     public const double MainBaseHeight = 640;
 
+    /// <summary>缩放下限 0.7 对应的高度（640×0.7）；不再用作默认高度的兜底。</summary>
     public const double MainMinHeight = 448;
 
     public const double TemplateWidth = 260;
 
-    /// <summary>模板窗满 10 条时的自身高度，也是主窗最小高度依据。</summary>
+    /// <summary>模板窗满 10 条时的自身高度。</summary>
     public const double TemplateMaxHeight = 448;
 
     public const double Gap = 4;
 
-    public const double MinScale = 0.7;
+    /// <summary>缩放下限：放宽到 0.4，允许 1080p 上「屏高 1/3」的默认值落地（约 0.54 倍）。</summary>
+    public const double MinScale = 0.4;
 
-    public const double MaxScale = 1.15;
+    /// <summary>倍数设计封顶；实际上限几乎总是由「2/3 屏高」决定，此值只防极端大屏。</summary>
+    public const double MaxScale = 3.0;
 
     public const double ViewportMargin = 12;
 
-    /// <summary>首次打开的主窗高度：工作区高的一半，夹在 448 与 640 之间。</summary>
+    public const double DefaultHeightRatio = 1.0 / 3.0;
+
+    public const double MaxHeightRatio = 2.0 / 3.0;
+
+    /// <summary>首次打开的主窗视觉高度：工作区高的 1/3。</summary>
     public static double DefaultMainHeight(double workAreaHeight) =>
-        Math.Clamp(workAreaHeight / 2, MainMinHeight, MainBaseHeight);
+        workAreaHeight * DefaultHeightRatio;
 
-    /// <summary>主窗高度上限：工作区底部留 12px，再按缩放换算回布局高度。</summary>
-    public static double MaxMainHeight(double workAreaHeight, double mainTop, double scale) =>
-        Math.Max(MainMinHeight, (workAreaHeight - mainTop - ViewportMargin) / scale);
+    /// <summary>主窗视觉高度上限：工作区高的 2/3，且不越过工作区底部留白。</summary>
+    public static double MaxMainHeight(double workAreaHeight, double mainTop) =>
+        Math.Max(1, Math.Min(workAreaHeight * MaxHeightRatio, workAreaHeight - mainTop - ViewportMargin));
 
-    /// <summary>缩放上限：只计算主窗（模板窗是否展开不影响）。</summary>
-    public static double MaxScaleFor(WinRect workArea, WinPoint anchor, double mainHeight)
+    /// <summary>当前允许的最大倍数：高度按 2/3 屏高，宽度只算主窗（模板窗展开不影响）。</summary>
+    public static double MaxScaleFor(WinRect workArea, WinPoint anchor)
     {
-        var byHeight = (workArea.Height - anchor.Y - ViewportMargin) / mainHeight;
+        var byHeight = MaxMainHeight(workArea.Height, anchor.Y) / MainBaseHeight;
         var byWidth = (workArea.Right - anchor.X - ViewportMargin) / MainWidth;
         return Math.Max(MinScale, Math.Min(MaxScale, Math.Min(byHeight, byWidth)));
     }
 
-    /// <summary>把缩放钳回 0.7 到上限之间。</summary>
-    public static double ClampScale(double scale, WinRect workArea, WinPoint anchor, double mainHeight) =>
-        Math.Clamp(scale, MinScale, MaxScaleFor(workArea, anchor, mainHeight));
+    /// <summary>把缩放钳回 0.4 到当前屏允许的上限之间。</summary>
+    public static double ClampScale(double scale, WinRect workArea, WinPoint anchor) =>
+        Math.Clamp(scale, MinScale, MaxScaleFor(workArea, anchor));
 
-    /// <summary>两窗几何：模板窗左缘 = 主窗视觉右缘 + 固定 4；模板窗高度不随主窗高度变化。</summary>
-    public static PanelFrame Arrange(WinPoint anchor, double scale, double mainHeight, bool templateVisible)
+    /// <summary>两窗几何：模板窗左缘 = 主窗视觉右缘 + 固定 4；模板窗高度只跟随缩放。</summary>
+    public static PanelFrame Arrange(WinPoint anchor, double scale, bool templateVisible)
     {
         var mainWidth = MainWidth * scale;
         var main = new ClusterPanelFrame(
-            new WinRect(anchor.X, anchor.Y, mainWidth, mainHeight * scale),
+            new WinRect(anchor.X, anchor.Y, mainWidth, MainBaseHeight * scale),
             true);
         var template = new ClusterPanelFrame(
             new WinRect(anchor.X + mainWidth + Gap, anchor.Y, TemplateWidth * scale, TemplateMaxHeight * scale),
@@ -60,7 +69,7 @@ public static class PanelLayout
         return new PanelFrame(main, template);
     }
 
-    /// <summary>首次启动位置：工作区右侧偏上；放不下时水平居中。</summary>
+    /// <summary>首次启动位置：工作区右侧偏上、不贴边；放不下时水平居中。</summary>
     public static WinPoint FirstLaunchAnchor(WinRect workArea, double scale, bool templateVisible)
     {
         var totalWidth = (MainWidth + (templateVisible ? Gap + TemplateWidth : 0)) * scale;

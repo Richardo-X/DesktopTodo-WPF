@@ -2,7 +2,7 @@ using TodoWpf.Core.Windows;
 
 namespace TodoWpf.Tests;
 
-/// <summary>新外观两窗布局（批次 04）：默认高度公式、缩放只算主窗、模板窗只跟随缩放不跟随高度。</summary>
+/// <summary>新外观两窗布局（批次 04）：默认高度=工作区 1/3、上限=2/3、缩放只算主窗。</summary>
 public class PanelLayoutTests
 {
     private static readonly WinRect WorkArea = new(0, 0, 1920, 1040);
@@ -16,50 +16,64 @@ public class PanelLayoutTests
         Assert.Equal(260, PanelLayout.TemplateWidth);
         Assert.Equal(448, PanelLayout.TemplateMaxHeight);
         Assert.Equal(4, PanelLayout.Gap);
-        Assert.Equal(0.7, PanelLayout.MinScale);
-        Assert.Equal(1.15, PanelLayout.MaxScale);
+        Assert.Equal(0.4, PanelLayout.MinScale);
+        Assert.Equal(3.0, PanelLayout.MaxScale);
     }
 
     [Fact]
-    public void DefaultMainHeight_HalfOfWorkArea_ClampedTo448And640()
+    public void DefaultMainHeight_IsThirdOfWorkArea()
     {
-        Assert.Equal(448, PanelLayout.DefaultMainHeight(704));
-        Assert.Equal(508, PanelLayout.DefaultMainHeight(1016));
-        Assert.Equal(640, PanelLayout.DefaultMainHeight(1400));
+        Assert.Equal(1040 / 3.0, PanelLayout.DefaultMainHeight(1040), 6);
+        Assert.Equal(704 / 3.0, PanelLayout.DefaultMainHeight(704), 6);
+        Assert.Equal(1400 / 3.0, PanelLayout.DefaultMainHeight(1400), 6);
+    }
+
+    [Fact]
+    public void MaxMainHeight_IsTwoThirdsOfWorkArea()
+    {
+        Assert.Equal(1040 * 2 / 3.0, PanelLayout.MaxMainHeight(1040, 80), 6);
+        Assert.Equal(1400 * 2 / 3.0, PanelLayout.MaxMainHeight(1400, 80), 6);
     }
 
     [Fact]
     public void MaxMainHeight_StopsAtViewportBottom()
     {
-        Assert.Equal(928, PanelLayout.MaxMainHeight(1040, 100, 1.0), 6);
-        Assert.Equal(928 / 1.15, PanelLayout.MaxMainHeight(1040, 100, 1.15), 6);
-        Assert.Equal(448, PanelLayout.MaxMainHeight(500, 480, 1.0));
+        // 顶边很靠下时，可用空间小于 2/3 屏高，取可用空间
+        Assert.Equal(1040 - 900 - 12, PanelLayout.MaxMainHeight(1040, 900), 6);
     }
 
     [Fact]
     public void MaxScaleFor_CountsMainWindowOnly()
     {
-        var scale = PanelLayout.MaxScaleFor(new WinRect(0, 0, 1000, 2080), new WinPoint(100, 100), 640);
-        Assert.Equal(1.15, scale, 6);
+        // 宽度足够时结果取设计封顶 3.0；若把模板窗计入宽度限制，结果会小于 3.0（只算主窗才成立）
+        var scale = PanelLayout.MaxScaleFor(new WinRect(0, 0, 1920, 3000), new WinPoint(100, 100));
+        Assert.Equal(3.0, scale, 6);
     }
 
     [Fact]
-    public void MaxScaleFor_HeightLimitWins_WhenViewportShort()
+    public void MaxScaleFor_TwoThirdsHeightWins()
     {
-        var scale = PanelLayout.MaxScaleFor(new WinRect(0, 0, 1920, 700), new WinPoint(100, 100), 640);
-        Assert.Equal((700 - 100 - 12) / 640.0, scale, 6);
+        var scale = PanelLayout.MaxScaleFor(new WinRect(0, 0, 1920, 1040), new WinPoint(100, 80));
+        Assert.Equal((1040 * 2 / 3.0) / 640.0, scale, 6);
     }
 
     [Fact]
     public void ClampScale_EnforcesLowerBound()
     {
-        Assert.Equal(0.7, PanelLayout.ClampScale(0.3, WorkArea, new WinPoint(100, 100), 640));
+        Assert.Equal(0.4, PanelLayout.ClampScale(0.1, WorkArea, new WinPoint(100, 100)), 6);
+    }
+
+    [Fact]
+    public void DefaultScale_On1080p_IsAbout054()
+    {
+        var height = PanelLayout.DefaultMainHeight(1040);
+        Assert.Equal(0.5417, height / 640.0, 3);
     }
 
     [Fact]
     public void Arrange_TemplateSitsRightOfMain_GapConstant()
     {
-        var frame = PanelLayout.Arrange(new WinPoint(800, 100), 1.0, 640, templateVisible: true);
+        var frame = PanelLayout.Arrange(new WinPoint(800, 100), 1.0, templateVisible: true);
 
         Assert.Equal(800, frame.Main.X);
         Assert.Equal(360, frame.Main.Width);
@@ -71,22 +85,9 @@ public class PanelLayoutTests
     }
 
     [Fact]
-    public void Arrange_ChangingMainHeight_DoesNotMoveTemplate()
-    {
-        var anchor = new WinPoint(800, 100);
-        var tall = PanelLayout.Arrange(anchor, 1.0, 700, templateVisible: true);
-        var shortMain = PanelLayout.Arrange(anchor, 1.0, 448, templateVisible: true);
-
-        Assert.Equal(shortMain.Template.X, tall.Template.X, 6);
-        Assert.Equal(shortMain.Template.Y, tall.Template.Y, 6);
-        Assert.Equal(shortMain.Template.Height, tall.Template.Height, 6);
-        Assert.NotEqual(shortMain.Main.Height, tall.Main.Height);
-    }
-
-    [Fact]
     public void Arrange_ScaleAppliesToBoth_GapConstant()
     {
-        var frame = PanelLayout.Arrange(new WinPoint(800, 100), 1.15, 640, templateVisible: true);
+        var frame = PanelLayout.Arrange(new WinPoint(800, 100), 1.15, templateVisible: true);
 
         Assert.Equal(360 * 1.15, frame.Main.Width, 6);
         Assert.Equal(260 * 1.15, frame.Template.Width, 6);
@@ -96,7 +97,7 @@ public class PanelLayoutTests
     [Fact]
     public void Arrange_TemplateHidden_StillGivesGeometry()
     {
-        var frame = PanelLayout.Arrange(new WinPoint(100, 100), 1.0, 640, templateVisible: false);
+        var frame = PanelLayout.Arrange(new WinPoint(100, 100), 1.0, templateVisible: false);
 
         Assert.False(frame.Template.Visible);
         Assert.Equal(100 + 360 + 4, frame.Template.X);
