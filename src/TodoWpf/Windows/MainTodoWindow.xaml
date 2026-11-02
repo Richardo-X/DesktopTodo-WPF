@@ -59,7 +59,7 @@
 
         <Style x:Key="RowCard" TargetType="Border">
             <Setter Property="Height" Value="34"/>
-            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="Margin" Value="0,2"/>
             <Setter Property="Padding" Value="3,8"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Background" Value="{DynamicResource Brush.RowCard}"/>
@@ -142,8 +142,8 @@
                         <Button x:Name="PinBtn" Style="{StaticResource Ib}" ToolTip="窗口置顶开关" Click="PinBtn_Click">
                             <Viewbox Width="14" Height="14">
                                 <Canvas Width="24" Height="24">
-                                    <Path Data="{StaticResource Icon.Pin}"
-                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                    <Path x:Name="PinIcon" Data="{StaticResource Icon.Pin}"
+                                          Stroke="{DynamicResource Brush.Faint}"
                                           StrokeThickness="1.8"
                                           StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                                 </Canvas>
@@ -349,6 +349,20 @@
                                 </Button>
                             </Grid>
 
+                            <Grid>
+                                <!-- 时间轴整段一条线：与行内节点共用同一套列定义（34/16/*/16），
+                                     不用 Margin 硬算，避免与节点错位；上下各缩进半行 17 -->
+                                <Grid IsHitTestVisible="False">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="34"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="1" Width="2" HorizontalAlignment="Center"
+                                            Margin="0,17,0,17"
+                                            Background="{DynamicResource Brush.CardBorder}" Opacity="0.55"/>
+                                </Grid>
                             <ItemsControl x:Name="DoneList" ItemsSource="{Binding DoneRows}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -364,9 +378,6 @@
                                                        TextAlignment="Right" Padding="0,0,8,0"
                                                        VerticalAlignment="Center"/>
                                             <Grid Grid.Column="1">
-                                                <Border Width="2" HorizontalAlignment="Center"
-                                                        Background="{DynamicResource Brush.CardBorder}"
-                                                        Opacity="0.55"/>
                                                 <Ellipse Width="7" Height="7"
                                                          Fill="{DynamicResource Brush.Accent}"
                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -382,6 +393,7 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                            </Grid>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>

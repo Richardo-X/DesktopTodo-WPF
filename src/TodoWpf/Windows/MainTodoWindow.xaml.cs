@@ -166,7 +166,11 @@ public partial class MainTodoWindow : Window
     public void SetTopMost(bool on)
     {
         Topmost = on;
-        PinBtn.Foreground = on ? (Brush)FindResource("Brush.Accent") : (Brush)FindResource("Brush.Faint");
+        // 始终用动态资源引用：开→强调色，关→弱化色；两者都跟随主题切换。
+        // 不能用 ClearValue：XAML 里的 DynamicResource 本身就是本地值，会被一并清掉导致图标消失。
+        PinIcon.SetResourceReference(
+            System.Windows.Shapes.Shape.StrokeProperty,
+            on ? "Brush.Accent" : "Brush.Faint");
     }
 
     public void SetTuckLock(bool on)
