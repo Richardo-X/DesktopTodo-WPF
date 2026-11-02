@@ -307,7 +307,6 @@ public class DesignTokenTests
         [
             "src/TodoWpf/Windows/MainTodoWindow.xaml",
             "src/TodoWpf/Windows/QuickWindow.xaml",
-            "src/TodoWpf/Windows/DoneWindow.xaml",
         ];
 
         foreach (var relative in clusterWindows)

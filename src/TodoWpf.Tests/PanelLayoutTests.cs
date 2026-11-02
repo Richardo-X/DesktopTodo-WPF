@@ -16,7 +16,7 @@ public class PanelLayoutTests
         Assert.Equal(260, PanelLayout.TemplateWidth);
         Assert.Equal(448, PanelLayout.TemplateMaxHeight);
         Assert.Equal(4, PanelLayout.Gap);
-        Assert.Equal(0.4, PanelLayout.MinScale);
+        Assert.Equal(192, PanelLayout.AbsoluteMinHeight);
         Assert.Equal(3.0, PanelLayout.MaxScale);
     }
 
@@ -60,7 +60,8 @@ public class PanelLayoutTests
     [Fact]
     public void ClampScale_EnforcesLowerBound()
     {
-        Assert.Equal(0.4, PanelLayout.ClampScale(0.1, WorkArea, new WinPoint(100, 100)), 6);
+        // 1040 的 1/4 = 260 → 260/640 = 0.40625
+        Assert.Equal(0.40625, PanelLayout.ClampScale(0.1, WorkArea, new WinPoint(100, 100)), 6);
     }
 
     [Fact]

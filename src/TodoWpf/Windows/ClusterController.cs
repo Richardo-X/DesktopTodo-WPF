@@ -27,7 +27,6 @@ public sealed class ClusterController : IDisposable
 
     private readonly MainTodoWindow _main;
     private readonly QuickWindow _quick;
-    private readonly DoneWindow _done;
     private readonly TuckBarWindow _tuckBar;
     private readonly TuckStateMachine _tuck = new();
 
@@ -60,11 +59,10 @@ public sealed class ClusterController : IDisposable
 
         _main = new MainTodoWindow();
         _quick = new QuickWindow();
-        _done = new DoneWindow();
         _tuckBar = new TuckBarWindow();
 
         // 不进任务栏/Alt+Tab（需求 §2.2）：ShowInTaskbar=false 只管任务栏，Alt+Tab 需 WS_EX_TOOLWINDOW
-        foreach (var window in (Window[])[_main, _quick, _done, _tuckBar])
+        foreach (var window in (Window[])[_main, _quick, _tuckBar])
         {
             ToolWindowChrome.Apply(window);
         }
@@ -75,19 +73,18 @@ public sealed class ClusterController : IDisposable
 
         _main.TitlebarPressed += OnTitlebarPressed;
         _quick.TitlebarPressed += OnTitlebarPressed;
-        _done.TitlebarPressed += OnTitlebarPressed;
         _main.ScaleGripHandle.MouseLeftButtonDown += ScaleGrip_MouseDown;
         _tuckBar.BarHit += (_, _) => OnPointerEnter();
 
         // 指针进出 → 状态机（窗口级，被遮挡时系统不派发 = 真实命中语义）
-        foreach (var window in (Window[])[_main, _quick, _done])
+        foreach (var window in (Window[])[_main, _quick])
         {
             window.MouseLeave += (_, _) => _tuck.NotifyPointerLeft(DateTimeOffset.Now);
             window.MouseEnter += (_, _) => OnPointerEnter();
         }
 
         // Alt+F4 = 强制退出整个应用（退出前数据落盘；×=托盘隐藏用 Hide，不触发 Closing）
-        foreach (var window in (Window[])[_main, _quick, _done, _tuckBar])
+        foreach (var window in (Window[])[_main, _quick, _tuckBar])
         {
             window.Closing += (_, e) =>
             {
@@ -117,8 +114,6 @@ public sealed class ClusterController : IDisposable
 
     public QuickWindow Quick => _quick;
 
-    public DoneWindow Done => _done;
-
     /// <summary>初始化：应用记忆、接互锁、显示窗口。</summary>
     public void Start()
     {
@@ -136,11 +131,10 @@ public sealed class ClusterController : IDisposable
         ApplyThemeState();
         _main.Controller = this;
         _quick.Controller = this;
-        _done.Controller = this;
         _tuckBar.Controller = this;
 
         // 焦点描边仅键盘导航显示（L1 明细；鼠标点击不留蓝框）
-        foreach (var window in (Window[])[_main, _quick, _done])
+        foreach (var window in (Window[])[_main, _quick])
         {
             FocusVisualScope.Attach(window);
         }
@@ -170,7 +164,6 @@ public sealed class ClusterController : IDisposable
         _main.SetRows(MainViewService.TodoRows(_data, todayKey));
         _main.SetCount(_data.Todos.Count, _data.Settings.MaxItems);
         var doneRows = MainViewService.DoneRows(_data, _data.Settings.DoneSort);
-        _done.SetDoneRows(doneRows, _data.Completed.Count);
         _main.SetDoneRows(doneRows);
         _quick.SetTemplateRows(MainViewService.TemplateRows(_data), Core.Models.TemplateLimit.Max);
     }
@@ -464,10 +457,11 @@ public sealed class ClusterController : IDisposable
         }
 
         var mouse = ToScreen(_main, e);
+        var workArea = WorkArea();
         var targetMainWidth = Math.Max(
-            PanelLayout.MainWidth * PanelLayout.MinScale,
+            PanelLayout.MainWidth * PanelLayout.MinScaleFor(workArea.Height),
             _resizeStartMainWidth + (mouse.X - _resizeStartMouse.X));
-        _scale = PanelLayout.ClampScale(targetMainWidth / PanelLayout.MainWidth, WorkArea(), SnappedAnchor());
+        _scale = PanelLayout.ClampScale(targetMainWidth / PanelLayout.MainWidth, workArea, SnappedAnchor());
         RequestResizeLayout();
     }
 
@@ -503,7 +497,6 @@ public sealed class ClusterController : IDisposable
     {
         var opacity = HideSideWindowsDuringResize && resizing ? 0d : 1d;
         _quick.Opacity = opacity;
-        _done.Opacity = opacity;
     }
 
     /// <summary>置 true 可在拖缩放柄时把每帧几何写盘（临时目录下的 resize-trace.log），用于定位“边缘没钉住”。</summary>
@@ -559,10 +552,8 @@ public sealed class ClusterController : IDisposable
         _tuck.SetSnapped(false);
         _main.BeginAnimation(Window.TopProperty, null);
         _quick.BeginAnimation(Window.TopProperty, null);
-        _done.BeginAnimation(Window.TopProperty, null);
         _main.Top = _anchor.Y;
         _quick.Top = _anchor.Y;
-        _done.Top = _anchor.Y;
         _tuck.SetSnapped(_anchor.Y <= WorkArea().Y);
     }
 
@@ -579,7 +570,6 @@ public sealed class ClusterController : IDisposable
     {
         _main.Topmost = on;
         _quick.Topmost = on;
-        _done.Topmost = on;
         _tuckBar.Topmost = on;
     }
 
@@ -1091,7 +1081,6 @@ public sealed class ClusterController : IDisposable
         _clusterHidden = true;
         _main.Hide();
         _quick.Hide();
-        _done.Hide();
         _tuckBar.Hide();
     }
 

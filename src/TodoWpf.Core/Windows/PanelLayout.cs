@@ -24,8 +24,8 @@ public static class PanelLayout
 
     public const double Gap = 4;
 
-    /// <summary>缩放下限：放宽到 0.4，允许 1080p 上「屏高 1/3」的默认值落地（约 0.54 倍）。</summary>
-    public const double MinScale = 0.4;
+    /// <summary>绝对最小高度（DIP）：低于它内容无法使用。</summary>
+    public const double AbsoluteMinHeight = 192;
 
     /// <summary>倍数设计封顶；实际上限几乎总是由「2/3 屏高」决定，此值只防极端大屏。</summary>
     public const double MaxScale = 3.0;
@@ -49,12 +49,20 @@ public static class PanelLayout
     {
         var byHeight = MaxMainHeight(workArea.Height, anchor.Y) / MainBaseHeight;
         var byWidth = (workArea.Right - anchor.X - ViewportMargin) / MainWidth;
-        return Math.Max(MinScale, Math.Min(MaxScale, Math.Min(byHeight, byWidth)));
+        return Math.Max(MinScaleFor(workArea.Height), Math.Min(MaxScale, Math.Min(byHeight, byWidth)));
     }
 
-    /// <summary>把缩放钳回 0.4 到当前屏允许的上限之间。</summary>
+    /// <summary>最小布局高：屏高 1/4，且不低于 192 DIP。</summary>
+    public static double MinMainHeight(double workAreaHeight) =>
+        Math.Max(AbsoluteMinHeight, workAreaHeight / 4.0);
+
+    /// <summary>最小倍数：由最小布局高换算。</summary>
+    public static double MinScaleFor(double workAreaHeight) =>
+        MinMainHeight(workAreaHeight) / MainBaseHeight;
+
+    /// <summary>把缩放钳回「屏高 1/4」到当前屏允许的上限之间。</summary>
     public static double ClampScale(double scale, WinRect workArea, WinPoint anchor) =>
-        Math.Clamp(scale, MinScale, MaxScaleFor(workArea, anchor));
+        Math.Clamp(scale, MinScaleFor(workArea.Height), MaxScaleFor(workArea, anchor));
 
     /// <summary>两窗几何：模板窗左缘 = 主窗视觉右缘 + 固定 4；模板窗高度只跟随缩放。</summary>
     public static PanelFrame Arrange(WinPoint anchor, double scale, bool templateVisible)
