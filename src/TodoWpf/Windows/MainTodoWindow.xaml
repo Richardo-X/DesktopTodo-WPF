@@ -219,7 +219,7 @@
                                 </Canvas>
                             </Viewbox>
                         </Button>
-                        <Button x:Name="SettingsBtn" Style="{StaticResource Ib}" ToolTip="设置">
+                        <Button x:Name="SettingsBtn" Style="{StaticResource Ib}" ToolTip="设置" Click="SettingsBtn_Click">
                             <Viewbox Width="14" Height="14">
                                 <Canvas Width="24" Height="24">
                                     <Path Data="{StaticResource Icon.Gear}" Stroke="{DynamicResource Brush.Faint}"

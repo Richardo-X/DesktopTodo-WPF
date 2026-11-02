@@ -272,6 +272,8 @@ public partial class MainTodoWindow : Window
 
     private void ThemeBtn_Click(object sender, RoutedEventArgs e) => Controller?.ToggleTheme();
 
+    private void SettingsBtn_Click(object sender, RoutedEventArgs e) => Controller?.OpenSettings();
+
     private void PinBtn_Click(object sender, RoutedEventArgs e) => Controller?.ToggleTopMost();
 
     private void TuckLockBtn_Click(object sender, RoutedEventArgs e) => Controller?.ToggleTuckLock();

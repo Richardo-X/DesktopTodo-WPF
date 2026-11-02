@@ -611,6 +611,8 @@ public sealed class ClusterController : IDisposable
     public void ToggleTheme()
     {
         App.ApplyTheme(!App.IsNight);
+        // 主题落盘（此前只在内存切换，重启丢失——批次05③ 修复）
+        Mutate(d => d with { UiState = d.UiState with { Theme = App.IsNight ? "night" : "day" } });
         _main.ThemeBtn.Tag = (System.Windows.Media.Geometry)_main.FindResource(App.IsNight ? "Icon.Sun" : "Icon.Moon");
     }
 
@@ -867,6 +869,174 @@ public sealed class ClusterController : IDisposable
         {
             ApplyOps(r);
         }
+    }
+
+    // ---------- 设置窗（批次05③） ----------
+
+    /// <summary>打开设置窗（标题栏齿轮；模态）。</summary>
+    public void OpenSettings()
+    {
+        BeginModal();
+        SettingsDialog.Show(this);
+        EndModal();
+    }
+
+    /// <summary>待办上限 1~10 步进；不可低于当前待办数量（需求 §2.8）。</summary>
+    public void SetMaxItems(int value)
+    {
+        var floor = Math.Max(1, _data.Todos.Count);
+        var clamped = Math.Clamp(value, floor, AppSettings.MaxMaxItems);
+        if (clamped == _data.Settings.MaxItems)
+        {
+            return;
+        }
+
+        Mutate(d => d with { Settings = d.Settings with { MaxItems = clamped } });
+        RefreshAllViews();
+    }
+
+    /// <summary>时制切换（时钟即时变化并落盘）。</summary>
+    public void SetHour12(bool hour12)
+    {
+        if (_data.Settings.Hour12 == hour12)
+        {
+            return;
+        }
+
+        Mutate(d => d with { Settings = d.Settings with { Hour12 = hour12 } });
+        UpdateClock();
+    }
+
+    /// <summary>主题切换（设置窗入口；即时生效并落盘）。</summary>
+    public void SetTheme(bool night)
+    {
+        if (App.IsNight == night)
+        {
+            return;
+        }
+
+        App.ApplyTheme(night);
+        Mutate(d => d with { UiState = d.UiState with { Theme = night ? "night" : "day" } });
+        _main.ThemeBtn.Tag = (System.Windows.Media.Geometry)_main.FindResource(night ? "Icon.Sun" : "Icon.Moon");
+    }
+
+    /// <summary>恢复默认尺寸：按当前屏重算（屏高 1/3）并落盘（体验说明书 ③.3）。</summary>
+    public void ResetWindowSize()
+    {
+        var workArea = WorkArea();
+        _scale = PanelLayout.ClampScale(
+            PanelLayout.DefaultMainHeight(workArea.Height) / PanelLayout.MainBaseHeight,
+            workArea, SnappedAnchor());
+        ApplyLayout();
+        ShowToast("已按当前屏恢复默认尺寸");
+    }
+
+    /// <summary>开机自启（注册表 Run；开启时清除 StartupApproved 禁用标记加固；需求 §2.8）。
+    /// 注册表被拦截/拒绝时只提示，不绕过。</summary>
+    public void SetAutoStart(bool on)
+    {
+        const string runKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
+        const string approvedKey = @"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run";
+        const string appName = "桌面待办-WPF";
+
+        try
+        {
+            using var run = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(runKey, writable: true);
+            if (run is null)
+            {
+                ShowToast("注册表不可写，无法修改自启");
+                return;
+            }
+
+            if (on)
+            {
+                var exe = Environment.ProcessPath;
+                if (string.IsNullOrEmpty(exe))
+                {
+                    ShowToast("无法获取程序路径");
+                    return;
+                }
+
+                run.SetValue(appName, $"\"{exe}\"");
+                using var approved = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(approvedKey, writable: true);
+                approved?.DeleteValue(appName, throwOnMissingValue: false);
+            }
+            else
+            {
+                run.DeleteValue(appName, throwOnMissingValue: false);
+            }
+
+            Mutate(d => d with { Settings = d.Settings with { AutoStart = on } });
+            ShowToast(on ? "已开启开机自启" : "已关闭开机自启");
+        }
+        catch (System.Security.SecurityException)
+        {
+            ShowToast("注册表写入被拒绝");
+        }
+        catch (System.IO.IOException)
+        {
+            ShowToast("注册表写入失败");
+        }
+        catch (Microsoft.Win32.RegistrySecurityException)
+        {
+            ShowToast("注册表写入被拒绝");
+        }
+    }
+
+    /// <summary>导入历史 CSV（覆盖/合并；文件框 + 校验提示；需求 §2.8）。</summary>
+    public void ImportHistoryCsv(string mode, System.Windows.Window anchor)
+    {
+        if (mode == CsvService.ModeCover &&
+            !ConfirmDialog.Confirm("覆盖导入历史记录？", "会清空现有全部历史记录（含今天已完成的），无法恢复。",
+                "选择文件", danger: true, anchor: anchor))
+        {
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = "CSV 文件 (*.csv)|*.csv",
+            DefaultExt = ".csv",
+        };
+        if (dialog.ShowDialog(_main) != true)
+        {
+            return;
+        }
+
+        string text;
+        try
+        {
+            text = System.IO.File.ReadAllText(dialog.FileName, System.Text.Encoding.UTF8);
+        }
+        catch (System.IO.IOException)
+        {
+            ShowToast("文件读取失败");
+            return;
+        }
+        catch (System.Security.SecurityException)
+        {
+            ShowToast("没有读取权限");
+            return;
+        }
+
+        var (next, ok, imported) = CsvService.Import(
+            _data, text, mode, LocalDate.Key(DateTimeOffset.Now), DateTimeOffset.Now);
+        if (!ok)
+        {
+            ShowToast("文件格式不正确，只支持本软件导出的 CSV");
+            return;
+        }
+
+        if (imported == 0)
+        {
+            ShowToast("没有新记录（内容已存在）");
+            return;
+        }
+
+        _data = next;
+        RefreshAllViews();
+        _ = _repository.SaveAsync(_data);
+        ShowToast($"已导入 {imported} 条");
     }
 
     // ---------- 历史窗（批次05③） ----------
