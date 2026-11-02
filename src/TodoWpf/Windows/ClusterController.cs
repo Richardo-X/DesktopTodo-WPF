@@ -913,9 +913,9 @@ public sealed class ClusterController : IDisposable
         TextEditDialog.Open(b =>
         {
             b.Title("编辑模板").Text(item.Content).CounterTotal(ContentRules.MaxLength)
-             .Action("delete", "删除", onClick: _ =>
+             .Action("delete", "删除", onClick: d =>
              {
-                 if (ConfirmDialog.Confirm("删除模板", "确定删除这个模板吗？", "删除"))
+                 if (ConfirmDialog.Confirm("删除模板", "确定删除这个模板吗？", "删除", danger: true, anchor: d))
                  {
                      saved = true;
                      ApplyOps(TodoOpsService.DeleteTemplate(_data, id));
@@ -1031,7 +1031,7 @@ public sealed class ClusterController : IDisposable
                 isTemplates
                     ? $"确定删除所选的 {_batch.SelectedCount} 个模板吗？删除后无法恢复。"
                     : $"确定删除所选的 {_batch.SelectedCount} 项吗？删除后无法恢复。",
-                "删除"))
+                "删除", danger: true, anchor: _main))
         {
             return;
         }
@@ -1174,9 +1174,9 @@ public sealed class ClusterController : IDisposable
                          $"创建于 {LocalDate.KeyOfIso(item.CreatedAt)}", item.Overdue)
              .Text(item.Content)
              .CounterTotal(ContentRules.MaxLength)
-             .Action("delete", "删除", onClick: _ =>
+             .Action("delete", "删除", onClick: d =>
              {
-                 if (ConfirmDialog.Confirm("删除待办", "确定删除这条待办吗？删除后无法恢复。", "删除"))
+                 if (ConfirmDialog.Confirm("删除待办", "确定删除这条待办吗？删除后无法恢复。", "删除", danger: true, anchor: d))
                  {
                      saved = true;
                      ApplyOps(TodoOpsService.DeleteTodo(_data, id));

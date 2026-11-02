@@ -2,28 +2,106 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="确认"
-        Width="420" SizeToContent="Height"
+        Width="340" SizeToContent="Height"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
-        ResizeMode="NoResize" ShowInTaskbar="False" WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize" ShowInTaskbar="False" WindowStartupLocation="Manual"
         UseLayoutRounding="True" TextOptions.TextRenderingMode="ClearType"
         FontFamily="{StaticResource Font.Text}"
         Effect="{StaticResource Effect.DialogShadowMain}">
 
-    <!-- 确认框（需求 §2.2：托盘退出唯一关闭途径的确认框；宽度 420/圆角 10/单层蓝黑投影） -->
+    <Window.Resources>
+        <!-- 原型 .btn：32 高、r6、字 12 -->
+        <Style x:Key="GhostBtn" TargetType="Button">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-    <Border Background="{DynamicResource Brush.CardSolid}"
+        <Style x:Key="PrimarySmBtn" TargetType="Button">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.AccentFg}"/>
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.AccentHover}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 危险确认（原型 .btn.danger：红字红边透明底，悬停浅红底） -->
+        <Style x:Key="DangerSmBtn" TargetType="Button" BasedOn="{StaticResource PrimarySmBtn}">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Overdue}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.OverdueEdge}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.SoftOverdue}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- 确认框（原型 .cbox，D 类）：340 × 内容高、Shell 底、r10、蓝黑投影；
+         定位 = 居中于「打开它的窗口」（Confirm 传入锚窗），越界钳回所在屏工作区。 -->
+    <Border Background="{DynamicResource Brush.Shell}"
             BorderBrush="{DynamicResource Brush.CardBorder}" BorderThickness="1"
-            CornerRadius="{StaticResource Radius.Dialog}" Padding="20,22">
+            CornerRadius="{StaticResource Radius.Dialog}" Padding="20">
         <StackPanel>
-            <TextBlock x:Name="TitleText" Text="确认" FontSize="14.5" FontWeight="SemiBold"
-                       Foreground="{DynamicResource Brush.Text}" Margin="0,0,0,8"/>
-            <TextBlock x:Name="BodyText" Text="" FontSize="{StaticResource Size.BodyFont}" LineHeight="21"
-                       Foreground="{DynamicResource Brush.Muted}" TextWrapping="Wrap" Margin="0,0,0,17"/>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button x:Name="CancelBtn" Style="{StaticResource SmallButton}" Content="取消"
-                        Width="64" Margin="0,0,9,0" Click="Cancel_Click"/>
-                <Button x:Name="OkBtn" Style="{StaticResource PrimaryButton}" Content="确定"
-                        Width="64" Click="Ok_Click"/>
+            <TextBlock x:Name="TitleText" Text="确认" FontSize="13" FontWeight="SemiBold"
+                       Foreground="{DynamicResource Brush.Text}"/>
+            <TextBlock x:Name="BodyText" Text="" FontSize="12" LineHeight="20"
+                       Foreground="{DynamicResource Brush.Muted}" TextWrapping="Wrap"
+                       Margin="0,8,0,0"/>
+            <StackPanel x:Name="ActionsPanel" Orientation="Horizontal" HorizontalAlignment="Right"
+                        Margin="0,20,0,0">
+                <Button x:Name="CancelBtn" Content="取消" Style="{StaticResource GhostBtn}"
+                        Margin="0,0,8,0" Click="Cancel_Click"/>
+                <Button x:Name="OkBtn" Content="确定" Style="{StaticResource PrimarySmBtn}"
+                        Click="Ok_Click"/>
             </StackPanel>
         </StackPanel>
     </Border>
