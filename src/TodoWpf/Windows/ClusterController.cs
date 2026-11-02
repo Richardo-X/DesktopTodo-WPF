@@ -127,7 +127,11 @@ public sealed class ClusterController : IDisposable
         {
             UiState = _data.UiState with { QuickVisible = false, DoneVisible = false, ClusterScale = 1 },
         };
-        _scale = 1;
+        var startupArea = WorkArea();
+        _scale = PanelLayout.ClampScale(
+            PanelLayout.DefaultMainHeight(startupArea.Height) / PanelLayout.MainBaseHeight,
+            startupArea,
+            _anchor);
 
         ApplyThemeState();
         _main.Controller = this;
@@ -181,9 +185,14 @@ public sealed class ClusterController : IDisposable
             return new WinPoint(pos.X, pos.Y);
         }
 
-        var scale = ClusterLayout.ClampScale(_scale, WorkArea(), ui.QuickVisible, ui.DoneVisible);
+        var workArea = WorkArea();
+        var estimate = new WinPoint(workArea.X, workArea.Y + 80);
+        var scale = PanelLayout.ClampScale(
+            PanelLayout.DefaultMainHeight(workArea.Height) / PanelLayout.MainBaseHeight,
+            workArea,
+            estimate);
         _scale = scale;
-        return ClusterLayout.FirstLaunchAnchor(WorkArea(), scale, ui.QuickVisible, ui.DoneVisible);
+        return PanelLayout.FirstLaunchAnchor(workArea, scale, ui.QuickVisible);
     }
 
     /// <summary>窗口所在显示器的工作区（DIP）。旧实现用 SystemParameters.WorkArea 只取主屏，
@@ -226,25 +235,22 @@ public sealed class ClusterController : IDisposable
     {
         var ui = _data.UiState;
         var workArea = WorkArea();
-        var frame = ClusterLayout.Arrange(workArea, SnappedAnchor(), _scale, ui.QuickVisible, ui.DoneVisible);
+        var frame = PanelLayout.Arrange(SnappedAnchor(), _scale, ui.QuickVisible);
 
-        // 快捷窗用固定画布（零矩形变更）；主窗/已完成窗逐帧摆位。
-        var tplRect = frame.Quick.Rect with { Height = TemplateWindowHeight() * _scale };
+        // 模板窗用固定画布（零矩形变更）；主窗逐帧摆位。
+        var tplRect = frame.Template.Rect with { Height = TemplateWindowHeight() * _scale };
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
-            (tplRect, _quick, frame.Quick.Visible, PinEdge.Left),
-            (frame.Done.Rect, _done, false, PinEdge.Left));
+            (tplRect, _quick, frame.Template.Visible, PinEdge.Left));
 
         // 内容缩放比不从 _scale 直接取，而是从"窗口矩形取整后的实际尺寸"反推：
         // 窗口宽度要落到整数物理像素（PlaceBatch 里 round），若内容仍按原始 _scale 排版，
         // 两者会差零点几像素——内容比窗口宽 ⇒ 右对齐的卡面被裁掉一条；比窗口窄 ⇒
         // 卡面右缘缩进窗内，肉眼就是"两窗缝隙在缩放中变宽/变窄"（用户视频慢放实证：缝隙 13→17→13）。
         // 反推后 内容布局尺寸 ≡ 窗口客户区尺寸，卡面边缘逐帧与窗口边缘重合。
-        _main.SetContentScale(NormalizedScale(frame.Main.Rect.Width, ClusterLayout.MainWidth));
-        _quick.SetContentScale(NormalizedScale(frame.Quick.Rect.Width, ClusterLayout.SideWidth));
+        _main.SetContentScale(NormalizedScale(frame.Main.Rect.Width, PanelLayout.MainWidth));
+        _quick.SetContentScale(NormalizedScale(frame.Template.Rect.Width, PanelLayout.TemplateWidth));
         _quick.SetContentHeight(TemplateWindowHeight());
-        // 已完成窗维持在"逐帧改窗口矩形 + LayoutTransform"这条老路上（用户 2026-10-13 裁定回退）
-        _done.SetContentScale(NormalizedScale(frame.Done.Rect.Width, ClusterLayout.SideWidth));
 
         // 窗口矩形已在本帧落位；这里把内容布局也同步推完，避免"内容晚窗口一帧"
         // （内容若晚一帧，右对齐的快捷窗右缘与两窗缝隙就会被看见在动）。
@@ -252,12 +258,11 @@ public sealed class ClusterController : IDisposable
         {
             _main.UpdateLayout();
             _quick.UpdateLayout();
-            _done.UpdateLayout();
         }
 
         // 白条定位：可见组水平中心、贴屏顶
         var left = frame.Main.Rect.X;
-        var right = frame.Quick.Visible ? frame.Quick.Rect.Right : frame.Main.Rect.Right;
+        var right = frame.Template.Visible ? frame.Template.Rect.Right : frame.Main.Rect.Right;
         _tuckBar.Left = (left + right) / 2 - _tuckBar.Width / 2;
         _tuckBar.Top = workArea.Y;
 
@@ -278,20 +283,19 @@ public sealed class ClusterController : IDisposable
     private void MoveCluster()
     {
         var ui = _data.UiState;
-        var frame = ClusterLayout.Arrange(WorkArea(), SnappedAnchor(), _scale, ui.QuickVisible, ui.DoneVisible);
+        var frame = PanelLayout.Arrange(SnappedAnchor(), _scale, ui.QuickVisible);
 
         // 快捷窗在移动路径上也必须用**画布矩形**（与 ApplyLayout 一致）：
         // 它是个固定设计尺寸 + 渲染层缩放的窗，卡面比目标档宽（310 设计宽）。
         // 这里若用目标矩形（缩放后的实际宽度）摆它，卡片就被塞进更窄的窗口里 ⇒ 移动过程中被裁；
         // 松手走 ApplyLayout 又换回画布矩形 ⇒ 于是"移动时被裁、松手恢复"（用户 2026-10-13 实测）。
-        var tplRect = frame.Quick.Rect with { Height = TemplateWindowHeight() * _scale };
+        var tplRect = frame.Template.Rect with { Height = TemplateWindowHeight() * _scale };
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
-            (tplRect, _quick, frame.Quick.Visible, PinEdge.Left),
-            (frame.Done.Rect, _done, false, PinEdge.Left));
+            (tplRect, _quick, frame.Template.Visible, PinEdge.Left));
 
         var left = frame.Main.Rect.X;
-        var right = frame.Quick.Visible ? frame.Quick.Rect.Right : frame.Main.Rect.Right;
+        var right = frame.Template.Visible ? frame.Template.Rect.Right : frame.Main.Rect.Right;
         var barLeft = (left + right) / 2 - _tuckBar.Width / 2;
         if (_tuckBar.IsVisible && _tuckBar.Left != barLeft) { _tuckBar.Left = barLeft; }
     }
@@ -461,10 +465,9 @@ public sealed class ClusterController : IDisposable
 
         var mouse = ToScreen(_main, e);
         var targetMainWidth = Math.Max(
-            ClusterLayout.MainWidth * ClusterLayout.MinScale,
+            PanelLayout.MainWidth * PanelLayout.MinScale,
             _resizeStartMainWidth + (mouse.X - _resizeStartMouse.X));
-        var ui = _data.UiState;
-        _scale = ClusterLayout.ClampScale(targetMainWidth / ClusterLayout.MainWidth, WorkArea(), ui.QuickVisible, ui.DoneVisible);
+        _scale = PanelLayout.ClampScale(targetMainWidth / PanelLayout.MainWidth, WorkArea(), SnappedAnchor());
         RequestResizeLayout();
     }
 
@@ -648,7 +651,7 @@ public sealed class ClusterController : IDisposable
     {
         var ui = _data.UiState;
         var workArea = WorkArea();
-        var frame = ClusterLayout.Arrange(workArea, SnappedAnchor(), _scale, ui.QuickVisible, ui.DoneVisible);
+        var frame = PanelLayout.Arrange(SnappedAnchor(), _scale, ui.QuickVisible);
 
         var targets = new List<(Window Window, double DockedTop, double HiddenTop)>();
         if (frame.Main.Visible)
@@ -656,15 +659,10 @@ public sealed class ClusterController : IDisposable
             targets.Add((_main, frame.Main.Rect.Y, workArea.Y - frame.Main.Rect.Height - 8));
         }
 
-        if (frame.Quick.Visible)
+        if (frame.Template.Visible)
         {
             var tplH = TemplateWindowHeight() * _scale;
-            targets.Add((_quick, frame.Quick.Rect.Y, workArea.Y - tplH - 8));
-        }
-
-        if (frame.Done.Visible)
-        {
-            targets.Add((_done, frame.Done.Rect.Y, workArea.Y - frame.Done.Rect.Height - 8));
+            targets.Add((_quick, frame.Template.Rect.Y, workArea.Y - tplH - 8));
         }
 
         if (slideOut)
@@ -730,7 +728,7 @@ public sealed class ClusterController : IDisposable
 
         if (ui.DoneVisible)
         {
-            _done.Show();
+            // 已完成窗已不参与布局（批次04 收尾），不再显示
         }
     }
 
@@ -1110,7 +1108,7 @@ public sealed class ClusterController : IDisposable
 
         if (ui.DoneVisible)
         {
-            _done.Show();
+            // 已完成窗已不参与布局（批次04 收尾），不再显示
         }
 
         // 缩进态托盘恢复：自动弹出停留 3 秒（状态机 hold 会话）
@@ -1133,10 +1131,10 @@ public sealed class ClusterController : IDisposable
     private void OnDisplaySettingsChanged(object? sender, EventArgs e)
     {
         var workArea = WorkArea();
-        _scale = ClusterLayout.ClampScale(_scale, workArea, _data.UiState.QuickVisible, _data.UiState.DoneVisible);
         var clamped = ScreenClamp.ClampToWorkArea(
             new WinRect(_anchor.X, _anchor.Y, 0, 0), workArea);
         _anchor = new WinPoint(clamped.X, clamped.Y);
+        _scale = PanelLayout.ClampScale(_scale, workArea, _anchor);
         if (!_clusterHidden)
         {
             ApplyLayout();
