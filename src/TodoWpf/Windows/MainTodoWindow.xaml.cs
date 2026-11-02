@@ -21,7 +21,9 @@ public partial class MainTodoWindow : Window
     {
         InitializeComponent();
         DataContext = this;
-        EditRowCommand = new RelayCommand<TodoRowView>(row => row is not null, row => Controller?.OpenEditTodo(row.Id));
+        EditRowCommand = new RelayCommand<TodoRowView>(
+            row => row is not null && !InBatch, // 批量中禁用双击编辑（原型口径）
+            row => Controller?.OpenEditTodo(row.Id));
         WindowShell.ApplyFixed(this);
         _toastTimer.Tick += (_, _) =>
         {
@@ -107,6 +109,7 @@ public partial class MainTodoWindow : Window
         }
 
         DoneCount.Text = rows.Count.ToString();
+        DoneEmpty.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void AddBtn_Click(object sender, RoutedEventArgs e) => Controller?.OpenNewTodo();
@@ -130,14 +133,46 @@ public partial class MainTodoWindow : Window
         }
     }
 
-    /// <summary>批量条可见/计数/删除可用性由控制器推送。</summary>
-    public void SetBatchBar(bool visible, int selected, bool canDelete)
+    /// <summary>批量中取消选中（勾选框两个方向都要算切换；常规态不会触发——行尾框常态恒未勾）。</summary>
+    private void RowComplete_Unchecked(object sender, RoutedEventArgs e)
+    {
+        if (!InBatch || (sender as System.Windows.Controls.CheckBox)?.DataContext is not TodoRowView row)
+        {
+            return;
+        }
+
+        Controller?.ToggleBatchSelection(row.Id);
+    }
+
+    /// <summary>批量中点行任意处 = 切换选中（原型批量分支整行可点）。</summary>
+    private void Row_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (!InBatch || (sender as Border)?.DataContext is not TodoRowView row)
+        {
+            return;
+        }
+
+        Controller?.ToggleBatchSelection(row.Id);
+        e.Handled = true;
+    }
+
+    /// <summary>批量条可见/计数/删除可用性由控制器推送；连带推送：空态文案变体、
+    /// 已完成段变暗（原型 .dimdone）、设置入口冻结（原型 .frozen-btn）。</summary>
+    public void SetBatchBar(bool visible, int selected, bool canDelete, int total)
     {
         InBatch = visible;
         ActionBar.Visibility = visible ? Visibility.Hidden : Visibility.Visible;
         BatchBar.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
         BatchCount.Text = $"已选 {selected} 项";
         BatchDeleteBtn.IsEnabled = canDelete;
+        BatchAllBtn.Content = visible && total > 0 && selected == total ? "取消全选" : "全选";
+
+        TodoEmptyA.Text = visible ? "没有可批量删除的待办" : "今天还没有待办";
+        TodoEmptyB.Text = visible ? "点「返回」退出批量" : "点 ＋ 新建一条";
+
+        DoneBlock.Opacity = visible ? 0.4 : 1.0;
+        DoneBlock.IsHitTestVisible = !visible;
+        SettingsBtn.IsEnabled = !visible;
     }
 
     /// <summary>是否处于批量模式（勾选行为分支用）。</summary>
@@ -146,6 +181,18 @@ public partial class MainTodoWindow : Window
     private void BatchExit_Click(object sender, RoutedEventArgs e) => Controller?.ExitBatch();
 
     private void BatchDelete_Click(object sender, RoutedEventArgs e) => Controller?.DeleteSelected();
+
+    private void BatchAll_Click(object sender, RoutedEventArgs e) => Controller?.ToggleBatchAll();
+
+    /// <summary>Esc 退出批量（原型全局 Esc；二级窗/确认框开着时不在本窗路由，无冲突）。</summary>
+    private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Escape && InBatch)
+        {
+            Controller?.ExitBatch();
+            e.Handled = true;
+        }
+    }
 
     /// <summary>双击行 → 编辑。</summary>
     public System.Windows.Input.ICommand EditRowCommand { get; }

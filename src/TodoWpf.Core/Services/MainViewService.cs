@@ -3,8 +3,15 @@ using TodoWpf.Core.Utils;
 
 namespace TodoWpf.Core.Services;
 
-/// <summary>主窗一行待办/已完成/模板的展示投影（纯数据，UI 层直接绑定）。</summary>
-public sealed record TodoRowView(string Id, string Content, bool Overdue, bool Completed = false);
+/// <summary>主窗一行待办/已完成/模板的展示投影（纯数据，UI 层直接绑定）。
+/// Selected/BatchMode：批量删除态的行选中与批量标志（批次05①；非持久字段，仅投影）。</summary>
+public sealed record TodoRowView(
+    string Id,
+    string Content,
+    bool Overdue,
+    bool Completed = false,
+    bool Selected = false,
+    bool BatchMode = false);
 
 public sealed record DoneRowView(string Id, string Content, bool Overdue, string CompletedTimeText);
 
@@ -21,9 +28,15 @@ public static class MainViewService
 
     public static bool CanAddTodo(int activeCount, int maxItems) => activeCount < maxItems;
 
-    public static List<TodoRowView> TodoRows(AppData data, string todayKey) =>
+    public static List<TodoRowView> TodoRows(AppData data, string todayKey, BatchState? batch = null) =>
         data.Todos
-            .Select(item => new TodoRowView(item.Id, item.Content, OverdueService.IsActiveOverdue(item, todayKey)))
+            .Select(item => new TodoRowView(
+                item.Id,
+                item.Content,
+                OverdueService.IsActiveOverdue(item, todayKey),
+                Completed: false,
+                Selected: batch is { IsActive: true } && batch.IsSelected(item.Id),
+                BatchMode: batch is { IsActive: true }))
             .ToList();
 
     public static List<DoneRowView> DoneRows(AppData data, string sort)

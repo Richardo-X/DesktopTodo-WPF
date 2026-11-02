@@ -123,5 +123,15 @@ public partial class QuickWindow : Window
     /// <summary>卡面内容。</summary>
     public FrameworkElement CardBody => CardContent;
 
+    /// <summary>
+    /// 批量态整窗冻结（原型 .frozen-win：可读不可点，opacity .7）。
+    /// 根 Border 断命中 ⇒ 标题栏拖动/行点击/按钮全部失效，内容照常显示。
+    /// </summary>
+    public void SetFrozen(bool frozen)
+    {
+        CardRoot.IsHitTestVisible = !frozen;
+        CardRoot.Opacity = frozen ? 0.7 : 1.0;
+    }
+
     public ClusterController? Controller { get; set; }
 }

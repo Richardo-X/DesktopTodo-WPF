@@ -159,7 +159,7 @@ public sealed class ClusterController : IDisposable
     public void RefreshAllViews()
     {
         var todayKey = LocalDate.Key(DateTimeOffset.Now);
-        _main.SetRows(MainViewService.TodoRows(_data, todayKey));
+        _main.SetRows(MainViewService.TodoRows(_data, todayKey, _batch));
         _main.SetCount(_data.Todos.Count, _data.Settings.MaxItems);
         var doneRows = MainViewService.DoneRows(_data, _data.Settings.DoneSort);
         _main.SetDoneRows(doneRows);
@@ -883,13 +883,20 @@ public sealed class ClusterController : IDisposable
     /// <summary>批量删除状态机（目标=待办；选择集与置灰口径）。</summary>
     private readonly BatchState _batch = new();
 
-    /// <summary>进入/退出 批量删除（主窗「批量删除」按钮）。</summary>
+    /// <summary>进入/退出 批量删除（主窗「批量删除」按钮）。
+    /// 空列表不进入（原型：toast「没有可批量删除的待办」）。</summary>
     public void ToggleBatch()
     {
         if (_batch.IsActive)
         {
             _batch.Exit();
             PushBatchBar();
+            return;
+        }
+
+        if (_data.Todos.Count == 0)
+        {
+            ShowToast("没有可批量删除的待办");
             return;
         }
 
@@ -901,6 +908,13 @@ public sealed class ClusterController : IDisposable
     public void ToggleBatchSelection(string id)
     {
         _batch.Toggle(id);
+        PushBatchBar();
+    }
+
+    /// <summary>「全选 / 取消全选」切换（原型 batchAll 口径）。</summary>
+    public void ToggleBatchAll()
+    {
+        _batch.ToggleAll(_data.Todos.Select(t => t.Id));
         PushBatchBar();
     }
 
@@ -937,8 +951,17 @@ public sealed class ClusterController : IDisposable
         PushBatchBar();
     }
 
-    private void PushBatchBar() =>
-        _main.SetBatchBar(_batch.IsActive, _batch.SelectedCount, _batch.CanDelete);
+    /// <summary>
+    /// 批量态视觉推送（唯一入口，进入/切换/退出都走这里）：
+    /// 批量条 + 行选中投影 + 已完成段变暗 + 模板窗冻结 + 标题栏设置冻结 + 缩进门槛。
+    /// </summary>
+    private void PushBatchBar()
+    {
+        _main.SetBatchBar(_batch.IsActive, _batch.SelectedCount, _batch.CanDelete, _data.Todos.Count);
+        _main.SetRows(MainViewService.TodoRows(_data, LocalDate.Key(DateTimeOffset.Now), _batch));
+        _quick.SetFrozen(_batch.IsActive);
+        _tuck.SetBatching(_batch.IsActive);
+    }
 
     /// <summary>模板一键加入今日待办（快捷窗行；上限已满时提示；模板保留）。</summary>
     public void ApplyTemplateRow(string templateId)
@@ -967,6 +990,9 @@ public sealed class ClusterController : IDisposable
             ShowOpsError(r.Reason);
         }
     }
+
+    /// <summary>toast 提示（主窗底部深色胶囊；批次05①）。</summary>
+    public void ShowToast(string message) => _main.ShowToast(message);
 
     /// <summary>操作失败提示（机器可读 Reason → 用户文案；批次05：原型 toast）。</summary>
     private void ShowOpsError(string? reason) =>
