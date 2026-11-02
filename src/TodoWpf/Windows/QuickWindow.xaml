@@ -78,9 +78,11 @@
                 </Grid>
 
                 <Grid Grid.Row="2">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                    <!-- 槽位常驻（Visible）：滚动条出现/消失时内容宽度恒定、文字不重排
+                         （原型 overflow-y:scroll 口径）；右内边距 0 + 滚动条 8 = 8px，对齐原型 5+3 -->
+                    <ScrollViewer VerticalScrollBarVisibility="Visible"
                                   HorizontalScrollBarVisibility="Disabled"
-                                  Padding="8,4,2,8">
+                                  Padding="8,4,0,8">
                         <ItemsControl x:Name="TemplateList" ItemsSource="{Binding TemplateRows}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
