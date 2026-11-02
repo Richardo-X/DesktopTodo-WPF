@@ -207,6 +207,14 @@ public static class TodoOpsService
         return new(next, true);
     }
 
+    /// <summary>批量删除模板（只删存在的 id；顺序保留；批次05②）。</summary>
+    public static TodoOpsResult DeleteTemplates(AppData data, IReadOnlyCollection<string> ids)
+    {
+        var next = data.DeepCopy();
+        var removed = next.Templates.RemoveAll(t => ids.Contains(t.Id));
+        return removed == 0 ? new(data, false, ReasonNotFound) : new(next, true);
+    }
+
     private static bool ValidContent(string? raw, out string? reason)
     {
         var result = ContentRules.Validate(raw);

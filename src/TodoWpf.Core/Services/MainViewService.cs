@@ -15,7 +15,11 @@ public sealed record TodoRowView(
 
 public sealed record DoneRowView(string Id, string Content, bool Overdue, string CompletedTimeText);
 
-public sealed record TemplateRowView(string Id, string Content);
+public sealed record TemplateRowView(
+    string Id,
+    string Content,
+    bool Selected = false,
+    bool BatchMode = false);
 
 /// <summary>
 /// 三窗列表/计数的展示口径（纯函数，可单测）：
@@ -66,9 +70,13 @@ public static class MainViewService
         return local.ToString("HH:mm");
     }
 
-    public static List<TemplateRowView> TemplateRows(AppData data) =>
+    public static List<TemplateRowView> TemplateRows(AppData data, BatchState? batch = null) =>
         data.Templates
-            .Select(t => new TemplateRowView(t.Id, t.Content))
+            .Select(t => new TemplateRowView(
+                t.Id,
+                t.Content,
+                Selected: batch is { IsActive: true } && batch.IsSelected(t.Id),
+                BatchMode: batch is { IsActive: true }))
             .ToList();
 
     /// <summary>

@@ -218,4 +218,25 @@ public class TodoOpsServiceTests
         Assert.False(r.Ok);
         Assert.Equal(TodoOpsService.ReasonNotFound, r.Reason);
     }
+
+    [Fact]
+    public void 模板批量删除_只删存在的_顺序保留()
+    {
+        var data = new AppData
+        {
+            Templates = [
+                new TemplateItem { Id = "t1", Content = "A", CreatedAt = "2026-10-12T01:00:00.000Z" },
+                new TemplateItem { Id = "t2", Content = "B", CreatedAt = "2026-10-12T01:00:00.000Z" },
+                new TemplateItem { Id = "t3", Content = "C", CreatedAt = "2026-10-12T01:00:00.000Z" },
+            ],
+        };
+
+        var r = TodoOpsService.DeleteTemplates(data, ["t1", "t3", "ghost"]);
+        Assert.True(r.Ok);
+        Assert.Equal(["B"], r.Data.Templates.Select(t => t.Content));
+
+        var again = TodoOpsService.DeleteTemplates(r.Data, ["ghost"]);
+        Assert.False(again.Ok);
+        Assert.Equal(TodoOpsService.ReasonNotFound, again.Reason);
+    }
 }
