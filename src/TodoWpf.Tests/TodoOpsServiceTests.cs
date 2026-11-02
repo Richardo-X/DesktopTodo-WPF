@@ -265,4 +265,31 @@ public class TodoOpsServiceTests
         Assert.False(TodoOpsService.DeleteCompleted(data, "nope").Ok);
         Assert.False(TodoOpsService.DeleteArchived(data, "nope").Ok);
     }
+
+    [Fact]
+    public void 历史按日批量删除_只删指定日_删空分组移除()
+    {
+        var a = Done("A", "2026-10-12T05:00:00.000Z");
+        var b = Done("B", "2026-10-12T06:00:00.000Z");
+        var c = Done("C", "2026-10-11T05:00:00.000Z");
+        var data = new AppData
+        {
+            Archive = new Dictionary<string, List<TodoItem>>
+            {
+                ["2026-10-12"] = [a, b],
+                ["2026-10-11"] = [c],
+            },
+        };
+
+        var r = TodoOpsService.DeleteArchivedMany(data, "2026-10-12", [a.Id, c.Id]); // c 不在本日
+        Assert.True(r.Ok);
+        Assert.Equal(["B"], r.Data.Archive["2026-10-12"].Select(t => t.Content));
+        Assert.True(r.Data.Archive.ContainsKey("2026-10-11"));
+
+        var r2 = TodoOpsService.DeleteArchivedMany(r.Data, "2026-10-12", [r.Data.Archive["2026-10-12"][0].Id]);
+        Assert.True(r2.Ok);
+        Assert.False(r2.Data.Archive.ContainsKey("2026-10-12")); // 删空分组移除
+
+        Assert.False(TodoOpsService.DeleteArchivedMany(data, "2026-10-01", [a.Id]).Ok);
+    }
 }

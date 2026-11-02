@@ -172,6 +172,29 @@ public static class TodoOpsService
         return new(data, false, ReasonNotFound);
     }
 
+    /// <summary>历史窗按日批量删除（只删指定日内存在的 id；删空分组移除；批次05③）。</summary>
+    public static TodoOpsResult DeleteArchivedMany(AppData data, string dateKey, IReadOnlyCollection<string> ids)
+    {
+        if (!data.Archive.TryGetValue(dateKey, out var bucket) || ids.Count == 0)
+        {
+            return new(data, false, ReasonNotFound);
+        }
+
+        var next = data.DeepCopy();
+        var removed = next.Archive[dateKey].RemoveAll(t => ids.Contains(t.Id));
+        if (removed == 0)
+        {
+            return new(data, false, ReasonNotFound);
+        }
+
+        if (next.Archive[dateKey].Count == 0)
+        {
+            next.Archive.Remove(dateKey);
+        }
+
+        return new(next, true);
+    }
+
     /// <summary>从模板一键加入今日待办（模板保留；受待办上限；内容=模板内容）。</summary>
     public static TodoOpsResult ApplyTemplate(AppData data, string templateId, DateTimeOffset now) =>
         data.Templates.FindIndex(t => t.Id == templateId) is var index and >= 0

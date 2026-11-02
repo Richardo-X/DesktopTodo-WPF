@@ -1,0 +1,266 @@
+<Window x:Class="TodoWpf.Windows.HistoryDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="桌面待办"
+        Width="420" Height="560"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False"
+        WindowStartupLocation="Manual"
+        UseLayoutRounding="True" TextOptions.TextRenderingMode="ClearType"
+        FontFamily="{StaticResource Font.Text}"
+        Effect="{StaticResource Effect.DialogShadowMain}">
+
+    <!-- 历史窗（原型 openHistory，420×560）：单日导航（前一天/日期/后一天/回到今天）+
+         动作行（日期·条数·批量删除·排序 / 批量态等高切换）+ 只读列表 + 底部导出区间。
+         双击行 = 只读详情；批量删除走确认框；导出=系统另存为（UTF-8 BOM）。 -->
+    <Window.Resources>
+        <!-- 小按钮（原型 .sbtn 28 高，历史导航/动作行） -->
+        <Style x:Key="HistSbtn" TargetType="Button">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.CardBorder}"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HistSbtnDanger" TargetType="Button" BasedOn="{StaticResource HistSbtn}">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Overdue}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.OverdueEdge}"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.Overdue}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="DatePickerStyle" TargetType="DatePicker">
+            <Setter Property="Width" Value="118"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="6,0"/>
+        </Style>
+
+        <!-- 勾选框（与主窗同款 16×16 r4）：批量行尾槽位用 -->
+        <Style x:Key="HistRowCheck" TargetType="CheckBox">
+            <Setter Property="Width" Value="16"/>
+            <Setter Property="Height" Value="16"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="bd" Width="16" Height="16" CornerRadius="4"
+                                BorderBrush="{DynamicResource Brush.Line}" BorderThickness="1"
+                                Background="Transparent">
+                            <Viewbox x:Name="ck" Width="12" Height="12" Visibility="Collapsed">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="{StaticResource Icon.Check}"
+                                          Stroke="{DynamicResource Brush.AccentFg}" StrokeThickness="2.2"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                </Canvas>
+                            </Viewbox>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Accent}"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+                                <Setter TargetName="ck" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border x:Name="CardRoot" Background="{DynamicResource Brush.Shell}"
+            BorderBrush="{DynamicResource Brush.CardBorder}" BorderThickness="1"
+            CornerRadius="{StaticResource Radius.Dialog}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseDown">
+                <Button x:Name="BackBtn" Style="{StaticResource BackButton}" Tag="{StaticResource Icon.ChevL}"
+                        ToolTip="返回" Click="Back_Click" HorizontalAlignment="Left" Margin="-12,0,0,0"/>
+                <TextBlock Text="历史记录" FontSize="13" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Brush.Text}"
+                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                           IsHitTestVisible="False"/>
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="20,8,20,14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- 单日导航 -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,4,0,0">
+                    <Button x:Name="PrevBtn" Content="前一天" Style="{StaticResource HistSbtn}" Click="Prev_Click"/>
+                    <DatePicker x:Name="CurDatePicker" Margin="6,0" Style="{StaticResource DatePickerStyle}"
+                                SelectedDateFormat="Short" SelectedDateChanged="Date_Changed"/>
+                    <Button x:Name="NextBtn" Content="后一天" Style="{StaticResource HistSbtn}" Click="Next_Click"/>
+                    <Button x:Name="TodayBtn" Content="回到今天" Style="{StaticResource HistSbtn}"
+                            Margin="6,0,0,0" Click="Today_Click"/>
+                </StackPanel>
+
+                <!-- 动作行（36 高，两态等高切换；左组/右组/排序钉行尾） -->
+                <Grid Grid.Row="1" Height="36" Margin="0,4,0,2">
+                    <StackPanel x:Name="NormalBar" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock x:Name="DateTitle" Text="" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Brush.Text}" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="CountText" Text="0 条" FontSize="11"
+                                   Foreground="{DynamicResource Brush.Faint}" Margin="8,0,0,0"
+                                   VerticalAlignment="Center" Typography.NumeralAlignment="Tabular"/>
+                    </StackPanel>
+                    <Button x:Name="BatchEnterBtn" Content="批量删除" Style="{StaticResource HistSbtn}"
+                            Margin="0,0,24,0" Click="BatchEnter_Click" HorizontalAlignment="Right"/>
+                    <StackPanel x:Name="BatchBar" Orientation="Horizontal" Visibility="Hidden"
+                                VerticalAlignment="Center">
+                        <TextBlock x:Name="SelCountText" Text="已选 0 项" FontSize="11"
+                                   Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Center"
+                                   Typography.NumeralAlignment="Tabular"/>
+                        <Button x:Name="BatchDeleteBtn" Content="删除所选" Style="{StaticResource HistSbtnDanger}"
+                                Margin="8,0,0,0" IsEnabled="False" Click="BatchDelete_Click"/>
+                        <Button x:Name="BatchAllBtn" Content="全选" Style="{StaticResource HistSbtn}"
+                                Margin="8,0,0,0" Click="BatchAll_Click"/>
+                        <Button x:Name="BatchExitBtn" Content="返回" Style="{StaticResource HistSbtn}"
+                                Margin="8,0,0,0" Click="BatchExit_Click"/>
+                    </StackPanel>
+                    <Button x:Name="SortBtn" Width="16" Height="16" HorizontalAlignment="Right"
+                            VerticalAlignment="Center" Background="Transparent" BorderThickness="0"
+                            Cursor="Hand" ToolTip="按完成时间排序" Click="Sort_Click">
+                        <Viewbox Width="12" Height="12">
+                            <Canvas Width="24" Height="24">
+                                <Path x:Name="SortIcon" Data="{StaticResource Icon.SortAsc}"
+                                      Stroke="{DynamicResource Brush.Faint}" StrokeThickness="1.8"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            </Canvas>
+                        </Viewbox>
+                    </Button>
+                </Grid>
+
+                <!-- 当日列表 -->
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Visible"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Padding="0,4,0,4">
+                    <StackPanel>
+                        <ItemsControl x:Name="HistList" ItemsSource="{Binding Rows}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Height="36" MouseLeftButtonDown="Row_Click"
+                                          MouseRightButtonDown="Row_Click">
+                                        <Grid.Style>
+                                            <Style TargetType="Grid">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                                                    </Trigger>
+                                                    <DataTrigger Binding="{Binding Selected}" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource Brush.SoftAccent}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Grid.Style>
+                                        <Grid.InputBindings>
+                                            <MouseBinding Gesture="LeftDoubleClick"
+                                                          Command="{Binding DataContext.DetailCommand, ElementName=HistList}"/>
+                                        </Grid.InputBindings>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="16"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Content}" FontSize="13"
+                                                   Foreground="{DynamicResource Brush.Text}"
+                                                   TextTrimming="CharacterEllipsis" Margin="6,0,0,0"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="逾期" FontSize="11"
+                                                   Foreground="{DynamicResource Brush.Overdue}" Margin="0,0,8,0"
+                                                   VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Overdue}" Value="False">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="2" Text="{Binding TimeText}" FontSize="11"
+                                                   Foreground="{DynamicResource Brush.Faint}" Margin="0,0,8,0"
+                                                   VerticalAlignment="Center" Typography.NumeralAlignment="Tabular"/>
+                                        <!-- 批量态行尾勾选框（槽位替换） -->
+                                        <CheckBox Grid.Column="3" Width="16" Height="16"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  IsChecked="{Binding Selected, Mode=OneWay}">
+                                            <CheckBox.Style>
+                                                <Style TargetType="CheckBox" BasedOn="{StaticResource HistRowCheck}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding BatchMode}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </CheckBox.Style>
+                                        </CheckBox>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock x:Name="EmptyText" Text="该日期暂无已完成事项" FontSize="12"
+                                   Foreground="{DynamicResource Brush.Faint}"
+                                   HorizontalAlignment="Center" Margin="0,40,0,0" Visibility="Collapsed"/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- 导出区间（原型 .histexport：顶分隔线；批量中冻结） -->
+                <Border Grid.Row="3" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource Brush.CardBorder}"
+                        Margin="0,10,0,0" Padding="0,10,0,0">
+                    <StackPanel x:Name="ExportPanel" Orientation="Horizontal">
+                        <TextBlock Text="导出" FontSize="11" Foreground="{DynamicResource Brush.Muted}"
+                                   VerticalAlignment="Center"/>
+                        <DatePicker x:Name="FromPicker" Margin="6,0,0,0" Width="102" Height="28"
+                                    FontSize="11" Padding="6,0"/>
+                        <TextBlock Text="至" FontSize="11" Foreground="{DynamicResource Brush.Muted}"
+                                   Margin="6,0" VerticalAlignment="Center"/>
+                        <DatePicker x:Name="ToPicker" Width="102" Height="28" FontSize="11" Padding="6,0"/>
+                        <Button Content="导出 CSV" Style="{StaticResource HistSbtn}"
+                                Margin="6,0,0,0" Click="Export_Click"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

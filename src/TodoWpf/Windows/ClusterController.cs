@@ -769,19 +769,27 @@ public sealed class ClusterController : IDisposable
 
     // ---------- 批次04：待办 CRUD（二级窗 + 原子数据操作） ----------
 
-    /// <summary>有二级窗打开（组件保持弹出；缩进门槛由 TuckStateMachine 承担）。</summary>
+    /// <summary>有二级窗打开（组件保持弹出；缩进门槛由 TuckStateMachine 承担）。
+    /// 模态可嵌套（设置→历史→详情），按计数开关。</summary>
     public bool IsModalOpen { get; private set; }
+
+    private int _modalDepth;
 
     private void BeginModal()
     {
+        _modalDepth++;
         IsModalOpen = true;
         _tuck.SetChildOpen(true);
     }
 
     private void EndModal()
     {
-        IsModalOpen = false;
-        _tuck.SetChildOpen(false);
+        _modalDepth = Math.Max(0, _modalDepth - 1);
+        IsModalOpen = _modalDepth > 0;
+        if (!IsModalOpen)
+        {
+            _tuck.SetChildOpen(false);
+        }
     }
 
     /// <summary>CRUD 成功后统一走这里：替换数据 → 刷新三窗 → 防抖落盘。</summary>
@@ -858,6 +866,73 @@ public sealed class ClusterController : IDisposable
         if (r.Ok)
         {
             ApplyOps(r);
+        }
+    }
+
+    // ---------- 历史窗（批次05③） ----------
+
+    /// <summary>当前数据快照（历史窗每次渲染时读取）。</summary>
+    public AppData Data => _data;
+
+    /// <summary>打开历史记录（设置页「打开」；模态嵌套于设置窗）。</summary>
+    public void OpenHistory()
+    {
+        BeginModal();
+        HistoryDialog.Show(this);
+        EndModal();
+    }
+
+    /// <summary>历史窗按日批量删除（确认框由历史窗负责）。</summary>
+    public bool DeleteArchivedMany(string dateKey, IReadOnlyCollection<string> ids)
+    {
+        var r = TodoOpsService.DeleteArchivedMany(_data, dateKey, ids);
+        if (r.Ok)
+        {
+            ApplyOps(r);
+        }
+
+        return r.Ok;
+    }
+
+    /// <summary>导出历史 CSV（系统另存为；UTF-8 BOM；需求 §2.7）。</summary>
+    public void ExportHistoryCsv(string from, string to)
+    {
+        if (string.CompareOrdinal(from, to) > 0)
+        {
+            ShowToast("起始日期不能晚于结束日期");
+            return;
+        }
+
+        var csv = CsvService.Export(_data, from, to);
+        if (csv is null)
+        {
+            ShowToast("该区间暂无记录");
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            FileName = CsvService.ExportFileName(from, to),
+            Filter = "CSV 文件 (*.csv)|*.csv",
+            DefaultExt = ".csv",
+        };
+        if (dialog.ShowDialog(_main) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            System.IO.File.WriteAllText(dialog.FileName, csv, new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+            ShowToast("已导出 CSV");
+        }
+        catch (System.IO.IOException)
+        {
+            ShowToast("文件被占用，请关闭后重试");
+        }
+        catch (System.UnauthorizedAccessException)
+        {
+            ShowToast("没有写入权限，请换一个位置");
         }
     }
 
