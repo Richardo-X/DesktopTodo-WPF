@@ -46,6 +46,7 @@ public class TuckStateMachineTests
                      new Action<TuckStateMachine>(s => s.SetDragging(true)),
                      new Action<TuckStateMachine>(s => s.SetResizing(true)),
                      new Action<TuckStateMachine>(s => s.SetChildOpen(true)),
+                     new Action<TuckStateMachine>(s => s.SetBatching(true)),
                  })
         {
             var m = NewMachine();
@@ -56,6 +57,24 @@ public class TuckStateMachineTests
 
             Assert.Empty(m.DrainCommands());
         }
+    }
+
+    [Fact]
+    public void BatchingOn_CancelsPendingTuck_AndUnblockingRestores()
+    {
+        var m = NewMachine();
+        m.SetSnapped(true);
+        m.NotifyPointerLeft(T0);
+        m.SetBatching(true); // 批量中：待缩取消
+        m.Tick(T0.AddSeconds(5));
+
+        Assert.Empty(m.DrainCommands());
+
+        m.SetBatching(false); // 退出批量后指针仍在窗外 → 重新计时缩进
+        m.NotifyPointerLeft(T0.AddSeconds(6));
+        m.Tick(T0.AddSeconds(6).AddMilliseconds(500));
+
+        Assert.Equal([TuckCommand.Tuck], m.DrainCommands());
     }
 
     [Fact]

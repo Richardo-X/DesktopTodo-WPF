@@ -44,6 +44,30 @@ public sealed class BatchState
         }
     }
 
+    /// <summary>
+    /// 「全选」切换（原型 batchAll 口径）：传入集合**全部已选中** → 清空（按钮此时文案=取消全选）；
+    /// 否则全部选中。未进行中时忽略。
+    /// </summary>
+    public void ToggleAll(IEnumerable<string> ids)
+    {
+        if (!IsActive)
+        {
+            return;
+        }
+
+        var list = ids as IReadOnlyCollection<string> ?? ids.ToList();
+        if (list.Count > 0 && list.All(IsSelected))
+        {
+            _selected.Clear();
+            return;
+        }
+
+        foreach (var id in list)
+        {
+            _selected.Add(id);
+        }
+    }
+
     /// <summary>当前选中的 id 快照（删除用）。</summary>
     public IReadOnlyCollection<string> SelectedIds => _selected.ToList();
 

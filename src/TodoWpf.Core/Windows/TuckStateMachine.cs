@@ -37,6 +37,7 @@ public sealed class TuckStateMachine
     private bool _snapped;
     private bool _locked;
     private bool _childOpen;
+    private bool _batching;
     private bool _dragging;
     private bool _resizing;
     private bool _pointerInside;
@@ -108,6 +109,19 @@ public sealed class TuckStateMachine
                     _holdUntil = null;
                     Issue(TuckCommand.EndHold);
                 }
+            }
+        }
+    }
+
+    /// <summary>批量删除进行中（R1 沿用门槛：批量中不缩进）。开启时取消待缩。</summary>
+    public void SetBatching(bool batching)
+    {
+        lock (_gate)
+        {
+            _batching = batching;
+            if (batching)
+            {
+                _pendingTuckAt = null;
             }
         }
     }
@@ -256,7 +270,7 @@ public sealed class TuckStateMachine
 
     // ---------- 内部 ----------
 
-    private bool CanTuck() => _snapped && !_locked && !_childOpen && !_dragging && !_resizing;
+    private bool CanTuck() => _snapped && !_locked && !_childOpen && !_batching && !_dragging && !_resizing;
 
     private void Issue(TuckCommand command)
     {

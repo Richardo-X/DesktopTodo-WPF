@@ -55,4 +55,42 @@ public class BatchStateTests
         b.Toggle("x");
         Assert.Empty(b.SelectedIds);
     }
+
+    // ---------- 全选切换（批次05①，原型 batchAll 口径） ----------
+
+    [Fact]
+    public void 全选_部分选中时_全选集合()
+    {
+        var b = new BatchState();
+        b.Enter("todos");
+        b.Toggle("a");
+        b.ToggleAll(["a", "b", "c"]);
+
+        Assert.Equal(3, b.SelectedCount);
+        Assert.True(b.IsSelected("b"));
+    }
+
+    [Fact]
+    public void 全选_全部已选中时_清空为取消全选()
+    {
+        var b = new BatchState();
+        b.Enter("todos");
+        b.ToggleAll(["a", "b"]);
+        b.ToggleAll(["a", "b"]); // 再点 = 取消全选
+
+        Assert.Empty(b.SelectedIds);
+        Assert.False(b.CanDelete);
+    }
+
+    [Fact]
+    public void 全选_未进入时忽略_空集合无效果()
+    {
+        var b = new BatchState();
+        b.ToggleAll(["x"]); // 未进入：忽略
+        Assert.False(b.IsActive);
+
+        b.Enter("todos");
+        b.ToggleAll([]); // 空集合：无效果（原型 sel.size===0 时清空亦无效果）
+        Assert.Empty(b.SelectedIds);
+    }
 }
