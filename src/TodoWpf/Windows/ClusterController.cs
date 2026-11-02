@@ -968,19 +968,17 @@ public sealed class ClusterController : IDisposable
         }
     }
 
-    /// <summary>操作失败提示（机器可读 Reason → 用户文案；批次05 换原型 toast）。</summary>
-    private static void ShowOpsError(string? reason) =>
-        System.Windows.MessageBox.Show(
-            reason switch
-            {
-                TodoOpsService.ReasonLimitReached => $"待办数量已达上限（{TemplateLimit.Max} 条），无法添加",
-                TodoOpsService.ReasonTemplateLimitReached => "模板数量已达上限（10 个）",
-                TodoOpsService.ReasonDuplicateTemplate => "已存在相同内容的模板",
-                TodoOpsService.ReasonEmptyContent => "内容不能为空",
-                TodoOpsService.ReasonTooLong => "内容超过 300 字",
-                _ => "操作失败",
-            },
-            "桌面待办", MessageBoxButton.OK, MessageBoxImage.Information);
+    /// <summary>操作失败提示（机器可读 Reason → 用户文案；批次05：原型 toast）。</summary>
+    private void ShowOpsError(string? reason) =>
+        _main.ShowToast(reason switch
+        {
+            TodoOpsService.ReasonLimitReached => $"待办数量已达上限（{TemplateLimit.Max} 条），无法添加",
+            TodoOpsService.ReasonTemplateLimitReached => "模板数量已达上限（10 个）",
+            TodoOpsService.ReasonDuplicateTemplate => "已存在相同内容的模板",
+            TodoOpsService.ReasonEmptyContent => "内容不能为空",
+            TodoOpsService.ReasonTooLong => "内容超过 300 字",
+            _ => "操作失败",
+        });
 
     /// <summary>＋ 新建待办（主窗右上角 ＋；空内容时新建置灰）。</summary>
     public void OpenNewTodo()

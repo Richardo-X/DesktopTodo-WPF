@@ -65,4 +65,8 @@
     <SolidColorBrush x:Key="Brush.Line" Color="#421E232A"/>
     <SolidColorBrush x:Key="Brush.DoneStamp" Color="#FF5C636C"/>
 
+    <!-- toast 提示（原型 .toast：深色胶囊，日夜同值；fg #eef3fa） -->
+    <SolidColorBrush x:Key="Brush.Toast" Color="#F014181E"/>
+    <SolidColorBrush x:Key="Brush.ToastFg" Color="#FFEEF3FA"/>
+
 </ResourceDictionary>

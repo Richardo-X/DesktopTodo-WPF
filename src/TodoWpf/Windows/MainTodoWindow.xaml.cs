@@ -23,6 +23,32 @@ public partial class MainTodoWindow : Window
         DataContext = this;
         EditRowCommand = new RelayCommand<TodoRowView>(row => row is not null, row => Controller?.OpenEditTodo(row.Id));
         WindowShell.ApplyFixed(this);
+        _toastTimer.Tick += (_, _) =>
+        {
+            _toastTimer.Stop();
+            ToastPill.Visibility = Visibility.Collapsed;
+        };
+    }
+
+    private readonly System.Windows.Threading.DispatcherTimer _toastTimer = new()
+    {
+        Interval = TimeSpan.FromMilliseconds(2200),
+    };
+
+    /// <summary>
+    /// toast 提示（原型 .toasts 口径）：底部居中深色胶囊，0.18s 淡入上移，
+    /// 2.2s 后消失（原型到期直接移除，无退场动画）。重复调用重置计时并换文案。
+    /// </summary>
+    public void ShowToast(string message)
+    {
+        ToastText.Text = message;
+        ToastPill.Visibility = Visibility.Visible;
+        var fadeIn = new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180));
+        var riseIn = new System.Windows.Media.Animation.DoubleAnimation(6, 0, TimeSpan.FromMilliseconds(180));
+        ToastPill.BeginAnimation(OpacityProperty, fadeIn);
+        ToastShift.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty, riseIn);
+        _toastTimer.Stop();
+        _toastTimer.Start();
     }
 
     public event EventHandler<MouseButtonEventArgs>? TitlebarPressed;
