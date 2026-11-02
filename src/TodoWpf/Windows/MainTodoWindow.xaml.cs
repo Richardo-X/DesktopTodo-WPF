@@ -276,6 +276,38 @@ public partial class MainTodoWindow : Window
     private void Grip_MouseDown(object sender, MouseButtonEventArgs e) =>
         _drag.Begin((FrameworkElement)sender, e);
 
+    // ---------- 悬停气泡（批次05①） ----------
+
+    private void RowText_MouseEnter(object sender, MouseEventArgs e)
+    {
+        if (sender is TextBlock tb)
+        {
+            Controller?.HoverText(tb, RowOf(tb));
+        }
+    }
+
+    private void RowText_MouseLeave(object sender, MouseEventArgs e) => Controller?.EndHover();
+
+    /// <summary>列表一滚就收气泡，不停在滚走的行旁（原型 scroll→hideBubble）。</summary>
+    private void ListScroll_ScrollChanged(object sender, ScrollChangedEventArgs e) => Controller?.EndHover();
+
+    /// <summary>行容器：文本向上找到首个 Border（待办行卡）或 Grid（已完成行/模板行）。</summary>
+    private static FrameworkElement RowOf(TextBlock tb)
+    {
+        DependencyObject node = tb;
+        while (System.Windows.Media.VisualTreeHelper.GetParent(node) is { } parent)
+        {
+            if (parent is Border or System.Windows.Controls.Grid)
+            {
+                return (FrameworkElement)parent;
+            }
+
+            node = parent;
+        }
+
+        return tb;
+    }
+
     /// <summary>协调器（创建后注入）。</summary>
     public ClusterController? Controller { get; set; }
 }

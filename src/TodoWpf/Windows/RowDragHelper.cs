@@ -66,6 +66,8 @@ internal sealed class RowDragHelper
             return;
         }
 
+        _window.Controller?.EndHover(); // 拖动开始，气泡收起（原型 pointerdown hideBubble）
+
         var generator = _window.TodoList.ItemContainerGenerator;
         var presenters = new List<FrameworkElement>(_window.Rows.Count);
         var cards = new List<Border>(_window.Rows.Count);

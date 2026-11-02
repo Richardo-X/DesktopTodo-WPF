@@ -75,6 +75,9 @@ public partial class QuickWindow : Window
         }
     }
 
+    /// <summary>内容缩放比（气泡定位/尺寸换算用）。</summary>
+    public double ContentScaleFactor => ((ScaleTransform)ContentScale).ScaleX;
+
     /// <summary>整批刷新模板行 + 计数 + 空态。</summary>
     public void SetTemplateRows(IReadOnlyList<TemplateRowView> rows, int maxTemplates)
     {
@@ -118,6 +121,35 @@ public partial class QuickWindow : Window
         {
             Controller?.ApplyTemplateRow(row.Id);
         }
+    }
+
+    // ---------- 悬停气泡（批次05①） ----------
+
+    private void TplText_MouseEnter(object sender, MouseEventArgs e)
+    {
+        if (sender is TextBlock tb)
+        {
+            Controller?.HoverText(tb, RowOf(tb));
+        }
+    }
+
+    private void TplText_MouseLeave(object sender, MouseEventArgs e) => Controller?.EndHover();
+
+    /// <summary>模板行容器：文本向上找首个 Grid（行根）。</summary>
+    private static FrameworkElement RowOf(TextBlock tb)
+    {
+        DependencyObject node = tb;
+        while (System.Windows.Media.VisualTreeHelper.GetParent(node) is { } parent)
+        {
+            if (parent is System.Windows.Controls.Grid)
+            {
+                return (FrameworkElement)parent;
+            }
+
+            node = parent;
+        }
+
+        return tb;
     }
 
     /// <summary>卡面内容。</summary>

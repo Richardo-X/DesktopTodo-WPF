@@ -94,7 +94,8 @@
                                         <TextBlock Text="{Binding Content}" FontSize="13"
                                                    Foreground="{DynamicResource Brush.Text}"
                                                    TextTrimming="CharacterEllipsis"
-                                                   VerticalAlignment="Center" Margin="6,0,8,0"/>
+                                                   VerticalAlignment="Center" Margin="6,0,8,0"
+                                                   MouseEnter="TplText_MouseEnter" MouseLeave="TplText_MouseLeave"/>
                                         <Button Grid.Column="1" Width="22" Height="22"
                                                 Background="Transparent" BorderThickness="0"
                                                 Cursor="Hand" ToolTip="加入今日待办"

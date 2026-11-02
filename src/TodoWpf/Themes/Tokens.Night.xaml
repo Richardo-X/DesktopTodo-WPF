@@ -68,4 +68,9 @@
     <SolidColorBrush x:Key="Brush.Toast" Color="#F014181E"/>
     <SolidColorBrush x:Key="Brush.ToastFg" Color="#FFEEF3FA"/>
 
+    <!-- 悬停气泡（原型 .bubble）：night bg #3A3A3C / fg #F0F0F0 / border rgba(255,255,255,.11)→#1CFFFFFF -->
+    <SolidColorBrush x:Key="Brush.BubbleBg" Color="{StaticResource Color.BubbleBg}"/>
+    <SolidColorBrush x:Key="Brush.BubbleFg" Color="{StaticResource Color.BubbleFg}"/>
+    <SolidColorBrush x:Key="Brush.BubbleBorder" Color="#1CFFFFFF"/>
+
 </ResourceDictionary>

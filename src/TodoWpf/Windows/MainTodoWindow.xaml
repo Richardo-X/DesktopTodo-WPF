@@ -331,7 +331,8 @@
 
                     <ScrollViewer x:Name="ListScroll" Grid.Row="2" VerticalScrollBarVisibility="Visible"
                                   HorizontalScrollBarVisibility="Disabled"
-                                  Padding="12,0,4,26">
+                                  Padding="12,0,4,26"
+                                  ScrollChanged="ListScroll_ScrollChanged">
                         <StackPanel>
                             <ItemsControl x:Name="TodoList" ItemsSource="{Binding Rows}">
                                 <ItemsControl.ItemTemplate>
@@ -366,7 +367,8 @@
                                             </Viewbox>
                                             <TextBlock Grid.Column="1" Text="{Binding Content}"
                                                        FontSize="13" TextTrimming="CharacterEllipsis"
-                                                       VerticalAlignment="Center" Margin="8,0,8,0">
+                                                       VerticalAlignment="Center" Margin="8,0,8,0"
+                                                       MouseEnter="RowText_MouseEnter" MouseLeave="RowText_MouseLeave">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
@@ -499,7 +501,8 @@
                                                     <TextBlock Grid.Column="2" Text="{Binding Content}"
                                                                FontSize="13" Foreground="{DynamicResource Brush.Muted}"
                                                                TextTrimming="CharacterEllipsis"
-                                                               VerticalAlignment="Center" Margin="8,0,8,0"/>
+                                                               VerticalAlignment="Center" Margin="8,0,8,0"
+                                                               MouseEnter="RowText_MouseEnter" MouseLeave="RowText_MouseLeave"/>
                                                     <CheckBox Grid.Column="3" Style="{StaticResource RowCheck}"
                                                               IsChecked="True" IsEnabled="False"
                                                               VerticalAlignment="Center"/>

@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -28,10 +29,14 @@ public sealed class ClusterController : IDisposable
     private readonly MainTodoWindow _main;
     private readonly QuickWindow _quick;
     private readonly TuckBarWindow _tuckBar;
+    private readonly BubbleWindow _bubble;
     private readonly TuckStateMachine _tuck = new();
 
     private readonly DispatcherTimer _tuckTick;
     private readonly DispatcherTimer _clock;
+    private readonly DispatcherTimer _hoverTimer;
+    private TextBlock? _hoverTextEl;
+    private FrameworkElement? _hoverRow;
 
     private WinPoint _anchor;
     private double _scale = 1;
@@ -60,6 +65,14 @@ public sealed class ClusterController : IDisposable
         _main = new MainTodoWindow();
         _quick = new QuickWindow();
         _tuckBar = new TuckBarWindow();
+        _bubble = new BubbleWindow();
+
+        // 悬停气泡（批次05①）：300ms 延迟（用户 2026-11-03 裁定；原型 500ms）
+        _hoverTimer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromMilliseconds(300),
+        };
+        _hoverTimer.Tick += (_, _) => ShowHoverBubble();
 
         // 不进任务栏/Alt+Tab（需求 §2.2）：ShowInTaskbar=false 只管任务栏，Alt+Tab 需 WS_EX_TOOLWINDOW
         foreach (var window in (Window[])[_main, _quick, _tuckBar])
@@ -145,6 +158,7 @@ public sealed class ClusterController : IDisposable
         RefreshAllViews();
         UpdateClock();
         ApplyLayout();
+        _bubble.Show(); // 透明常驻：以 Opacity=0 待命，规避显示时闪现
 
         // 显隐交给 ApplyLayout（按存档的面板开关决定）——此前三个窗口无条件 Show()，
         // 会把"已关闭"的面板以 WPF 默认尺寸（1536×844）显示出来（Viewbox 又把内容放大填满）= 启动巨窗 bug。
@@ -158,6 +172,7 @@ public sealed class ClusterController : IDisposable
     /// </summary>
     public void RefreshAllViews()
     {
+        EndHover(); // 行整表重建，悬停目标已失效
         var todayKey = LocalDate.Key(DateTimeOffset.Now);
         _main.SetRows(MainViewService.TodoRows(_data, todayKey, _batch));
         _main.SetCount(_data.Todos.Count, _data.Settings.MaxItems);
@@ -353,6 +368,7 @@ public sealed class ClusterController : IDisposable
             return;
         }
 
+        EndHover(); // 整组拖动时气泡悬空已失锚
         _dragging = true;
         _dragStartAnchor = _anchor;
         _dragStartMouse = ToScreen(window, e);
@@ -437,6 +453,7 @@ public sealed class ClusterController : IDisposable
         }
 
         _resizing = true;
+        EndHover(); // 缩放期间窗口矩形在变，气泡失锚
         _resizeStartMouse = ToScreen(_main, e);
         _resizeStartMainWidth = _main.ActualWidth;
         _tuck.SetResizing(true);
@@ -781,6 +798,46 @@ public sealed class ClusterController : IDisposable
         _ = _repository.SaveAsync(_data);
     }
 
+    // ---------- 悬停气泡（批次05①） ----------
+
+    /// <summary>行文本悬停进入：300ms 后若内容确实被截断则显示全文气泡。</summary>
+    public void HoverText(TextBlock textElement, FrameworkElement row)
+    {
+        _hoverTextEl = textElement;
+        _hoverRow = row;
+        _hoverTimer.Stop();
+        _hoverTimer.Start();
+    }
+
+    /// <summary>悬停结束（移出/滚动/拖动/刷新/隐藏窗）。瞬时隐藏，不淡出（原型口径）。</summary>
+    public void EndHover()
+    {
+        _hoverTimer.Stop();
+        _hoverTextEl = null;
+        _hoverRow = null;
+        _bubble.Hide();
+    }
+
+    private void ShowHoverBubble()
+    {
+        _hoverTimer.Stop();
+        if (_hoverTextEl is not { } tb || _hoverRow is null || _clusterHidden || _batch.IsActive)
+        {
+            return;
+        }
+
+        if (!BubbleWindow.IsTruncated(tb, tb.Text))
+        {
+            return; // 未截断：全文已在行内，不弹
+        }
+
+        // 缩放比跟所属窗：模板窗行用模板窗缩放，其余按主窗（原型 --bubble-scale 口径）
+        var scale = ReferenceEquals(Window.GetWindow(tb), _quick)
+            ? _quick.ContentScaleFactor
+            : _main.ContentScaleFactor;
+        _bubble.Show(_hoverRow, tb.Text, scale, MonitorLayout.WorkAreaDips(_main));
+    }
+
     /// <summary>勾选完成（主窗行）。</summary>
     public void CompleteRow(string id)
     {
@@ -1110,6 +1167,7 @@ public sealed class ClusterController : IDisposable
 
     public void HideClusterToTray()
     {
+        EndHover();
         _clusterHidden = true;
         _main.Hide();
         _quick.Hide();
