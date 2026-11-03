@@ -108,9 +108,30 @@ public partial class BubbleWindow : Window
 
         Left = x;
         Top = y;
+        ReassertTopmost();
 
         BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(150)));
     }
+
+    /// <summary>显示时重申置顶：与主窗同为 TOPMOST 时后显者不保证在上（验收 1.4 实证）。</summary>
+    private void ReassertTopmost()
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd == IntPtr.Zero)
+        {
+            return;
+        }
+
+        SetWindowPos(hwnd, HwndTopmost, 0, 0, 0, 0, SwpNoSize | SwpNoMove | SwpNoActivate);
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
+
+    private static readonly IntPtr HwndTopmost = new(-1);
+    private const uint SwpNoSize = 0x0001;
+    private const uint SwpNoMove = 0x0002;
+    private const uint SwpNoActivate = 0x0010;
 
     /// <summary>隐藏（瞬时归零；窗口保持常驻，规避再显示的闪现）。</summary>
     public new void Hide()

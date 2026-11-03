@@ -122,30 +122,13 @@ public partial class MainTodoWindow : Window
 
     private void RowComplete_Checked(object sender, RoutedEventArgs e)
     {
-        if ((sender as System.Windows.Controls.CheckBox)?.DataContext is not TodoRowView row)
+        // 批量中勾选框仅作指示（IsHitTestVisible=False），但绑定设值仍会触发本事件——切选统一走 Row_Click
+        if (InBatch || (sender as System.Windows.Controls.CheckBox)?.DataContext is not TodoRowView row)
         {
             return;
         }
 
-        if (InBatch)
-        {
-            Controller?.ToggleBatchSelection(row.Id);
-        }
-        else
-        {
-            Controller?.CompleteRow(row.Id);
-        }
-    }
-
-    /// <summary>批量中取消选中（勾选框两个方向都要算切换；常规态不会触发——行尾框常态恒未勾）。</summary>
-    private void RowComplete_Unchecked(object sender, RoutedEventArgs e)
-    {
-        if (!InBatch || (sender as System.Windows.Controls.CheckBox)?.DataContext is not TodoRowView row)
-        {
-            return;
-        }
-
-        Controller?.ToggleBatchSelection(row.Id);
+        Controller?.CompleteRow(row.Id);
     }
 
     /// <summary>批量中点行任意处 = 切换选中（原型批量分支整行可点）。</summary>
@@ -177,6 +160,20 @@ public partial class MainTodoWindow : Window
         DoneBlock.Opacity = visible ? 0.4 : 1.0;
         DoneBlock.IsHitTestVisible = !visible;
         SettingsBtn.IsEnabled = !visible;
+    }
+
+    /// <summary>批量切选只更新该行视觉：替换单条投影触发单容器重生成，
+    /// 避免整表重建造成的绑定事件风暴与悬停丢失。</summary>
+    public void UpdateRowSelection(string id, bool selected)
+    {
+        for (var i = 0; i < Rows.Count; i++)
+        {
+            if (Rows[i].Id == id)
+            {
+                Rows[i] = Rows[i] with { Selected = selected };
+                return;
+            }
+        }
     }
 
     /// <summary>是否处于批量模式（勾选行为分支用）。</summary>

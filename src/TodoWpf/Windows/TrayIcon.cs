@@ -27,26 +27,9 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add("退出", null, (_, _) => _ = ExitAsync());
         _notifyIcon.ContextMenuStrip = menu;
 
-        // 单击恢复（体验说明书 ④.1）：隐藏态下单击弹回。250ms 延迟区分双击
-        // （双击会先触发一次 Click，若立即恢复则双击切换会被抖成两次）。
-        _clickTimer.Interval = 250;
-        _clickTimer.Tick += (_, _) =>
-        {
-            _clickTimer.Stop();
-            if (_controller.IsClusterHidden)
-            {
-                _controller.ShowClusterFromTray();
-            }
-        };
-        _notifyIcon.Click += (_, _) => _clickTimer.Start();
-        _notifyIcon.DoubleClick += (_, _) =>
-        {
-            _clickTimer.Stop(); // 双击=切换（需求 §2.2），吞掉刚才那次单击
-            ToggleVisible();
-        };
+        // 显隐切换 = 双击托盘（用户 2026-11-04 裁定：取消单击恢复，回归需求 §2.2 三途径口径）
+        _notifyIcon.DoubleClick += (_, _) => ToggleVisible();
     }
-
-    private readonly System.Windows.Forms.Timer _clickTimer = new();
 
     private void ToggleVisible()
     {

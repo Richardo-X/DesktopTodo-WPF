@@ -21,11 +21,22 @@
                         <Border x:Name="bd" Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard Storyboard="{StaticResource Anim.PressIn}"/>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard Storyboard="{StaticResource Anim.PressOut}"/>
+                                </Trigger.ExitActions>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -167,7 +178,7 @@
                                        Typography.NumeralAlignment="Tabular"/>
                         </Border>
                         <Button x:Name="AddTemplateBtn" Style="{StaticResource AddBtn}"
-                                Margin="-2,0,0,0" ToolTip="新建模板" Click="AddTemplate_Click">
+                                Margin="6,0,0,0" ToolTip="新建模板" Click="AddTemplate_Click">
                             <Viewbox Width="15" Height="15">
                                 <Canvas Width="24" Height="24">
                                     <Path Data="{StaticResource Icon.Plus}"
@@ -220,9 +231,10 @@
                         <ItemsControl x:Name="TemplateList" ItemsSource="{Binding TemplateRows}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Height="36" MouseLeftButtonDown="TplRow_Click">
-                                        <Grid.Style>
-                                            <Style TargetType="Grid">
+                                    <!-- 行容器用 Border 承载圆角（Grid 无圆角）：悬停/选中底 6px 倒角（原型 .tplrow r=radius-row） -->
+                                    <Border CornerRadius="6" MouseLeftButtonDown="TplRow_Click">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
                                                 <Setter Property="Background" Value="Transparent"/>
                                                 <Style.Triggers>
                                                     <!-- 行悬停（原型 .tplrow:hover） -->
@@ -235,7 +247,8 @@
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
-                                        </Grid.Style>
+                                        </Border.Style>
+                                        <Grid Height="36">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="22"/>
@@ -313,9 +326,11 @@
                                         </CheckBox>
                                         <Grid.InputBindings>
                                             <MouseBinding Gesture="LeftDoubleClick"
-                                                          Command="{Binding DataContext.EditTemplateCommand, ElementName=TemplateList}"/>
+                                                          Command="{Binding DataContext.EditTemplateCommand, ElementName=TemplateList}"
+                                                          CommandParameter="{Binding}"/>
                                         </Grid.InputBindings>
-                                    </Grid>
+                                        </Grid>
+                                    </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

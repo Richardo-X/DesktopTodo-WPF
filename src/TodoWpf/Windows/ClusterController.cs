@@ -88,6 +88,13 @@ public sealed class ClusterController : IDisposable
         _quick.TitlebarPressed += OnTitlebarPressed;
         _main.ScaleGripHandle.MouseLeftButtonDown += ScaleGrip_MouseDown;
         _tuckBar.BarHit += (_, _) => OnPointerEnter();
+        // 白条也参与"指针在内"判定：从白条直接移到遮挡窗时，应用窗从未获得悬停、
+        // 不会发 MouseLeave——若白条自己不发离开，指针在内将永久卡死（验收 4.2 实证）。
+        _tuckBar.MouseLeave += (_, _) =>
+        {
+            _tuck.SetPointerInside(false);
+            _tuck.NotifyPointerLeft(DateTimeOffset.Now);
+        };
 
         // 指针进出 → 状态机（窗口级，被遮挡时系统不派发 = 真实命中语义）
         foreach (var window in (Window[])[_main, _quick])
@@ -707,17 +714,19 @@ public sealed class ClusterController : IDisposable
         var total = targets.Count;
         if (total == 0)
         {
-            if (slideOut)
-            {
-                _tuck.NotifyTuckCompleted();
-                _tuckBar.Show();
-            }
-            else
-            {
-                _tuck.NotifyUntuckCompleted();
-            }
+                if (slideOut)
+                {
+                    _tuck.NotifyTuckCompleted();
+                    _tuckBar.Show();
+                }
+                else
+                {
+                    // 弹出完成即收白条（此前只在下次缩进开始时隐藏，导致"弹出后白条仍挂着"）
+                    _tuck.NotifyUntuckCompleted();
+                    _tuckBar.Hide();
+                }
 
-            return;
+                return;
         }
 
         foreach (var (window, dockedTop, hiddenTop) in targets)
@@ -739,6 +748,7 @@ public sealed class ClusterController : IDisposable
                 else
                 {
                     _tuck.NotifyUntuckCompleted();
+                    _tuckBar.Hide();
                 }
             });
         }
@@ -1266,11 +1276,12 @@ public sealed class ClusterController : IDisposable
         PushBatchBar();
     }
 
-    /// <summary>批量中：切换某行选中态。</summary>
+    /// <summary>批量中：切换某行选中态（轻量推送：计数条+该行视觉，不整表重建）。</summary>
     public void ToggleBatchSelection(string id)
     {
         _batch.Toggle(id);
-        PushBatchBar();
+        _main.SetBatchBar(_batch.IsActive, _batch.SelectedCount, _batch.CanDelete, _data.Todos.Count);
+        _main.UpdateRowSelection(id, _batch.IsSelected(id));
     }
 
     /// <summary>「全选 / 取消全选」切换（原型 batchAll 口径）。</summary>

@@ -21,11 +21,23 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                            </Trigger>
+                            <!-- 按压体感（原型 .ib:active）：0.96 缩放缓出 -->
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard Storyboard="{StaticResource Anim.PressIn}"/>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard Storyboard="{StaticResource Anim.PressOut}"/>
+                                </Trigger.ExitActions>
                             </Trigger>
                             <!-- 禁用（批量态冻结设置入口，原型 .frozen-btn：.45 置灰） -->
                             <Trigger Property="IsEnabled" Value="False">
@@ -51,11 +63,22 @@
                         <Border x:Name="bd" Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard Storyboard="{StaticResource Anim.PressIn}"/>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard Storyboard="{StaticResource Anim.PressOut}"/>
+                                </Trigger.ExitActions>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -213,7 +236,8 @@
                         <Button x:Name="TuckLockBtn" Style="{StaticResource Ib}" ToolTip="缩进锁定" Click="TuckLockBtn_Click">
                             <Viewbox Width="14" Height="14">
                                 <Canvas Width="24" Height="24">
-                                    <Path Data="{StaticResource Icon.TuckLock}" Stroke="{DynamicResource Brush.Faint}"
+                                    <Path Data="{StaticResource Icon.TuckLock}"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                           StrokeThickness="1.8"
                                           StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                                 </Canvas>
@@ -345,26 +369,31 @@
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="16"/>
                                             </Grid.ColumnDefinitions>
-                                            <Viewbox Width="14" Height="14" Margin="-5,0,0,0"
-                                                     VerticalAlignment="Center"
-                                                     MouseLeftButtonDown="Grip_MouseDown">
-                                                <Viewbox.Style>
-                                                    <Style TargetType="Viewbox">
-                                                        <Setter Property="Cursor" Value="Hand"/>
+                                            <!-- 拖拽把手：透明命中区占满整列（原型 .grip 命中含 ±3px 延展），
+                                                 点阵居中于"卡片左缘↔文字左缘"之间（用户 2026-11-03 裁定）；
+                                                 此前命中=图标 6 个小点（每点约 2px）导致几乎点不中。 -->
+                                            <Border Grid.Column="0" Width="25" Margin="-3,0,0,0"
+                                                    Background="Transparent" Cursor="Hand"
+                                                    MouseLeftButtonDown="Grip_MouseDown"
+                                                    HorizontalAlignment="Left">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
                                                         <Style.Triggers>
-                                                            <!-- 批量中点阵禁用（原型 .grip.disabled；WPF 光标无 NotAllowed，用 No=⊘） -->
+                                                            <!-- 批量中点阵禁用（原型 .grip.disabled） -->
                                                             <DataTrigger Binding="{Binding BatchMode}" Value="True">
                                                                 <Setter Property="Opacity" Value="0.4"/>
                                                                 <Setter Property="Cursor" Value="No"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
-                                                </Viewbox.Style>
-                                                <Canvas Width="24" Height="24">
-                                                    <Path Data="{StaticResource Icon.Grip}"
-                                                          Fill="{DynamicResource Brush.Faint}"/>
-                                                </Canvas>
-                                            </Viewbox>
+                                                </Border.Style>
+                                                <Viewbox Width="14" Height="14">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Data="{StaticResource Icon.Grip}"
+                                                              Fill="{DynamicResource Brush.Faint}"/>
+                                                    </Canvas>
+                                                </Viewbox>
+                                            </Border>
                                             <TextBlock Grid.Column="1" Text="{Binding Content}"
                                                        FontSize="13" TextTrimming="CharacterEllipsis"
                                                        VerticalAlignment="Center" Margin="8,0,8,0"
@@ -396,16 +425,17 @@
                                                 </TextBlock.Style>
                                             </TextBlock>
                                             <CheckBox Grid.Column="3" VerticalAlignment="Center"
-                                                      Checked="RowComplete_Checked" Unchecked="RowComplete_Unchecked">
-                                                <!-- 批量态同一颗行尾勾选框变"选中"指示（原型 .cb.selecting）：
-                                                     IsChecked 由样式按 BatchMode 切数据源；
-                                                     本地值优先级高于样式，故不能写特性，只能放 Setter。 -->
+                                                      Checked="RowComplete_Checked">
+                                                <!-- 批量态：同一颗行尾勾选框变"选中"指示（原型 .cb.selecting）。
+                                                     仅指示不可点（用户 2026-11-04 裁定：整行点击切换）——
+                                                     注意绑定设值同样会触发 Checked 事件，代码侧须以 InBatch 屏蔽。 -->
                                                 <CheckBox.Style>
                                                     <Style TargetType="CheckBox" BasedOn="{StaticResource RowCheck}">
                                                         <Setter Property="IsChecked" Value="{Binding Completed, Mode=OneWay}"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding BatchMode}" Value="True">
                                                                 <Setter Property="IsChecked" Value="{Binding Selected, Mode=OneWay}"/>
+                                                                <Setter Property="IsHitTestVisible" Value="False"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -413,7 +443,8 @@
                                             </CheckBox>
                                             <Grid.InputBindings>
                                                 <MouseBinding Gesture="LeftDoubleClick"
-                                                              Command="{Binding DataContext.EditRowCommand, ElementName=TodoList}"/>
+                                                              Command="{Binding DataContext.EditRowCommand, ElementName=TodoList}"
+                                                              CommandParameter="{Binding}"/>
                                             </Grid.InputBindings>
                                         </Grid>
                                     </Border>
@@ -486,7 +517,8 @@
                                                     <Grid.InputBindings>
                                                         <!-- 双击已完成行 → 只读详情窗（需求 §2.6） -->
                                                         <MouseBinding Gesture="LeftDoubleClick"
-                                                                      Command="{Binding DataContext.DoneDetailCommand, ElementName=DoneList}"/>
+                                                                      Command="{Binding DataContext.DoneDetailCommand, ElementName=DoneList}"
+                                                                      CommandParameter="{Binding}"/>
                                                     </Grid.InputBindings>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="34"/>
