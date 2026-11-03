@@ -44,6 +44,7 @@ public partial class HistoryDialog : Window
         FromPicker.SelectedDate = ParseDate(EarliestDate());
         ToPicker.SelectedDate = ParseDate(today);
         DetailCommand = new RelayCommand<HistRowView>(row => row is not null, row => OpenDetail(row));
+        DialogScale.Attach(this, CardRoot, ScaleGrip, "history", 420, 560, controller);
         UpdateSortIcon();
         Render();
     }

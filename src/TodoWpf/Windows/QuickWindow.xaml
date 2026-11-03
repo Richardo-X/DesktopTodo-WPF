@@ -227,7 +227,7 @@
                          （原型 overflow-y:scroll 口径）；右内边距 0 + 滚动条 8 = 8px，对齐原型 5+3 -->
                     <ScrollViewer VerticalScrollBarVisibility="Visible"
                                   HorizontalScrollBarVisibility="Disabled"
-                                  Padding="14,4,6,8">
+                                  Padding="14,4,9,8">
                         <ItemsControl x:Name="TemplateList" ItemsSource="{Binding TemplateRows}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>

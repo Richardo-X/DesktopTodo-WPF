@@ -201,10 +201,12 @@ public partial class TextEditDialog : Window
             return this;
         }
 
-        public TextEditDialog Build()
+        public TextEditDialog Build(ClusterController? controller = null)
         {
+            _dialog._controller = controller;
             _dialog.Owner = System.Windows.Application.Current.Windows
                 .OfType<Window>().FirstOrDefault(w => w.Title == "桌面待办");
+            _dialog.AttachScale();
             _dialog.CenterOnOwner();
             return _dialog;
         }
@@ -212,12 +214,17 @@ public partial class TextEditDialog : Window
 
     private int _counterTotal = 300;
     private Action<TextEditDialog>? _onTextChanged;
+    private ClusterController? _controller;
 
-    public static string? Open(Action<TextEditDialog.Builder> configure)
+    /// <summary>二级窗等比缩放（编辑组 420×560；右下手柄，按组存档）。</summary>
+    internal void AttachScale() =>
+        DialogScale.Attach(this, CardRoot, ScaleGrip, "edit", 420, 560, _controller);
+
+    public static string? Open(Action<TextEditDialog.Builder> configure, ClusterController? controller = null)
     {
         var builder = new Builder();
         configure(builder);
-        var dialog = builder.Build();
+        var dialog = builder.Build(controller);
         dialog.ShowDialog();
         return dialog._result;
     }

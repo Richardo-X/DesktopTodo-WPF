@@ -355,7 +355,7 @@
 
                     <ScrollViewer x:Name="ListScroll" Grid.Row="2" VerticalScrollBarVisibility="Visible"
                                   HorizontalScrollBarVisibility="Disabled"
-                                  Padding="14,0,6,24"
+                                  Padding="14,0,9,24"
                                   ScrollChanged="ListScroll_ScrollChanged">
                         <StackPanel>
                             <ItemsControl x:Name="TodoList" ItemsSource="{Binding Rows}">

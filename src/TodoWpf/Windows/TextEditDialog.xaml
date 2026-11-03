@@ -148,6 +148,16 @@
                 <StackPanel x:Name="LeftActions" Orientation="Horizontal" HorizontalAlignment="Left"/>
                 <StackPanel x:Name="RightActions" Orientation="Horizontal" HorizontalAlignment="Right"/>
             </Grid>
-        </Grid>
+        
+            <!-- 二级窗等比缩放手柄（DialogScale：右下拖动 0.7~1.2，按组存档；无长度缩放） -->
+            <Grid x:Name="ScaleGrip" Width="24" Height="24"
+                  HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                  Cursor="SizeNWSE" Background="Transparent" Panel.ZIndex="9">
+                <Border Width="13" Height="13" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                        Margin="0,0,3,3" Opacity="0.7"
+                        BorderBrush="{DynamicResource Brush.Muted}" BorderThickness="0,0,2,2"
+                        CornerRadius="0,0,9,0"/>
+            </Grid>
+</Grid>
     </Border>
 </Window>

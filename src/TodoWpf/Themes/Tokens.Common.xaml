@@ -106,13 +106,12 @@
         </Setter>
     </Style>
 
-    <!-- 全应用滚动条：8px 命中区、3px 视觉细条、无箭头、透明轨道；
+    <!-- 全应用滚动条：5px 命中区、4px 视觉细条居中、无箭头、透明轨道（用户 2026-11-04 规格）；
          不溢出（Maximum=0）时整条透明，不显示任何滑块。
-         滑块贴右缘（原型 webkit 滚动条口径：3px 条紧贴容器右缘，非居中）。
          「不挤压内容」由调用方保证：滚动容器一律 VerticalScrollBarVisibility=Visible
-         （槽位常驻）+ 右内边距同步让出，内容宽度恒定（原型 overflow-y:scroll 口径）。 -->
+         （槽位常驻）+ 右内边距同步让出（命中 5px 时右内边距 9 = 两侧 14/14 等距）。 -->
     <Style TargetType="ScrollBar">
-        <Setter Property="Width" Value="8"/>
+        <Setter Property="Width" Value="5"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -124,9 +123,9 @@
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
                                             <Grid Background="Transparent">
-                                                <Border Width="3" HorizontalAlignment="Right"
+                                                <Border Width="4" HorizontalAlignment="Center"
                                                         Background="{DynamicResource Brush.CardBorder}"
-                                                        CornerRadius="1.5"/>
+                                                        CornerRadius="2"/>
                                             </Grid>
                                         </ControlTemplate>
                                     </Thumb.Template>

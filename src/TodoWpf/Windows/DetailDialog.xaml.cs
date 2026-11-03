@@ -11,7 +11,8 @@ namespace TodoWpf.Windows;
 public partial class DetailDialog : Window
 {
     private DetailDialog(string title, string createdText, string completedText,
-                         bool overdue, string content, Action<DetailDialog> onConfirmedDelete)
+                         bool overdue, string content, Action<DetailDialog> onConfirmedDelete,
+                         ClusterController? controller)
     {
         InitializeComponent();
         TitleText.Text = title;
@@ -21,6 +22,11 @@ public partial class DetailDialog : Window
         StateValue.SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty,
             overdue ? "Brush.Overdue" : "Brush.Muted");
         ContentView.Text = content;
+        if (controller is not null)
+        {
+            DialogScale.Attach(this, CardRoot, ScaleGrip, "detail", 420, 438, controller);
+        }
+
         DeleteBtn.Click += (_, _) =>
         {
             if (ConfirmDialog.Confirm(
@@ -34,9 +40,10 @@ public partial class DetailDialog : Window
 
     /// <summary>打开详情（模态，与主窗视觉矩形两轴居中）。</summary>
     public static void Show(string title, string createdText, string completedText,
-                            bool overdue, string content, Action<DetailDialog> onConfirmedDelete)
+                            bool overdue, string content, Action<DetailDialog> onConfirmedDelete,
+                            ClusterController? controller = null)
     {
-        var dialog = new DetailDialog(title, createdText, completedText, overdue, content, onConfirmedDelete)
+        var dialog = new DetailDialog(title, createdText, completedText, overdue, content, onConfirmedDelete, controller)
         {
             Owner = System.Windows.Application.Current.Windows
                 .OfType<Window>().FirstOrDefault(w => w.Title == "桌面待办"),

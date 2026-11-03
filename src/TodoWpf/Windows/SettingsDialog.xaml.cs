@@ -17,6 +17,7 @@ public partial class SettingsDialog : Window
     {
         InitializeComponent();
         _controller = controller;
+        DialogScale.Attach(this, CardRoot, ScaleGrip, "settings", 420, 560, controller);
         Refresh();
     }
 

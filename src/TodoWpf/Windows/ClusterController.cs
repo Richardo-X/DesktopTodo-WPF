@@ -1092,6 +1092,14 @@ public sealed class ClusterController : IDisposable
     /// <summary>当前数据快照（历史窗每次渲染时读取）。</summary>
     public AppData Data => _data;
 
+    /// <summary>二级窗分组缩放存档（0.7~1.2；用户 2026-11-04 裁定：二级窗只做等比缩放）。</summary>
+    public void SetChildScale(string group, double scale)
+    {
+        var dict = new System.Collections.Generic.Dictionary<string, double>(_data.UiState.ChildScales);
+        dict[group] = Math.Clamp(scale, 0.7, 1.2);
+        Mutate(d => d with { UiState = d.UiState with { ChildScales = dict } });
+    }
+
     /// <summary>打开历史记录（设置页「打开」；模态嵌套于设置窗）。</summary>
     public void OpenHistory()
     {
@@ -1186,7 +1194,7 @@ public sealed class ClusterController : IDisposable
                  var ok = ContentRules.Validate(d.Editor.Text).Ok;
                  ((System.Windows.Controls.Button)((System.Windows.Controls.Panel)d.ActionsPanel).Children[0]).IsEnabled = ok;
              });
-        });
+        }, this);
         EndModal();
     }
 
@@ -1236,7 +1244,7 @@ public sealed class ClusterController : IDisposable
                  latestText = d.Editor.Text;
                  dirty = latestText.Trim() != item.Content;
              });
-        });
+        }, this);
         EndModal();
 
         if (!saved && dirty && ConfirmDialog.Confirm("未保存的修改", "内容已修改，保存吗？", "保存", anchor: _main))
@@ -1455,7 +1463,7 @@ public sealed class ClusterController : IDisposable
                  var ok = ContentRules.Validate(d.Editor.Text).Ok;
                  ((System.Windows.Controls.Button)((System.Windows.Controls.Panel)d.ActionsPanel).Children[0]).IsEnabled = ok;
              });
-        });
+        }, this);
         EndModal();
     }
 
@@ -1510,7 +1518,7 @@ public sealed class ClusterController : IDisposable
                  latestText = d.Editor.Text;
                  dirty = latestText.Trim() != item.Content;
              });
-        });
+        }, this);
         EndModal();
 
         if (!saved && dirty && ConfirmDialog.Confirm("未保存的修改", "内容已修改，保存吗？", "保存", anchor: _main))
@@ -1612,7 +1620,7 @@ public sealed class ClusterController : IDisposable
                 }
 
                 d.Close();
-            });
+            }, this);
         EndModal();
     }
 
