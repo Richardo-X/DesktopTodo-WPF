@@ -49,9 +49,9 @@ public partial class SettingsDialog : Window
     private void Refresh()
     {
         var settings = _controller.Data.Settings;
-        var floor = Math.Max(1, _controller.Data.Todos.Count);
         MaxValue.Text = settings.MaxItems.ToString();
-        MinusBtn.IsEnabled = settings.MaxItems > floor;
+        // 「−」始终可点：到下限再点给 toast（用户反馈置灰看不出来也没有提示；开发自定决策#7）
+        MinusBtn.IsEnabled = true;
         PlusBtn.IsEnabled = settings.MaxItems < TodoWpf.Core.Models.AppSettings.MaxMaxItems;
 
         Seg24.IsChecked = !settings.Hour12;

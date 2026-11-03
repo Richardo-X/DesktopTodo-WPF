@@ -112,14 +112,35 @@
                                     Background="{DynamicResource Brush.CounterChip}"
                                     BorderBrush="{DynamicResource Brush.Line}" BorderThickness="1"/>
                             <Ellipse x:Name="knob" Width="14" Height="14" Fill="{DynamicResource Brush.Muted}"
-                                     HorizontalAlignment="Left" Margin="2,0,0,0"/>
+                                     HorizontalAlignment="Left" Margin="2,0,0,0">
+                                <Ellipse.RenderTransform>
+                                    <TranslateTransform X="0"/>
+                                </Ellipse.RenderTransform>
+                            </Ellipse>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="track" Property="Background" Value="{DynamicResource Brush.SoftAccent}"/>
                                 <Setter TargetName="track" Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
                                 <Setter TargetName="knob" Property="Fill" Value="{DynamicResource Brush.Accent}"/>
-                                <Setter TargetName="knob" Property="Margin" Value="18,0,0,0"/>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="knob"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                             To="16" Duration="0:0:0.16"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="knob"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                             To="0" Duration="0:0:0.16"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -144,7 +165,7 @@
 
             <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseDown">
                 <Button x:Name="BackBtn" Style="{StaticResource BackButton}" Tag="{StaticResource Icon.ChevL}"
-                        ToolTip="返回" Click="Back_Click" HorizontalAlignment="Left" Margin="-12,0,0,0"/>
+                        ToolTip="返回" Click="Back_Click" HorizontalAlignment="Left"/>
                 <TextBlock Text="设置" FontSize="13" FontWeight="SemiBold"
                            Foreground="{DynamicResource Brush.Text}"
                            VerticalAlignment="Center" HorizontalAlignment="Center"

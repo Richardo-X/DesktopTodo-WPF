@@ -2,16 +2,19 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="桌面待办 · 白条"
-        Width="160" Height="12"
+        Width="160" Height="6"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="NoResize" ShowInTaskbar="False" ShowActivated="False"
         UseLayoutRounding="True"
         FontFamily="{StaticResource Font.Text}">
 
-    <!-- 缩进白条（R1：独立轻量元素，不再是"应用折叠成的一条"）。
+    <!-- 缩进白条（R1），1:1 ele BarWindow.vue（用户 2026-11-04 裁定按 ele 设计）：
+         窗体=热区 160×6，视觉条 3px 垂直居中、圆角胶囊；
+         白天 rgba(255,255,255,.55)/悬停 .85，夜间 .28/.5（Brush.TuckBar/Hover 按主题分值）。
          鼠标碰到白条本体（系统真实命中，被遮挡天然不弹）→ 整组滑回；点击亦可。 -->
 
-    <Border x:Name="Bar" Background="{DynamicResource Brush.TuckBar}" CornerRadius="6">
+    <Border x:Name="Bar" Height="3" VerticalAlignment="Center" CornerRadius="1.5"
+            Background="{DynamicResource Brush.TuckBar}">
         <Border.Style>
             <Style TargetType="Border">
                 <Style.Triggers>

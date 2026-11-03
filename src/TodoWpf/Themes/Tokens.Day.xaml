@@ -46,9 +46,9 @@
     <SolidColorBrush x:Key="Brush.Mask" Color="#750A1428"/>
     <SolidColorBrush x:Key="Brush.BlockedVeil" Color="#33141419"/>
 
-    <!-- 缩进白条（原型 #tuckBar：白 α.28，悬停亮 α.5，日夜同值） -->
-    <SolidColorBrush x:Key="Brush.TuckBar" Color="#47FFFFFF"/>
-    <SolidColorBrush x:Key="Brush.TuckBarHover" Color="#80FFFFFF"/>
+    <!-- 缩进白条（1:1 ele BarWindow.vue：日 α.55 / 悬停 .85） -->
+    <SolidColorBrush x:Key="Brush.TuckBar" Color="#8CFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.TuckBarHover" Color="#D9FFFFFF"/>
 
     <!-- 新外观（1C）表面令牌：新窗口引用；旧外观窗口删除后清理旧键 -->
     <SolidColorBrush x:Key="Brush.Shell" Color="#FFEEF1F6"/>

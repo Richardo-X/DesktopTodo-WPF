@@ -499,10 +499,45 @@
         </Setter>
     </Style>
 
-    <!-- 二级窗标题栏返回键（成品 .child-window .titlebar .back：34px 宽、透明底、悬停出行底色、13px chevron，
-         与主窗标题栏按钮同族、仅宽度不同。2026-10-14：TextEditDialog 引用本键而此前从未定义，点＋即崩，补上） -->
+    <!-- 二级窗标题栏返回键（原型 .backbtn：34×40、弱色、悬停行底色+变正文色、图标 14；
+         dhead 需自带左右 12 内边距，按钮 margin-left -12 贴窗缘） -->
     <Style x:Key="BackButton" TargetType="Button" BasedOn="{StaticResource TitlebarButton}">
         <Setter Property="Width" Value="{StaticResource Size.BackButtonWidth}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}">
+                        <Border.RenderTransform>
+                            <ScaleTransform ScaleX="1" ScaleY="1"/>
+                        </Border.RenderTransform>
+                        <Viewbox Width="14" Height="14">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="{TemplateBinding Tag}" Fill="Transparent"
+                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}"
+                                      StrokeThickness="1.8"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                            </Canvas>
+                        </Viewbox>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard Storyboard="{StaticResource Anim.PressIn}"/>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard Storyboard="{StaticResource Anim.PressOut}"/>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- 待办行（悬停底色；行内边距 11/12；圆角 8） -->

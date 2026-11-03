@@ -53,7 +53,7 @@
 
             <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseDown">
                 <Button x:Name="BackBtn" Style="{StaticResource BackButton}" Tag="{StaticResource Icon.ChevL}"
-                        ToolTip="返回" Click="Back_Click" HorizontalAlignment="Left" Margin="-12,0,0,0"/>
+                        ToolTip="返回" Click="Back_Click" HorizontalAlignment="Left"/>
                 <TextBlock x:Name="TitleText" Text="已完成事项" FontSize="13" FontWeight="SemiBold"
                            Foreground="{DynamicResource Brush.Text}"
                            VerticalAlignment="Center" HorizontalAlignment="Center"
