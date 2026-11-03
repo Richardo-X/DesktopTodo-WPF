@@ -59,7 +59,7 @@
                            VerticalAlignment="Center" HorizontalAlignment="Center"
                            IsHitTestVisible="False"/>
                 <Button x:Name="DeleteBtn" Content="删除" Style="{StaticResource DangerSm}"
-                        HorizontalAlignment="Right" Margin="0,0,6,0" Click="Delete_Click"/>
+                        HorizontalAlignment="Right" Margin="0,0,6,0"/>
             </Grid>
 
             <Grid Grid.Row="1" Margin="20,8,20,14">

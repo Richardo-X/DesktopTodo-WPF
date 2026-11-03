@@ -1011,13 +1011,13 @@ public sealed class ClusterController : IDisposable
         {
             ShowToast("注册表写入被拒绝");
         }
+        catch (System.UnauthorizedAccessException)
+        {
+            ShowToast("注册表写入被拒绝");
+        }
         catch (System.IO.IOException)
         {
             ShowToast("注册表写入失败");
-        }
-        catch (Microsoft.Win32.RegistrySecurityException)
-        {
-            ShowToast("注册表写入被拒绝");
         }
     }
 

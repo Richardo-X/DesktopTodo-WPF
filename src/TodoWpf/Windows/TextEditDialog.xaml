@@ -135,7 +135,7 @@
                              BorderBrush="{DynamicResource Brush.FieldSurfaceBorder}" BorderThickness="1"
                              VerticalContentAlignment="Top" Padding="12,10,12,10"
                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-                             LineHeight="23" LineStackingStrategy="BlockLineHeight"
+                             TextBlock.LineHeight="23"
                              TextChanged="Input_Changed"/>
                     <TextBlock x:Name="PlaceholderText" Text="" FontSize="13" LineHeight="23"
                                Foreground="{DynamicResource Brush.Faint}" IsHitTestVisible="False"
@@ -144,7 +144,7 @@
             </Grid>
 
             <!-- 底部操作条：左槽（删除/清空）+ 弹性空白 + 右槽（添加到模板/保存） -->
-            <Grid Grid.Row="2" x:Name="ActionsPanel" Margin="20,10,20,16">
+            <Grid Grid.Row="2" x:Name="ActionsRow" Margin="20,10,20,16">
                 <StackPanel x:Name="LeftActions" Orientation="Horizontal" HorizontalAlignment="Left"/>
                 <StackPanel x:Name="RightActions" Orientation="Horizontal" HorizontalAlignment="Right"/>
             </Grid>

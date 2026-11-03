@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using TodoWpf.Core.Models;
 using TodoWpf.Core.Services;
 using TodoWpf.Core.Utils;
@@ -38,10 +39,11 @@ public partial class HistoryDialog : Window
             _cur = ShiftDateKey(today, -1); // 默认看昨天（原型 openHistory 默认 yesterdayKey）
         }
 
-        CurDatePicker.DisplayDateStart = EarliestDate();
+        CurDatePicker.DisplayDateStart = ParseDate(EarliestDate());
         CurDatePicker.SelectedDate = ParseDate(_cur);
         FromPicker.SelectedDate = ParseDate(EarliestDate());
         ToPicker.SelectedDate = ParseDate(today);
+        DetailCommand = new RelayCommand<HistRowView>(row => row is not null, row => OpenDetail(row));
         UpdateSortIcon();
         Render();
     }
@@ -77,14 +79,12 @@ public partial class HistoryDialog : Window
         var today = LocalDate.Key(DateTimeOffset.Now);
         var earliest = EarliestDate();
         var sort = _controller.Data.Settings.DoneSort;
-        var items = (_controller.Data.Archive.TryGetValue(_cur, out var bucket) ? bucket : new List<TodoItem>())
-            .OrderBy(t => t.CompletedAt, StringComparer.Ordinal);
-        if (sort == "desc")
-        {
-            items = items.Reverse();
-        }
-
-        var list = items.ToList();
+        var source = _controller.Data.Archive.TryGetValue(_cur, out var bucket)
+            ? bucket
+            : new List<TodoItem>();
+        var list = sort == "desc"
+            ? source.OrderByDescending(t => t.CompletedAt, StringComparer.Ordinal).ToList()
+            : source.OrderBy(t => t.CompletedAt, StringComparer.Ordinal).ToList();
         Rows.Clear();
         foreach (var item in list)
         {
@@ -263,8 +263,7 @@ public partial class HistoryDialog : Window
         Render();
     }
 
-    private System.Windows.Input.ICommand DetailCommand { get; } = new RelayCommand<HistRowView>(
-        row => row is not null, row => OpenDetail(row));
+    private System.Windows.Input.ICommand DetailCommand { get; }
 
     private void OpenDetail(HistRowView row)
     {
