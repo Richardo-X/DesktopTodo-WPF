@@ -239,11 +239,11 @@ public sealed class ClusterController : IDisposable
         return physical / dpi.DpiScaleX / designWidth;
     }
 
-    /// <summary>模板窗设计高度：标题 + 动作行 + 行 × 36，夹在 160 与 448 之间。</summary>
+    /// <summary>模板窗设计高度：标题 40 + 动作行 40 + 列表上下 12 + 行 × 44（ele 行高），夹在 160 与 448 之间。</summary>
     private double TemplateWindowHeight()
     {
         var rows = _data.Templates.Count;
-        return Math.Clamp(rows * 36 + 88, 100, 448);
+        return Math.Clamp(rows * 44 + 92, 100, 448);
     }
 
     /// <summary>按锚点+缩放+开关重排三窗（隐藏窗同时就位但不出场）。</summary>

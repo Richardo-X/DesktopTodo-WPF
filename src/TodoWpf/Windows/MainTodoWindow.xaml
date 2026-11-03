@@ -11,8 +11,8 @@
 
     <Window.Resources>
         <Style x:Key="Ib" TargetType="Button">
-            <Setter Property="Width" Value="28"/>
-            <Setter Property="Height" Value="28"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Margin" Value="1,0"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -51,8 +51,8 @@
         </Style>
 
         <Style x:Key="Sq" TargetType="Button">
-            <Setter Property="Width" Value="28"/>
-            <Setter Property="Height" Value="28"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.CardBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -130,9 +130,9 @@
         </Style>
 
         <Style x:Key="RowCard" TargetType="Border">
-            <Setter Property="Height" Value="34"/>
+            <Setter Property="Height" Value="44"/>
             <Setter Property="Margin" Value="0,2"/>
-            <Setter Property="Padding" Value="3,8"/>
+            <Setter Property="Padding" Value="11,12"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Background" Value="{DynamicResource Brush.RowCard}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.RowCardBorder}"/>
@@ -153,13 +153,13 @@
         </Style>
 
         <Style x:Key="RowCheck" TargetType="CheckBox">
-            <Setter Property="Width" Value="16"/>
-            <Setter Property="Height" Value="16"/>
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Height" Value="20"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
-                        <Border x:Name="bd" Width="16" Height="16" CornerRadius="4"
+                        <Border x:Name="bd" Width="20" Height="20" CornerRadius="6"
                                 BorderBrush="{DynamicResource Brush.Line}" BorderThickness="1"
                                 Background="Transparent">
                             <Viewbox x:Name="ck" Width="12" Height="12" Visibility="Collapsed">
@@ -215,7 +215,7 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                                 VerticalAlignment="Center">
                         <Button x:Name="ThemeBtn" Style="{StaticResource Ib}" ToolTip="切换日/夜主题" Click="ThemeBtn_Click">
-                            <Viewbox Width="14" Height="14">
+                            <Viewbox Width="16" Height="16">
                                 <Canvas Width="24" Height="24">
                                     <Path Data="{StaticResource Icon.Moon}" Stroke="{DynamicResource Brush.Faint}"
                                           StrokeThickness="1.8"
@@ -224,7 +224,7 @@
                             </Viewbox>
                         </Button>
                         <Button x:Name="PinBtn" Style="{StaticResource Ib}" ToolTip="窗口置顶开关" Click="PinBtn_Click">
-                            <Viewbox Width="14" Height="14">
+                            <Viewbox Width="16" Height="16">
                                 <Canvas Width="24" Height="24">
                                     <Path x:Name="PinIcon" Data="{StaticResource Icon.Pin}"
                                           Stroke="{DynamicResource Brush.Faint}"
@@ -234,7 +234,7 @@
                             </Viewbox>
                         </Button>
                         <Button x:Name="TuckLockBtn" Style="{StaticResource Ib}" ToolTip="缩进锁定" Click="TuckLockBtn_Click">
-                            <Viewbox Width="14" Height="14">
+                            <Viewbox Width="16" Height="16">
                                 <Canvas Width="24" Height="24">
                                     <Path Data="{StaticResource Icon.TuckLock}"
                                           Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
@@ -244,7 +244,7 @@
                             </Viewbox>
                         </Button>
                         <Button x:Name="SettingsBtn" Style="{StaticResource Ib}" ToolTip="设置" Click="SettingsBtn_Click">
-                            <Viewbox Width="14" Height="14">
+                            <Viewbox Width="16" Height="16">
                                 <Canvas Width="24" Height="24">
                                     <Path Data="{StaticResource Icon.Gear}" Stroke="{DynamicResource Brush.Faint}"
                                           StrokeThickness="1.8"
@@ -253,7 +253,7 @@
                             </Viewbox>
                         </Button>
                         <Button x:Name="HideBtn" Style="{StaticResource Ib}" ToolTip="最小化到系统状态栏" Click="HideBtn_Click">
-                            <Viewbox Width="14" Height="14">
+                            <Viewbox Width="16" Height="16">
                                 <Canvas Width="24" Height="24">
                                     <Path Data="{StaticResource Icon.X}" Stroke="{DynamicResource Brush.Faint}"
                                           StrokeThickness="1.8"
@@ -271,23 +271,23 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,6,0,14">
-                        <TextBlock x:Name="ClockTime" Text="14:32" FontSize="28" FontWeight="Medium"
+                    <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,6,0,10">
+                        <TextBlock x:Name="ClockTime" Text="14:32" FontSize="38" FontWeight="Medium"
                                    FontFamily="{StaticResource Font.Display}"
                                    Foreground="{DynamicResource Brush.Text}"
                                    Typography.NumeralAlignment="Tabular"
                                    HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="ClockDate" Text="2026年10月12日 星期一" FontSize="13"
+                        <TextBlock x:Name="ClockDate" Text="2026年10月12日 星期一" FontSize="15"
                                    Foreground="{DynamicResource Brush.Faint}" Margin="0,2,0,0"
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
 
-                    <Grid x:Name="ActionBar" Grid.Row="1" Margin="16,2,16,12">
+                    <Grid x:Name="ActionBar" Grid.Row="1" Margin="14,2,14,8">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <!-- 圆角显式 = 高度 24 的一半：WPF 对超大 CornerRadius 会 X/Y 独立截断成椭圆角，
                                  与浏览器按比例缩放的胶囊不同（原型 border-radius:99px 实际得到半径 12 的圆角） -->
-                            <Border Background="{DynamicResource Brush.CounterChip}" CornerRadius="12"
-                                    Height="24" Padding="9,0" VerticalAlignment="Center">
+                            <Border Background="{DynamicResource Brush.CounterChip}" CornerRadius="13"
+                                    Height="26" Padding="10,0" VerticalAlignment="Center">
                                 <TextBlock x:Name="CountText" Text="0/10" FontSize="11"
                                            VerticalAlignment="Center"
                                            Foreground="{DynamicResource Brush.Muted}"
@@ -295,7 +295,7 @@
                             </Border>
                             <Button Style="{StaticResource Sq}" Margin="8,0,0,0" ToolTip="批量删除待办"
                                     Click="BatchToggle_Click">
-                                <Viewbox Width="14" Height="14">
+                                <Viewbox Width="16" Height="16">
                                     <Canvas Width="24" Height="24">
                                         <Path Data="{StaticResource Icon.Trash}" Stroke="{DynamicResource Brush.Muted}"
                                               StrokeThickness="1.8"
@@ -306,11 +306,11 @@
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                             <Button Background="{DynamicResource Brush.Accent}" BorderThickness="0"
-                                    Width="28" Height="28" Cursor="Hand" ToolTip="新建待办" Click="AddBtn_Click">
+                                    Width="32" Height="32" Cursor="Hand" ToolTip="新建待办" Click="AddBtn_Click">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border Background="{TemplateBinding Background}" CornerRadius="6">
-                                            <Viewbox Width="15" Height="15">
+                                            <Viewbox Width="16" Height="16">
                                                 <Canvas Width="24" Height="24">
                                                     <Path Data="{StaticResource Icon.Plus}" Stroke="{DynamicResource Brush.AccentFg}"
                                                           StrokeThickness="2.2"
@@ -323,7 +323,7 @@
                             </Button>
                             <Button x:Name="QuickBtn" Style="{StaticResource Sq}" Margin="8,0,0,0"
                                     ToolTip="显示 / 隐藏模板窗" Click="QuickBtn_Click">
-                                <Viewbox Width="14" Height="14">
+                                <Viewbox Width="16" Height="16">
                                     <Canvas Width="24" Height="24">
                                         <Path Data="{StaticResource Icon.Bolt}"
                                               Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
@@ -337,7 +337,7 @@
 
                     <!-- 批量条（原型 #batchbar）：与动作行同位等高替换；
                          布局 = 已选 n 项 · 返回 …… 全选 · 删除所选（弹性空白居中隔开） -->
-                    <Grid x:Name="BatchBar" Grid.Row="1" Visibility="Hidden" Margin="16,2,16,12">
+                    <Grid x:Name="BatchBar" Grid.Row="1" Visibility="Hidden" Margin="14,2,14,8">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock x:Name="BatchCount" Text="已选 0 项" FontSize="11" LineHeight="18"
                                        Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Center"
@@ -355,7 +355,7 @@
 
                     <ScrollViewer x:Name="ListScroll" Grid.Row="2" VerticalScrollBarVisibility="Visible"
                                   HorizontalScrollBarVisibility="Disabled"
-                                  Padding="12,0,4,26"
+                                  Padding="14,0,6,24"
                                   ScrollChanged="ListScroll_ScrollChanged">
                         <StackPanel>
                             <ItemsControl x:Name="TodoList" ItemsSource="{Binding Rows}">
@@ -367,12 +367,12 @@
                                                 <ColumnDefinition Width="14"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="16"/>
+                                                <ColumnDefinition Width="20"/>
                                             </Grid.ColumnDefinitions>
                                             <!-- 拖拽把手：透明命中区占满整列（原型 .grip 命中含 ±3px 延展），
                                                  点阵居中于"卡片左缘↔文字左缘"之间（用户 2026-11-03 裁定）；
                                                  此前命中=图标 6 个小点（每点约 2px）导致几乎点不中。 -->
-                                            <Border Grid.Column="0" Width="25" Margin="-3,0,0,0"
+                                            <Border Grid.Column="0" Width="34" Margin="-12,0,0,0"
                                                     Background="Transparent" Cursor="Hand"
                                                     MouseLeftButtonDown="Grip_MouseDown"
                                                     HorizontalAlignment="Left">
@@ -395,7 +395,7 @@
                                                 </Viewbox>
                                             </Border>
                                             <TextBlock Grid.Column="1" Text="{Binding Content}"
-                                                       FontSize="13" TextTrimming="CharacterEllipsis"
+                                                       FontSize="14.5" TextTrimming="CharacterEllipsis"
                                                        VerticalAlignment="Center" Margin="8,0,8,0"
                                                        MouseEnter="RowText_MouseEnter" MouseLeave="RowText_MouseLeave">
                                                 <TextBlock.Style>
@@ -410,7 +410,7 @@
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
-                                            <TextBlock Grid.Column="2" Text="逾期" FontSize="11"
+                                            <TextBlock Grid.Column="2" Text="逾期" FontSize="10"
                                                        Foreground="{DynamicResource Brush.Overdue}"
                                                        VerticalAlignment="Center" Margin="0,0,8,0">
                                                 <TextBlock.Style>
@@ -454,7 +454,7 @@
 
                             <!-- 单行行内空态（原型 .empty.inline：高 36，落在最后一条待办的位置；
                                  批量态换文案，由 SetBatchBar 推送） -->
-                            <StackPanel x:Name="TodoEmpty" Orientation="Horizontal" Height="36"
+                            <StackPanel x:Name="TodoEmpty" Orientation="Horizontal" Height="46"
                                         HorizontalAlignment="Center" Visibility="Hidden">
                                 <TextBlock x:Name="TodoEmptyA" Text="今天还没有待办" FontSize="13"
                                            Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Center"/>
@@ -465,7 +465,7 @@
 
                             <!-- 已完成段（时间轴 + 行）：批量态整段变暗禁点（原型 .dimdone） -->
                             <StackPanel x:Name="DoneBlock">
-                                <Grid Height="34" Margin="0,6,0,0">
+                                <Grid Height="36" Margin="0,6,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
@@ -507,13 +507,13 @@
                                             <ColumnDefinition Width="16"/>
                                         </Grid.ColumnDefinitions>
                                         <Border Grid.Column="1" Width="2" HorizontalAlignment="Center"
-                                                Margin="0,17,0,17"
+                                                Margin="0,22,0,22"
                                                 Background="{DynamicResource Brush.CardBorder}" Opacity="0.55"/>
                                     </Grid>
                                     <ItemsControl x:Name="DoneList" ItemsSource="{Binding DoneRows}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid Height="34">
+                                                <Grid Height="44">
                                                     <Grid.InputBindings>
                                                         <!-- 双击已完成行 → 只读详情窗（需求 §2.6） -->
                                                         <MouseBinding Gesture="LeftDoubleClick"
@@ -524,7 +524,7 @@
                                                         <ColumnDefinition Width="34"/>
                                                         <ColumnDefinition Width="16"/>
                                                         <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="16"/>
+                                                        <ColumnDefinition Width="20"/>
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Text="{Binding CompletedTimeText}" FontSize="11"
                                                                Foreground="{DynamicResource Brush.DoneStamp}"
@@ -536,7 +536,7 @@
                                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                     </Grid>
                                                     <TextBlock Grid.Column="2" Text="{Binding Content}"
-                                                               FontSize="13" Foreground="{DynamicResource Brush.Muted}"
+                                                               FontSize="14.5" Foreground="{DynamicResource Brush.Muted}"
                                                                TextTrimming="CharacterEllipsis"
                                                                VerticalAlignment="Center" Margin="8,0,8,0"
                                                                MouseEnter="RowText_MouseEnter" MouseLeave="RowText_MouseLeave"/>
