@@ -279,6 +279,19 @@ public sealed class ClusterController : IDisposable
         return Math.Clamp(rows * 44 + 92, 100, 448);
     }
 
+    /// <summary>模板窗右边距保留量（DIP）：不越主屏右缘时贴边保留这么宽可见。</summary>
+    private const double TemplateEdgeSliver = 40;
+
+    /// <summary>
+    /// 模板窗不得越过**主窗所在屏**的右缘（2026-11-04 开发自定，最小改动）：
+    /// 两块屏缩放不同时，把窗口放到另一块屏会被按另一套缩放解释 → 表现为"两窗分离很远 + 内容错乱"。
+    /// 越界时把模板窗左缘钳到"右缘 − 保留量"，即贴边裁切、保留一条可见（而不是跑到另一块屏上）。
+    /// </summary>
+    private static WinRect KeepTemplateOnMainScreen(WinRect tpl, WinRect workArea) =>
+        tpl.X <= workArea.Right - TemplateEdgeSliver
+            ? tpl
+            : tpl with { X = Math.Max(workArea.X, workArea.Right - TemplateEdgeSliver) };
+
     /// <summary>按锚点+缩放+开关重排三窗（隐藏窗同时就位但不出场）。</summary>
     public void ApplyLayout(bool saveState = true)
     {
@@ -288,7 +301,8 @@ public sealed class ClusterController : IDisposable
         var frame = PanelLayout.Arrange(SnappedAnchor(), scale, ui.QuickVisible);
 
         // 模板窗用固定画布（零矩形变更）；主窗逐帧摆位。
-        var tplRect = frame.Template.Rect with { Height = TemplateWindowHeight() * scale };
+        var tplRect = KeepTemplateOnMainScreen(
+            frame.Template.Rect with { Height = TemplateWindowHeight() * scale }, workArea);
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
             (tplRect, _quick, frame.Template.Visible, PinEdge.Left));
@@ -338,7 +352,8 @@ public sealed class ClusterController : IDisposable
         // 它是个固定设计尺寸 + 渲染层缩放的窗，卡面比目标档宽（310 设计宽）。
         // 这里若用目标矩形（缩放后的实际宽度）摆它，卡片就被塞进更窄的窗口里 ⇒ 移动过程中被裁；
         // 松手走 ApplyLayout 又换回画布矩形 ⇒ 于是"移动时被裁、松手恢复"（用户 2026-10-13 实测）。
-        var tplRect = frame.Template.Rect with { Height = TemplateWindowHeight() * scale };
+        var tplRect = KeepTemplateOnMainScreen(
+            frame.Template.Rect with { Height = TemplateWindowHeight() * scale }, WorkArea());
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
             (tplRect, _quick, frame.Template.Visible, PinEdge.Left));
