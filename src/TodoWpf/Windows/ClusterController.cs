@@ -46,13 +46,16 @@ public sealed class ClusterController : IDisposable
     private double _storedScale = 1;
 
     /// <summary>
-    /// 实际布局用档位 = **用户档位本身，不按屏钳制**。
-    /// 用户 2026-11-04 定：分辨率对尺寸的影响**只出现在首次安装**（唯一目的是防初始窗口过大卡死），
-    /// 之后一律以用户自己的调整为准 —— 所以换分辨率/跨屏都不再改尺寸。
-    /// （注：ele 是每次布局都按屏钳制[下限 0.7 / 上限屏高一半]，与本条相反；此处按用户最新指令执行，
-    ///   冲突已记入决策文档。）
+    /// 实际布局用档位 = 用户档位按**当前屏工作区**钳制（最小 1/4 屏高、最大 2/3 屏高、绝对下限 192 DIP）。
+    /// 只钳「生效值」，**绝不写回** `_storedScale`：
+    ///   · 拖到小屏被临时压到上限 → **拖动角标永远可达**（2026-11-04 用户实测：不钳制时窗高超过屏高、角标跑到屏外抓不到）；
+    ///   · 拖回大屏自动恢复用户自己的档位；
+    ///   · 不会"越拖越小"（当年的根因是把钳制值写回了存档，而今已拆分）。
+    /// 说明：工作区按 DIP 读取，而 DIP 已被系统缩放归一化（175% 屏上 1 DIP = 1.75 物理像素）
+    /// → 钳制天然包含缩放影响，**不需要任何 DPI 特判**（用户 2026-11-04 明确）。
     /// </summary>
-    private double LayoutScale => _storedScale;
+    private double LayoutScale(WinRect area, WinPoint anchor) =>
+        PanelLayout.ClampScale(_storedScale, area, anchor);
     private bool _clusterHidden;
 
     // 拖动/缩放进行中状态
@@ -165,18 +168,15 @@ public sealed class ClusterController : IDisposable
         var clampedAnchor = ScreenClamp.ClampToWorkArea(
             new WinRect(
                 _anchor.X, _anchor.Y,
-                PanelLayout.MainWidth * _storedScale,
-                PanelLayout.MainBaseHeight * _storedScale),
+                PanelLayout.MainWidth * LayoutScale(startupArea, _anchor),
+                PanelLayout.MainBaseHeight * LayoutScale(startupArea, _anchor)),
             startupArea);
         _anchor = new WinPoint(clampedAnchor.X, clampedAnchor.Y);
 
-        // 尺寸规则（用户 2026-11-04 定）：**分辨率只在首次安装影响尺寸**——
-        // 首次安装由 ResolveAnchor 按屏高 1/3 给默认并钳制（防初始窗口过大卡死）；
-        // 之后一律以存档的档位为准，只做绝对范围保护，不再按屏钳制。
-        if (_data.UiState.Pos is not null)
-        {
-            _storedScale = Math.Clamp(_storedScale, 0.15, PanelLayout.MaxScale);
-        }
+        // 尺寸规则（用户 2026-11-04 定稿）：默认档位按屏高 1/3 只在首次安装给；
+        // 之后每次布局都按当前屏钳制**生效值**（1/4~2/3 屏高），但**不写回**用户档位。
+        // 存档值只做绝对范围保护，避免脏数据把窗口搞成 0 或无穷大。
+        _storedScale = Math.Clamp(_storedScale, 0.15, PanelLayout.MaxScale);
 
         ApplyThemeState();
         _main.Controller = this;
@@ -297,7 +297,7 @@ public sealed class ClusterController : IDisposable
     {
         var ui = _data.UiState;
         var workArea = WorkArea();
-        var scale = LayoutScale;
+        var scale = LayoutScale(workArea, SnappedAnchor());
         var frame = PanelLayout.Arrange(SnappedAnchor(), scale, ui.QuickVisible);
 
         // 模板窗用固定画布（零矩形变更）；主窗逐帧摆位。
@@ -345,7 +345,8 @@ public sealed class ClusterController : IDisposable
     private void MoveCluster()
     {
         var ui = _data.UiState;
-        var scale = LayoutScale;
+        var dragArea = WorkArea();
+        var scale = LayoutScale(dragArea, SnappedAnchor());
         var frame = PanelLayout.Arrange(SnappedAnchor(), scale, ui.QuickVisible);
 
         // 快捷窗在移动路径上也必须用**画布矩形**（与 ApplyLayout 一致）：
@@ -353,7 +354,7 @@ public sealed class ClusterController : IDisposable
         // 这里若用目标矩形（缩放后的实际宽度）摆它，卡片就被塞进更窄的窗口里 ⇒ 移动过程中被裁；
         // 松手走 ApplyLayout 又换回画布矩形 ⇒ 于是"移动时被裁、松手恢复"（用户 2026-10-13 实测）。
         var tplRect = KeepTemplateOnMainScreen(
-            frame.Template.Rect with { Height = TemplateWindowHeight() * scale }, WorkArea());
+            frame.Template.Rect with { Height = TemplateWindowHeight() * scale }, dragArea);
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
             (tplRect, _quick, frame.Template.Visible, PinEdge.Left));
@@ -457,7 +458,7 @@ public sealed class ClusterController : IDisposable
         // 继续往新屏移动 ⇒ **跨屏可移动**。
         // （2026-11-04 曾改为"按鼠标所在屏 + 整簇不跨屏"，结果主窗永远跨不过边界、完全无法跨屏，已回退。）
         var area = WorkArea();
-        var dragScale = LayoutScale;
+        var dragScale = LayoutScale(area, anchor);
         anchor = PanelLayout.ClampAnchorForDrag(
             anchor, PanelLayout.MainWidth * dragScale, area);
         _dragWorkArea = area;
@@ -726,7 +727,7 @@ public sealed class ClusterController : IDisposable
     {
         var ui = _data.UiState;
         var workArea = WorkArea();
-        var scale = LayoutScale;
+        var scale = LayoutScale(workArea, SnappedAnchor());
         var frame = PanelLayout.Arrange(SnappedAnchor(), scale, ui.QuickVisible);
 
         var targets = new List<(Window Window, double DockedTop, double HiddenTop)>();
