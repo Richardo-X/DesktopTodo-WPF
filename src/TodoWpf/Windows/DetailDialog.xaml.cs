@@ -15,6 +15,8 @@ public partial class DetailDialog : Window
                          ClusterController? controller)
     {
         InitializeComponent();
+        // 2026-11-05 裁定：二级窗弃 WPF 投影，改 DWM 系统圆角（与主窗同壳）
+        WindowShell.ApplyFixed(this);
         TitleText.Text = title;
         CreatedValue.Text = createdText;
         CompletedValue.Text = completedText;

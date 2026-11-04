@@ -3,12 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="桌面待办"
         Width="420" Height="560"
-        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        WindowStyle="None" AllowsTransparency="False" Background="{DynamicResource Brush.Shell}"
         ResizeMode="NoResize" ShowInTaskbar="False"
         WindowStartupLocation="Manual"
         UseLayoutRounding="True" TextOptions.TextRenderingMode="ClearType"
         FontFamily="{StaticResource Font.Text}"
-        Effect="{StaticResource Effect.DialogShadowMain}"
         PreviewKeyDown="Window_PreviewKeyDown">
 
     <!-- 编辑窗（原型 openEditor，二级窗 3:4=420×560）：

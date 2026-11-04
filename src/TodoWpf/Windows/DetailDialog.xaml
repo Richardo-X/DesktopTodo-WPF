@@ -3,12 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="桌面待办"
         Width="420" Height="438"
-        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        WindowStyle="None" AllowsTransparency="False" Background="{DynamicResource Brush.Shell}"
         ResizeMode="NoResize" ShowInTaskbar="False"
         WindowStartupLocation="Manual"
         UseLayoutRounding="True" TextOptions.TextRenderingMode="ClearType"
-        FontFamily="{StaticResource Font.Text}"
-        Effect="{StaticResource Effect.DialogShadowMain}">
+        FontFamily="{StaticResource Font.Text}">
 
     <!-- 详情窗（方案 H 定稿：420×438，体验说明书 ③.2）：
          三行属性（创建/完成/状态）+ 1px 分隔线 + 无框正文（只读）；

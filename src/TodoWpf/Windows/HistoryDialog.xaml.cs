@@ -29,6 +29,8 @@ public partial class HistoryDialog : Window
     private HistoryDialog(ClusterController controller)
     {
         InitializeComponent();
+        // 2026-11-05 裁定：二级窗弃 WPF 投影，改 DWM 系统圆角（与主窗同壳）
+        WindowShell.ApplyFixed(this);
         _controller = controller;
         DataContext = this;
 

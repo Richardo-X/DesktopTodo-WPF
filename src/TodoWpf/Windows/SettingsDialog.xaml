@@ -3,12 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="桌面待办"
         Width="420" Height="560"
-        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        WindowStyle="None" AllowsTransparency="False" Background="{DynamicResource Brush.Shell}"
         ResizeMode="NoResize" ShowInTaskbar="False"
         WindowStartupLocation="Manual"
         UseLayoutRounding="True" TextOptions.TextRenderingMode="ClearType"
-        FontFamily="{StaticResource Font.Text}"
-        Effect="{StaticResource Effect.DialogShadowMain}">
+        FontFamily="{StaticResource Font.Text}">
 
     <!-- 设置窗（原型 openSettings + 体验说明书 ③.3）：上限步进 / 时制 / 主题 / 历史入口 /
          导入历史（覆盖·合并）/ 恢复默认尺寸 / 开机自启；所有设置即时生效并落盘。 -->

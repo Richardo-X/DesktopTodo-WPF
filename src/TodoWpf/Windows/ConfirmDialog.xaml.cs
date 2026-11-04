@@ -15,6 +15,8 @@ public partial class ConfirmDialog : Window
     private ConfirmDialog(string title, string body, string okText, bool danger)
     {
         InitializeComponent();
+        // 2026-11-05 裁定：二级窗弃 WPF 投影（投影会从圆角缺口透出显脏），改 DWM 系统圆角（与主窗同壳）
+        WindowShell.ApplyFixed(this);
         TitleText.Text = title;
         BodyText.Text = body;
         BodyText.Visibility = string.IsNullOrEmpty(body) ? Visibility.Collapsed : Visibility.Visible;
