@@ -272,12 +272,16 @@ public partial class MainTodoWindow : Window
         PinIcon.SetResourceReference(
             System.Windows.Shapes.Shape.StrokeProperty,
             on ? "Brush.Accent" : "Brush.Faint");
+        // 激活态短线（用户 2026-11-05 裁定）：激活时图标下方显示主题色短线
+        PinActiveBar.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
     }
 
     public void SetTuckLock(bool on)
     {
         TuckLockBtn.Foreground = on ? (Brush)FindResource("Brush.Accent") : (Brush)FindResource("Brush.Faint");
         TuckLockBtn.ToolTip = on ? "缩进锁定：已开启（贴边保持弹出）" : "缩进锁定";
+        // 激活态短线（用户 2026-11-05 裁定）：与置顶同款
+        TuckActiveBar.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void ThemeBtn_Click(object sender, RoutedEventArgs e) => Controller?.ToggleTheme();

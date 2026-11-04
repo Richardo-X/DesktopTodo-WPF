@@ -231,25 +231,39 @@
                                 </Canvas>
                             </Viewbox>
                         </Button>
+                        <!-- 激活态短线（用户 2026-11-05 裁定）：图标下方 12×3 圆角短线，
+                             激活时显示、再点消失；图标本身保持变蓝，双信号 -->
                         <Button x:Name="PinBtn" Style="{StaticResource Ib}" ToolTip="窗口置顶开关" Click="PinBtn_Click">
-                            <Viewbox Width="16" Height="16">
-                                <Canvas Width="24" Height="24">
-                                    <Path x:Name="PinIcon" Data="{StaticResource Icon.Pin}"
-                                          Stroke="{DynamicResource Brush.Faint}"
-                                          StrokeThickness="1.8"
-                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                                </Canvas>
-                            </Viewbox>
+                            <Grid Width="32" Height="32">
+                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Canvas Width="24" Height="24">
+                                        <Path x:Name="PinIcon" Data="{StaticResource Icon.Pin}"
+                                              Stroke="{DynamicResource Brush.Faint}"
+                                              StrokeThickness="1.8"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <Border x:Name="PinActiveBar" Width="12" Height="3" CornerRadius="1.5"
+                                        HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                                        Margin="0,0,0,4" Visibility="Collapsed"
+                                        Background="{DynamicResource Brush.Accent}"/>
+                            </Grid>
                         </Button>
                         <Button x:Name="TuckLockBtn" Style="{StaticResource Ib}" ToolTip="缩进锁定" Click="TuckLockBtn_Click">
-                            <Viewbox Width="16" Height="16">
-                                <Canvas Width="24" Height="24">
-                                    <Path Data="{StaticResource Icon.TuckLock}"
-                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                                          StrokeThickness="1.8"
-                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                                </Canvas>
-                            </Viewbox>
+                            <Grid Width="32" Height="32">
+                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="{StaticResource Icon.TuckLock}"
+                                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              StrokeThickness="1.8"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <Border x:Name="TuckActiveBar" Width="12" Height="3" CornerRadius="1.5"
+                                        HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                                        Margin="0,0,0,4" Visibility="Collapsed"
+                                        Background="{DynamicResource Brush.Accent}"/>
+                            </Grid>
                         </Button>
                         <Button x:Name="SettingsBtn" Style="{StaticResource Ib}" ToolTip="设置" Click="SettingsBtn_Click">
                             <Viewbox Width="16" Height="16">
