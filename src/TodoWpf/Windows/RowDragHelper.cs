@@ -43,6 +43,7 @@ internal sealed class RowDragHelper
     private Border? _dragCard;
     private TodoRowView? _dragRow;
     private List<Border>? _cards;
+    private List<FrameworkElement>? _presenters;
     private List<double>? _tops;
     private double _pitch;
     private double _grab;
@@ -111,6 +112,7 @@ internal sealed class RowDragHelper
 
         var mouseScreenY = ScreenY(e) ?? 0;
         _cards = cards;
+        _presenters = presenters;
         _tops = tops;
         _dragRow = row;
         _dragCard = cards[from];
@@ -178,7 +180,7 @@ internal sealed class RowDragHelper
 
         // 被拖行的虚拟顶边钳在待办段内
         var want = Math.Min(Math.Max(cy - _grab, _tops![0]), _tops[^1]);
-        _dragCard!.RenderTransform = new TranslateTransform(want - _tops[_from], 0);
+        _dragCard!.RenderTransform = new TranslateTransform(0, want - _tops[_from]);
 
         // 中心线换位（含钳到首/末槽）
         var vc = want + rowH / 2;
@@ -207,7 +209,12 @@ internal sealed class RowDragHelper
 
     private void ArmVisual()
     {
-        Panel.SetZIndex(_dragCard!, 6);
+        // 层叠由 ItemsControl 的直接子元素（ContentPresenter）决定；设在卡面 Border 上无效 → 被其他行遮住
+        if (_presenters is not null && _from < _presenters.Count)
+        {
+            Panel.SetZIndex(_presenters[_from], 6);
+        }
+
         _dragCard!.Effect = new DropShadowEffect
         {
             BlurRadius = 22,
@@ -324,6 +331,7 @@ internal sealed class RowDragHelper
         var card = _dragCard;
         var row = _dragRow;
         var cards = _cards;
+        var presenters = _presenters;
         var tops = _tops;
         var from = _from;
         var target = commit ? _to : _from;
@@ -331,6 +339,7 @@ internal sealed class RowDragHelper
         _dragCard = null;
         _dragRow = null;
         _cards = null;
+        _presenters = null;
         _tops = null;
         _armed = false;
         _from = 0;
@@ -371,7 +380,11 @@ internal sealed class RowDragHelper
         timer.Tick += (_, _) =>
         {
             timer.Stop();
-            Panel.SetZIndex(card, 0);
+            if (presenters is not null && from < presenters.Count)
+            {
+                Panel.SetZIndex(presenters[from], 0);
+            }
+
             card.Effect = null;
             card.BorderBrush = (Brush)_window.FindResource("Brush.RowCardBorder");
             if (landed)

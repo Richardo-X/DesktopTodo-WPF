@@ -157,6 +157,31 @@ public partial class QuickWindow : Window
 
     private void TemplateBatchDelete_Click(object sender, RoutedEventArgs e) => Controller?.DeleteSelected();
 
+    /// <summary>批量态勾选框点击 = 切换选中（Click 不会被绑定回灌触发，无双切）。</summary>
+    private void TplCheck_Click(object sender, RoutedEventArgs e)
+    {
+        if (Controller is not { IsTemplateBatch: true }
+            || (sender as System.Windows.Controls.CheckBox)?.DataContext is not TemplateRowView row)
+        {
+            return;
+        }
+
+        Controller.ToggleBatchSelection(row.Id);
+    }
+
+    /// <summary>批量切选就地改投影（INPC），不重建容器。</summary>
+    public void UpdateRowSelection(string id, bool selected)
+    {
+        foreach (var row in TemplateRows)
+        {
+            if (row.Id == id)
+            {
+                row.Selected = selected;
+                return;
+            }
+        }
+    }
+
     /// <summary>批量中点行任意处 = 切换选中（与主窗同构；常规态交给行内按钮/双击）。</summary>
     private void TplRow_Click(object sender, MouseButtonEventArgs e)
     {

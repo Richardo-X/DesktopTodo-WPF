@@ -100,7 +100,8 @@ public partial class MainTodoWindow : Window
             Rows.Add(row);
         }
 
-        TodoEmpty.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Hidden;
+        // Collapsed（非 Hidden）：Hidden 仍占 46px 布局 → 有数据时最后一张卡与「已完成」之间多出一大段空白
+        TodoEmpty.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// <summary>整批刷新已完成行。</summary>
@@ -120,15 +121,26 @@ public partial class MainTodoWindow : Window
 
     private void BatchToggle_Click(object sender, RoutedEventArgs e) => Controller?.ToggleBatch();
 
-    private void RowComplete_Checked(object sender, RoutedEventArgs e)
+    /// <summary>
+    /// 行尾勾选框点击。用 Click 而非 Checked/Unchecked：Click 只在用户点击时触发，
+    /// 绑定回灌（Selected/Completed 变化）不会触发 → 不会出现"一次点击切两次"。
+    /// 批量态=切换选中；常规态=完成（用户 2026-11-04 裁定：勾选框在两种态下都可交互）。
+    /// </summary>
+    private void RowCheck_Click(object sender, RoutedEventArgs e)
     {
-        // 批量中勾选框仅作指示（IsHitTestVisible=False），但绑定设值仍会触发本事件——切选统一走 Row_Click
-        if (InBatch || (sender as System.Windows.Controls.CheckBox)?.DataContext is not TodoRowView row)
+        if ((sender as System.Windows.Controls.CheckBox)?.DataContext is not TodoRowView row)
         {
             return;
         }
 
-        Controller?.CompleteRow(row.Id);
+        if (InBatch)
+        {
+            Controller?.ToggleBatchSelection(row.Id);
+        }
+        else
+        {
+            Controller?.CompleteRow(row.Id);
+        }
     }
 
     /// <summary>批量中点行任意处 = 切换选中（原型批量分支整行可点）。</summary>
@@ -162,15 +174,15 @@ public partial class MainTodoWindow : Window
         SettingsBtn.IsEnabled = !visible;
     }
 
-    /// <summary>批量切选只更新该行视觉：替换单条投影触发单容器重生成，
-    /// 避免整表重建造成的绑定事件风暴与悬停丢失。</summary>
+    /// <summary>批量切选：就地改投影的 Selected（INotifyPropertyChanged）——
+    /// 不替换实例、不重建容器，快速连点不丢点击（用户 2026-11-04 反馈）。</summary>
     public void UpdateRowSelection(string id, bool selected)
     {
-        for (var i = 0; i < Rows.Count; i++)
+        foreach (var row in Rows)
         {
-            if (Rows[i].Id == id)
+            if (row.Id == id)
             {
-                Rows[i] = Rows[i] with { Selected = selected };
+                row.Selected = selected;
                 return;
             }
         }

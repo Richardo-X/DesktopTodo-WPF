@@ -3,23 +3,94 @@ using TodoWpf.Core.Utils;
 
 namespace TodoWpf.Core.Services;
 
-/// <summary>主窗一行待办/已完成/模板的展示投影（纯数据，UI 层直接绑定）。
-/// Selected/BatchMode：批量删除态的行选中与批量标志（批次05①；非持久字段，仅投影）。</summary>
-public sealed record TodoRowView(
-    string Id,
-    string Content,
-    bool Overdue,
-    bool Completed = false,
-    bool Selected = false,
-    bool BatchMode = false);
+/// <summary>
+/// 主窗一行待办的展示投影。**可观察对象**（非 record）：批量勾选只改 Selected 属性、
+/// 由绑定就地刷新——若每次换新实例，ItemsControl 会重建该行容器，快速连点会丢点击
+/// （用户 2026-11-04 反馈「快速点击无法快速切换」的根因）。
+/// </summary>
+public sealed class TodoRowView : System.ComponentModel.INotifyPropertyChanged
+{
+    private bool _selected;
+
+    public TodoRowView(string id, string content, bool overdue,
+                       bool completed = false, bool selected = false, bool batchMode = false)
+    {
+        Id = id;
+        Content = content;
+        Overdue = overdue;
+        Completed = completed;
+        _selected = selected;
+        BatchMode = batchMode;
+    }
+
+    public string Id { get; }
+
+    public string Content { get; }
+
+    public bool Overdue { get; }
+
+    public bool Completed { get; }
+
+    /// <summary>批量态标志（整表刷新时确定，不单独变更）。</summary>
+    public bool BatchMode { get; }
+
+    /// <summary>批量选中态（就地可变，绑定直接刷新）。</summary>
+    public bool Selected
+    {
+        get => _selected;
+        set
+        {
+            if (_selected == value)
+            {
+                return;
+            }
+
+            _selected = value;
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Selected)));
+        }
+    }
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+}
 
 public sealed record DoneRowView(string Id, string Content, bool Overdue, string CompletedTimeText);
 
-public sealed record TemplateRowView(
-    string Id,
-    string Content,
-    bool Selected = false,
-    bool BatchMode = false);
+/// <summary>模板行投影（同 TodoRowView：Selected 就地可变）。</summary>
+public sealed class TemplateRowView : System.ComponentModel.INotifyPropertyChanged
+{
+    private bool _selected;
+
+    public TemplateRowView(string id, string content, bool selected = false, bool batchMode = false)
+    {
+        Id = id;
+        Content = content;
+        _selected = selected;
+        BatchMode = batchMode;
+    }
+
+    public string Id { get; }
+
+    public string Content { get; }
+
+    public bool BatchMode { get; }
+
+    public bool Selected
+    {
+        get => _selected;
+        set
+        {
+            if (_selected == value)
+            {
+                return;
+            }
+
+            _selected = value;
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Selected)));
+        }
+    }
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+}
 
 /// <summary>
 /// 三窗列表/计数的展示口径（纯函数，可单测）：
@@ -38,9 +109,9 @@ public static class MainViewService
                 item.Id,
                 item.Content,
                 OverdueService.IsActiveOverdue(item, todayKey),
-                Completed: false,
-                Selected: batch is { IsActive: true } && batch.IsSelected(item.Id),
-                BatchMode: batch is { IsActive: true }))
+                false,
+                batch is { IsActive: true } && batch.IsSelected(item.Id),
+                batch is { IsActive: true }))
             .ToList();
 
     public static List<DoneRowView> DoneRows(AppData data, string sort)
@@ -75,8 +146,8 @@ public static class MainViewService
             .Select(t => new TemplateRowView(
                 t.Id,
                 t.Content,
-                Selected: batch is { IsActive: true } && batch.IsSelected(t.Id),
-                BatchMode: batch is { IsActive: true }))
+                batch is { IsActive: true } && batch.IsSelected(t.Id),
+                batch is { IsActive: true }))
             .ToList();
 
     /// <summary>
