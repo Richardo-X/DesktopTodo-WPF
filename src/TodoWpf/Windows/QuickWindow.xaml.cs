@@ -70,6 +70,9 @@ public partial class QuickWindow : Window
         }
     }
 
+    /// <summary>上一次刷新时的批量态（用于判断能否走"只追加"快路径）。</summary>
+    private bool _rowsBatchActive;
+
     /// <summary>内容缩放比（气泡定位/尺寸换算用）。</summary>
     public double ContentScaleFactor => ((ScaleTransform)ContentScale).ScaleX;
 
@@ -77,7 +80,9 @@ public partial class QuickWindow : Window
     public void SetTemplateRows(IReadOnlyList<TemplateRowView> rows, int maxTemplates, bool batchActive = false)
     {
         // 增量同步：新列表是旧列表的延长时只追加新增项，避免整表清空重建导致闪烁。
-        var appendOnly = rows.Count >= TemplateRows.Count;
+        // ⚠ 但**批量态发生变化时必须整表重建**——否则退出批量时旧行的 Selected/BatchMode 不会被清掉，
+        //   表现为"退出批量后仍显示选中样式"（用户 2026-11-04 实测）。
+        var appendOnly = batchActive == _rowsBatchActive && rows.Count >= TemplateRows.Count;
         if (appendOnly)
         {
             for (var i = 0; i < TemplateRows.Count; i++)
@@ -106,6 +111,7 @@ public partial class QuickWindow : Window
             }
         }
 
+        _rowsBatchActive = batchActive;
         TemplateCount.Text = $"{rows.Count}/{maxTemplates}";
         TemplateEmpty.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 

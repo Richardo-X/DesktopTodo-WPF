@@ -199,7 +199,11 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0" Background="Transparent" Margin="16,12,16,4" MouseLeftButtonDown="Titlebar_MouseDown">
+                <!-- 外层 Border 铺满整行（含顶部 12px 留白）承载拖动：此前拖动挂在带 Margin 的 Grid 上，
+                     顶部那 12px 留白不属于该元素 → 按在那里拖不动窗口（用户 2026-11-04）。
+                     内层 Grid 保留原 Margin 以维持原布局。 -->
+                <Border Grid.Row="0" Background="Transparent" MouseLeftButtonDown="Titlebar_MouseDown">
+                    <Grid Margin="16,12,16,4">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Border Width="16" Height="16" CornerRadius="5"
                                 Background="{DynamicResource Brush.Accent}">
@@ -265,7 +269,8 @@
                             </Viewbox>
                         </Button>
                     </StackPanel>
-                </Grid>
+                    </Grid>
+                </Border>
 
                 <Grid Grid.Row="1">
                     <Grid.RowDefinitions>
@@ -515,7 +520,20 @@
                                     <ItemsControl x:Name="DoneList" ItemsSource="{Binding DoneRows}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid Height="44" MouseLeftButtonDown="DoneRow_Click">
+                                                <!-- 已完成行悬停（用户 2026-11-04 指出此前没有）：外层 Border 承载圆角+悬停底色，
+                                                     让"一行到底占多宽"可见。 -->
+                                                <Border CornerRadius="6" MouseLeftButtonDown="DoneRow_Click">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                <Grid Height="44">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="34"/>
                                                         <ColumnDefinition Width="16"/>
@@ -542,6 +560,7 @@
                                                               IsChecked="True" IsEnabled="False"
                                                               VerticalAlignment="Center"/>
                                                 </Grid>
+                                                </Border>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>

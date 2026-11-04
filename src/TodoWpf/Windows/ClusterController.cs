@@ -39,7 +39,15 @@ public sealed class ClusterController : IDisposable
     private FrameworkElement? _hoverRow;
 
     private WinPoint _anchor;
-    private double _scale = 1;
+    /// <summary>用户档位（存档值 ClusterScale）。**不是**实际用于布局的值——
+    /// 布局一律走 EffectiveScale()：按当前屏工作区钳制后使用。
+    /// 这样"拖到小屏被钳小、拖回大屏自动恢复用户档位"，且存档不被钳制值污染
+    /// （用户 2026-11-04 实测：两屏来回拖窗口会一路变小——根因就是原先把钳制值写回了这个字段）。</summary>
+    private double _storedScale = 1;
+
+    /// <summary>实际布局用档位：用户档位按当前屏工作区钳制。</summary>
+    private double EffectiveScale(WinRect area, WinPoint anchor) =>
+        PanelLayout.ClampScale(_storedScale, area, anchor);
     private bool _clusterHidden;
 
     // 拖动/缩放进行中状态
@@ -82,7 +90,7 @@ public sealed class ClusterController : IDisposable
         }
 
 
-        _scale = _data.UiState.ClusterScale;
+        _storedScale = _data.UiState.ClusterScale;
         _anchor = ResolveAnchor();
 
         _main.TitlebarPressed += OnTitlebarPressed;
@@ -150,10 +158,12 @@ public sealed class ClusterController : IDisposable
         // 用户看到"窗口不见了"且无法点中）。需求 §2.1：分辨率变化/拔显示器 → 回可见范围。
         // 必须传真实主窗尺寸：传零尺寸矩形时钳制会允许贴到工作区右缘（窗口仍整个在屏外）
         var clampedAnchor = ScreenClamp.ClampToWorkArea(
-            new WinRect(_anchor.X, _anchor.Y, PanelLayout.MainWidth * _scale, PanelLayout.MainBaseHeight * _scale),
+            new WinRect(
+                _anchor.X, _anchor.Y,
+                PanelLayout.MainWidth * EffectiveScale(startupArea, _anchor),
+                PanelLayout.MainBaseHeight * EffectiveScale(startupArea, _anchor)),
             startupArea);
         _anchor = new WinPoint(clampedAnchor.X, clampedAnchor.Y);
-        _scale = PanelLayout.ClampScale(_scale, startupArea, _anchor);
 
         ApplyThemeState();
         _main.Controller = this;
@@ -216,7 +226,7 @@ public sealed class ClusterController : IDisposable
             PanelLayout.DefaultMainHeight(workArea.Height) / PanelLayout.MainBaseHeight,
             workArea,
             estimate);
-        _scale = scale;
+        _storedScale = scale;
         return PanelLayout.FirstLaunchAnchor(workArea, scale, ui.QuickVisible);
     }
 
@@ -260,10 +270,11 @@ public sealed class ClusterController : IDisposable
     {
         var ui = _data.UiState;
         var workArea = WorkArea();
-        var frame = PanelLayout.Arrange(SnappedAnchor(), _scale, ui.QuickVisible);
+        var scale = EffectiveScale(workArea, SnappedAnchor());
+        var frame = PanelLayout.Arrange(SnappedAnchor(), scale, ui.QuickVisible);
 
         // 模板窗用固定画布（零矩形变更）；主窗逐帧摆位。
-        var tplRect = frame.Template.Rect with { Height = TemplateWindowHeight() * _scale };
+        var tplRect = frame.Template.Rect with { Height = TemplateWindowHeight() * scale };
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
             (tplRect, _quick, frame.Template.Visible, PinEdge.Left));
@@ -296,7 +307,7 @@ public sealed class ClusterController : IDisposable
                 UiState = d.UiState with
                 {
                     Pos = new Position { X = _anchor.X, Y = _anchor.Y },
-                    ClusterScale = _scale,
+                    ClusterScale = _storedScale,
                 },
             });
         }
@@ -306,13 +317,14 @@ public sealed class ClusterController : IDisposable
     private void MoveCluster()
     {
         var ui = _data.UiState;
-        var frame = PanelLayout.Arrange(SnappedAnchor(), _scale, ui.QuickVisible);
+        var scale = EffectiveScale(WorkArea(), SnappedAnchor());
+        var frame = PanelLayout.Arrange(SnappedAnchor(), scale, ui.QuickVisible);
 
         // 快捷窗在移动路径上也必须用**画布矩形**（与 ApplyLayout 一致）：
         // 它是个固定设计尺寸 + 渲染层缩放的窗，卡面比目标档宽（310 设计宽）。
         // 这里若用目标矩形（缩放后的实际宽度）摆它，卡片就被塞进更窄的窗口里 ⇒ 移动过程中被裁；
         // 松手走 ApplyLayout 又换回画布矩形 ⇒ 于是"移动时被裁、松手恢复"（用户 2026-10-13 实测）。
-        var tplRect = frame.Template.Rect with { Height = TemplateWindowHeight() * _scale };
+        var tplRect = frame.Template.Rect with { Height = TemplateWindowHeight() * scale };
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
             (tplRect, _quick, frame.Template.Visible, PinEdge.Left));
@@ -413,18 +425,8 @@ public sealed class ClusterController : IDisposable
         // 本批 ④-3 我越界加的四缘磁吸已移除——它也正是"拖不过屏幕"的根因：磁吸把整簇钳在屏内）。
         var area = WorkArea();
         anchor = PanelLayout.ClampAnchorForDrag(
-            anchor, PanelLayout.MainWidth * _scale, area);
-
-        // 跨屏拖动：工作区变化时按新工作区重钳整簇缩放（裁定 D7，照 ele；只钳生效值、不动存档档位）
-        if (_dragWorkArea != area)
-        {
-            _dragWorkArea = area;
-            var reclamped = PanelLayout.ClampScale(_scale, area, anchor);
-            if (Math.Abs(reclamped - _scale) > 0.0001)
-            {
-                _scale = reclamped;
-            }
-        }
+            anchor, PanelLayout.MainWidth * EffectiveScale(area, anchor), area);
+        _dragWorkArea = area;
 
         _anchor = anchor;
         MoveCluster(); // 快路径：只改坐标，不重排、不落盘（抖动治理）
@@ -505,7 +507,9 @@ public sealed class ClusterController : IDisposable
         var targetMainWidth = Math.Max(
             PanelLayout.MainWidth * PanelLayout.MinScaleFor(workArea.Height),
             _resizeStartMainWidth + (mouse.X - _resizeStartMouse.X));
-        _scale = PanelLayout.ClampScale(targetMainWidth / PanelLayout.MainWidth, workArea, SnappedAnchor());
+        // 写用户档位：只做绝对范围保护，按屏钳制交给 EffectiveScale（这样拖回大屏能恢复）
+        _storedScale = Math.Clamp(
+            targetMainWidth / PanelLayout.MainWidth, 0.15, PanelLayout.MaxScale);
         RequestResizeLayout();
     }
 
@@ -687,7 +691,8 @@ public sealed class ClusterController : IDisposable
     {
         var ui = _data.UiState;
         var workArea = WorkArea();
-        var frame = PanelLayout.Arrange(SnappedAnchor(), _scale, ui.QuickVisible);
+        var scale = EffectiveScale(workArea, SnappedAnchor());
+        var frame = PanelLayout.Arrange(SnappedAnchor(), scale, ui.QuickVisible);
 
         var targets = new List<(Window Window, double DockedTop, double HiddenTop)>();
         if (frame.Main.Visible)
@@ -697,7 +702,7 @@ public sealed class ClusterController : IDisposable
 
         if (frame.Template.Visible)
         {
-            var tplH = TemplateWindowHeight() * _scale;
+            var tplH = TemplateWindowHeight() * scale;
             targets.Add((_quick, frame.Template.Rect.Y, workArea.Y - tplH - 8));
         }
 
@@ -968,7 +973,7 @@ public sealed class ClusterController : IDisposable
     public void ResetWindowSize()
     {
         var workArea = WorkArea();
-        _scale = PanelLayout.ClampScale(
+        _storedScale = PanelLayout.ClampScale(
             PanelLayout.DefaultMainHeight(workArea.Height) / PanelLayout.MainBaseHeight,
             workArea, SnappedAnchor());
         ApplyLayout();
@@ -1686,7 +1691,7 @@ public sealed class ClusterController : IDisposable
         var clamped = ScreenClamp.ClampToWorkArea(
             new WinRect(_anchor.X, _anchor.Y, 0, 0), workArea);
         _anchor = new WinPoint(clamped.X, clamped.Y);
-        _scale = PanelLayout.ClampScale(_scale, workArea, _anchor);
+        // 只钳生效值；用户档位不动
         if (!_clusterHidden)
         {
             ApplyLayout();
