@@ -203,7 +203,8 @@
                      顶部那 12px 留白不属于该元素 → 按在那里拖不动窗口（用户 2026-11-04）。
                      内层 Grid 保留原 Margin 以维持原布局。 -->
                 <Border Grid.Row="0" Background="Transparent" MouseLeftButtonDown="Titlebar_MouseDown">
-                    <Grid Margin="16,12,16,4">
+                    <!-- 顶部留白 12→6（2026-11-05 用户：间隙偏大，减半试试） -->
+                    <Grid Margin="16,6,16,4">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Border Width="16" Height="16" CornerRadius="5"
                                 Background="{DynamicResource Brush.Accent}">
