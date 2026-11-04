@@ -164,10 +164,13 @@ public partial class MainTodoWindow : Window
         }
     }
 
-    /// <summary>已完成行：双击打开只读详情窗（需求 §2.6）。</summary>
+    /// <summary>已完成行：双击打开只读详情窗（需求 §2.6）。
+    /// 事件挂在外层悬停 Border 上（2026-11-04 补悬停时挪的），sender 是 Border 不是 Grid
+    /// —— 此前 as Grid 恒为 null 导致双击全部无效（用户 2026-11-05 反馈）；
+    /// 用 FrameworkElement 兼容两种挂载。</summary>
     private void DoneRow_Click(object sender, MouseButtonEventArgs e)
     {
-        if (e.ClickCount != 2 || (sender as System.Windows.Controls.Grid)?.DataContext is not DoneRowView row)
+        if (e.ClickCount != 2 || (sender as System.Windows.FrameworkElement)?.DataContext is not DoneRowView row)
         {
             return;
         }
