@@ -44,21 +44,33 @@ public class RowLayoutInvariantTests
         double.Parse(value ?? throw new InvalidOperationException("缺少属性值"), System.Globalization.CultureInfo.InvariantCulture);
 
     [Fact]
-    public void 待办行卡_行内可用高度_必须容得下勾选框()
+    public void 行卡内边距_不得写死垂直值_内容须居中自适应()
     {
         string[] file = ["src", "TodoWpf", "Windows", "MainTodoWindow.xaml"];
+        var doc = RepoRoot.LoadXaml(file);
 
-        var cardHeight = Number(SetterValue("RowCard", "Height", file));
+        // 用户 2026-11-04：卡片外尺寸固定，内边距不写死、允许内容增减内边距
         var padding = ParseThickness(SetterValue("RowCard", "Padding", file)!);
-        var border = ParseThickness(SetterValue("RowCard", "BorderThickness", file)!);
-        var checkSize = Number(SetterValue("RowCheck", "Height", file));
-
-        var innerHeight = cardHeight - padding.Top - padding.Bottom - border.Top - border.Bottom;
-
         Assert.True(
-            innerHeight >= checkSize,
-            $"行内可用高 {innerHeight} < 勾选框 {checkSize}（行高 {cardHeight}，上下内边距 {padding.Top}/{padding.Bottom}，上下边框 {border.Top}/{border.Bottom}）" +
-            "——勾选框会被挤溢出。注意 WPF Padding 写法是「左右,上下」。");
+            padding.Top == 0 && padding.Bottom == 0,
+            $"RowCard 的垂直内边距必须为 0（现为 上{padding.Top}/下{padding.Bottom}）——垂直方向应由内容居中自适应，" +
+            "写死会导致内容一变高就被挤溢出（2026-11-04 勾选框被切的根因）。");
+
+        // 行内容 Grid 必须垂直居中（这样有效内边距 = (卡高 - 内容高)/2，自适应）
+        var rowGrid = doc
+            .Descendants()
+            .FirstOrDefault(e => e.Name.LocalName == "Border"
+                                 && e.Attribute("Style") is null
+                                 && e.Elements().Any(c => c.Name.LocalName == "Grid"
+                                                          && c.Attribute("VerticalAlignment") is not null));
+        var centered = doc.Descendants()
+            .Any(e => e.Name.LocalName == "Grid" && e.Attribute("VerticalAlignment")?.Value == "Center");
+        Assert.True(centered, "行内容 Grid 需要 VerticalAlignment=\"Center\" 才能让内容在固定高卡内居中自适应");
+
+        // 内容不得超过卡高（居中也不该溢出）
+        var cardHeight = Number(SetterValue("RowCard", "Height", file));
+        var checkSize = Number(SetterValue("RowCheck", "Height", file));
+        Assert.True(checkSize <= cardHeight, $"勾选框 {checkSize} > 卡高 {cardHeight}，居中也会溢出");
     }
 
     [Fact]
@@ -67,10 +79,10 @@ public class RowLayoutInvariantTests
         var doc = RepoRoot.LoadXaml("src", "TodoWpf", "Windows", "MainTodoWindow.xaml");
         string[] file = ["src", "TodoWpf", "Windows", "MainTodoWindow.xaml"];
 
+        // 垂直内边距为 0（内容居中自适应）→ 可用高 = 卡高 - 上下边框
         var cardHeight = Number(SetterValue("RowCard", "Height", file));
-        var padding = ParseThickness(SetterValue("RowCard", "Padding", file)!);
         var border = ParseThickness(SetterValue("RowCard", "BorderThickness", file)!);
-        var innerHeight = cardHeight - padding.Top - padding.Bottom - border.Top - border.Bottom;
+        var innerHeight = cardHeight - border.Top - border.Bottom;
 
         // 待办行文字（绑定 Content 且带行高的那个 TextBlock）
         var lineHeights = doc

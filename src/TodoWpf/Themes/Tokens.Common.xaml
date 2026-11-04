@@ -125,7 +125,7 @@
                         <ScrollBar x:Name="PART_VerticalScrollBar"
                                    Orientation="Vertical"
                                    HorizontalAlignment="Right" VerticalAlignment="Stretch"
-                                   Width="5"
+                                   Width="8"
                                    Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
                                    Maximum="{TemplateBinding ScrollableHeight}"
                                    ViewportSize="{TemplateBinding ViewportHeight}"
@@ -141,8 +141,12 @@
          「不挤压内容」由调用方保证：滚动容器一律 VerticalScrollBarVisibility=Visible
          （槽位常驻）+ 右内边距同步让出（命中 5px 时右内边距 9 = 两侧 14/14 等距）。 -->
     <Style TargetType="ScrollBar">
-        <Setter Property="Width" Value="5"/>
+        <!-- 命中区 8 DIP（用户 2026-11-04：4px 视觉条在 5px 命中区里每侧仅 0.5 DIP，
+             125% 下 = 0.625 物理像素落不到整数 → 渲染吸附到一侧、看着不居中）。
+             8 DIP 命中区 + 4 DIP 视觉条 → 每侧 2 DIP，100% 下精确居中；125% 下误差 ≤0.5px。 -->
+        <Setter Property="Width" Value="8"/>
         <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="UseLayoutRounding" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ScrollBar">
@@ -154,6 +158,7 @@
                                         <ControlTemplate TargetType="Thumb">
                                             <Grid Background="Transparent">
                                                 <Border Width="4" HorizontalAlignment="Center"
+                                                        SnapsToDevicePixels="True"
                                                         Background="{DynamicResource Brush.CardBorder}"
                                                         CornerRadius="2"/>
                                             </Grid>
