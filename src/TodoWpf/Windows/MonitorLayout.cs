@@ -69,6 +69,56 @@ internal static class MonitorLayout
             (work.Bottom - work.Top) / scale);
     }
 
+    [DllImport("user32.dll")]
+    private static extern bool GetCursorPos(out NativePoint point);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr MonitorFromPoint(NativePoint point, uint flags);
+
+    [DllImport("shcore.dll")]
+    private static extern int GetDpiForMonitor(IntPtr monitor, int type, out uint dpiX, out uint dpiY);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativePoint
+    {
+        public int X;
+        public int Y;
+    }
+
+    /// <summary>
+    /// **鼠标当前所在显示器**的工作区（DIP）。
+    /// 拖动时用它决定"整簇该落在哪块屏"：鼠标移到另一块屏 → 目标屏切换 → 整簇切过去
+    /// （2026-11-04：此前按主窗所在屏钳制，导致主窗永远跨不过边界、彻底无法跨屏）。
+    /// </summary>
+    public static WinRect WorkAreaDipsAtCursor()
+    {
+        if (!GetCursorPos(out var point))
+        {
+            return PrimaryWorkAreaDips();
+        }
+
+        var monitor = MonitorFromPoint(point, MonitorDefaultToNearest);
+        var info = new MonitorInfo { Size = Marshal.SizeOf<MonitorInfo>() };
+        if (monitor == IntPtr.Zero || !GetMonitorInfo(monitor, ref info))
+        {
+            return PrimaryWorkAreaDips();
+        }
+
+        uint dpiX = 96, dpiY = 96;
+        if (GetDpiForMonitor(monitor, 0, out dpiX, out dpiY) != 0 || dpiX == 0)
+        {
+            dpiX = 96;
+        }
+
+        var scale = dpiX / 96.0;
+        var work = info.Work;
+        return new WinRect(
+            work.Left / scale,
+            work.Top / scale,
+            (work.Right - work.Left) / scale,
+            (work.Bottom - work.Top) / scale);
+    }
+
     private static WinRect PrimaryWorkAreaDips()
     {
         var area = SystemParameters.WorkArea;

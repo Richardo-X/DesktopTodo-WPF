@@ -97,7 +97,16 @@ public partial class QuickWindow : Window
 
         if (appendOnly)
         {
-            for (var i = TemplateRows.Count; i < rows.Count; i++)
+            // 只追加时**必须就地同步已有行的 Selected**：全选/取消全选等操作行 id 没变、批量态也没变，
+            // 若只追加不同步，就会出现"计数器涨了但行没显示选中"（用户 2026-11-04 实测）。
+            // Selected 是可观察属性（INPC），就地赋值即刷新，不重建容器、不闪烁。
+            var oldCount = TemplateRows.Count;
+            for (var i = 0; i < oldCount; i++)
+            {
+                TemplateRows[i].Selected = rows[i].Selected;
+            }
+
+            for (var i = oldCount; i < rows.Count; i++)
             {
                 TemplateRows.Add(rows[i]);
             }

@@ -437,26 +437,14 @@ public sealed class ClusterController : IDisposable
         // 主窗至少 90 DIP 可见（左右各留 90）、顶边不越工作区顶（可贴顶）、底部至少 50 DIP 可见。
         // **只保留上边缘吸附**（裁定 D1：左/右/下边缘贴边在 ele 与需求文档「暂不做」清单里，
         // 本批 ④-3 我越界加的四缘磁吸已移除——它也正是"拖不过屏幕"的根因：磁吸把整簇钳在屏内）。
+        // 按**主窗所在屏**钳制（照 ele clampAnchorForEdges：主窗 ≥90px 可见、顶不越界、底部 ≥50px 可见）。
+        // 注：主窗可以一直往右拖到只剩 90px 可见 → 其中心越过边界后 MonitorFromWindow 切到新屏 →
+        // 继续往新屏移动 ⇒ **跨屏可移动**。
+        // （2026-11-04 曾改为"按鼠标所在屏 + 整簇不跨屏"，结果主窗永远跨不过边界、完全无法跨屏，已回退。）
         var area = WorkArea();
         var dragScale = LayoutScale;
         anchor = PanelLayout.ClampAnchorForDrag(
             anchor, PanelLayout.MainWidth * dragScale, area);
-
-        // 整簇不跨屏（2026-11-04 开发自定，见决策文档）：
-        // 两块屏缩放不同（2K@100% / 4K@175%）时，DIP 是"按屏"的——整簇一半在这屏、一半在那屏时，
-        // 模板窗的位置按主窗所在屏的 DIP 空间算出却落在另一块屏上 → 位置/尺寸被误读，表现为
-        // "两窗分离很远 + 内容错乱"（用户 2026-11-04 实测）。故把整簇钳在所在屏内；
-        // 放不下时退化为 ele 口径（主窗 ≥90px 可见），不做额外限制。
-        var clusterW = PanelLayout.MainWidth * dragScale
-            + (_data.UiState.QuickVisible ? PanelLayout.Gap + PanelLayout.TemplateWidth * dragScale : 0);
-        if (clusterW <= area.Width)
-        {
-            anchor = anchor with
-            {
-                X = Math.Clamp(anchor.X, area.X, Math.Max(area.X, area.Right - clusterW)),
-            };
-        }
-
         _dragWorkArea = area;
 
         _anchor = anchor;
