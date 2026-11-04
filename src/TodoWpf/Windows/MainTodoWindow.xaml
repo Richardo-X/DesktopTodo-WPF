@@ -293,7 +293,7 @@
                                            Foreground="{DynamicResource Brush.Muted}"
                                            Typography.NumeralAlignment="Tabular"/>
                             </Border>
-                            <Button Style="{StaticResource Sq}" Margin="8,0,0,0" ToolTip="批量删除待办"
+                            <Button x:Name="BatchToggleBtn" Style="{StaticResource Sq}" Margin="8,0,0,0" ToolTip="批量删除待办"
                                     Click="BatchToggle_Click">
                                 <Viewbox Width="16" Height="16">
                                     <Canvas Width="24" Height="24">
@@ -305,7 +305,7 @@
                             </Button>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                            <Button Background="{DynamicResource Brush.Accent}" BorderThickness="0"
+                            <Button x:Name="AddBtn" Background="{DynamicResource Brush.Accent}" BorderThickness="0"
                                     Width="32" Height="32" Cursor="Hand" ToolTip="新建待办" Click="AddBtn_Click">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
@@ -353,12 +353,16 @@
                         </StackPanel>
                     </Grid>
 
+                    <!-- 底部 24 让位缩放角标：用 Margin 而非 Padding——Padding 不缩小滚动条，
+                         滚动条会一直画到窗口底、穿过角标（用户 2026-11-04 反馈）；
+                         Margin 收窄容器 → 滚动条命中下限 = 列表内容下限 -->
                     <ScrollViewer x:Name="ListScroll" Grid.Row="2" VerticalScrollBarVisibility="Visible"
                                   HorizontalScrollBarVisibility="Disabled"
-                                  Padding="14,0,9,24"
+                                  Padding="14,0,9,0" Margin="0,0,0,24"
                                   ScrollChanged="ListScroll_ScrollChanged">
                         <StackPanel>
-                            <ItemsControl x:Name="TodoList" ItemsSource="{Binding Rows}">
+                            <ItemsControl x:Name="TodoList" ItemsSource="{Binding Rows}"
+                              AutomationProperties.AutomationId="TodoList">
                                 <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border Style="{StaticResource RowCard}" MouseLeftButtonDown="Row_Click">
@@ -396,7 +400,7 @@
                                             </Border>
                                             <TextBlock Grid.Column="1" Text="{Binding Content}"
                                                        FontSize="14.5" TextTrimming="CharacterEllipsis"
-                                                       VerticalAlignment="Center" Margin="8,0,8,0"
+                                                       VerticalAlignment="Center" Margin="6,0,2,0"
                                                        MouseEnter="RowText_MouseEnter" MouseLeave="RowText_MouseLeave">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
@@ -412,7 +416,7 @@
                                             </TextBlock>
                                             <TextBlock Grid.Column="2" Text="逾期" FontSize="10"
                                                        Foreground="{DynamicResource Brush.Overdue}"
-                                                       VerticalAlignment="Center" Margin="0,0,8,0">
+                                                       VerticalAlignment="Center" Margin="0,0,4,0">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Visibility" Value="Visible"/>
@@ -425,7 +429,7 @@
                                                 </TextBlock.Style>
                                             </TextBlock>
                                             <CheckBox Grid.Column="3" VerticalAlignment="Center"
-                                                      Checked="RowComplete_Checked">
+                                                      Click="RowCheck_Click">
                                                 <!-- 批量态：同一颗行尾勾选框变"选中"指示（原型 .cb.selecting）。
                                                      仅指示不可点（用户 2026-11-04 裁定：整行点击切换）——
                                                      注意绑定设值同样会触发 Checked 事件，代码侧须以 InBatch 屏蔽。 -->
@@ -435,7 +439,6 @@
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding BatchMode}" Value="True">
                                                                 <Setter Property="IsChecked" Value="{Binding Selected, Mode=OneWay}"/>
-                                                                <Setter Property="IsHitTestVisible" Value="False"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -465,24 +468,24 @@
 
                             <!-- 已完成段（时间轴 + 行）：批量态整段变暗禁点（原型 .dimdone） -->
                             <StackPanel x:Name="DoneBlock">
-                                <Grid Height="36" Margin="0,6,0,0">
+                                <Grid Height="40" Margin="0,4,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="16"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="已完成 · " FontSize="10"
+                                        <TextBlock Text="已完成 · " FontSize="12"
                                                    Foreground="{DynamicResource Brush.Faint}"/>
-                                        <TextBlock x:Name="DoneCount" Text="0" FontSize="10"
+                                        <TextBlock x:Name="DoneCount" Text="0" FontSize="12"
                                                    Foreground="{DynamicResource Brush.Faint}"/>
                                     </StackPanel>
                                     <Border Grid.Column="1" Height="1" Margin="8,0,8,0" VerticalAlignment="Center"
                                             Background="{DynamicResource Brush.Hairline}"/>
-                                    <Button Grid.Column="2" Width="16" Height="16" Background="Transparent"
+                                    <Button Grid.Column="2" Width="24" Height="24" Background="Transparent"
                                             BorderThickness="0" Cursor="Hand" ToolTip="按完成时间排序"
                                             Click="DoneSort_Click">
-                                        <Viewbox Width="12" Height="12">
+                                        <Viewbox Width="15" Height="15">
                                             <Canvas Width="24" Height="24">
                                                 <Path Data="{StaticResource Icon.SortAsc}"
                                                       Stroke="{DynamicResource Brush.Faint}" StrokeThickness="1.8"

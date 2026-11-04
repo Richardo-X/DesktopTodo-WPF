@@ -15,9 +15,9 @@
     <Window.Resources>
         <!-- seg 分段按钮（原型 .seg）：26 高、相邻 1px 分隔、on=淡底+accent 字 -->
         <Style x:Key="SegBtn" TargetType="RadioButton">
-            <Setter Property="Height" Value="26"/>
-            <Setter Property="Padding" Value="9,0"/>
-            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="11,0"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Background" Value="Transparent"/>
@@ -45,9 +45,9 @@
 
         <!-- 步进按钮（原型 .stepper .step：26×26） -->
         <Style x:Key="StepBtn" TargetType="Button">
-            <Setter Property="Width" Value="26"/>
-            <Setter Property="Height" Value="26"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="FontSize" Value="17"/>
             <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -74,9 +74,9 @@
 
         <!-- 小按钮（原型 .btn.sm：28 高） -->
         <Style x:Key="SmBtn" TargetType="Button">
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="Padding" Value="10,0"/>
-            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
             <Setter Property="Background" Value="{DynamicResource Brush.CardSolid}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.CardBorder}"/>
@@ -101,8 +101,8 @@
 
         <!-- 开关（原型 .switch：36×20 胶囊 + 14 knob） -->
         <Style x:Key="SwitchBtn" TargetType="ToggleButton">
-            <Setter Property="Width" Value="36"/>
-            <Setter Property="Height" Value="20"/>
+            <Setter Property="Width" Value="42"/>
+            <Setter Property="Height" Value="23"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -111,7 +111,7 @@
                             <Border x:Name="track" CornerRadius="99"
                                     Background="{DynamicResource Brush.CounterChip}"
                                     BorderBrush="{DynamicResource Brush.Line}" BorderThickness="1"/>
-                            <Ellipse x:Name="knob" Width="14" Height="14" Fill="{DynamicResource Brush.Muted}"
+                            <Ellipse x:Name="knob" Width="17" Height="17" Fill="{DynamicResource Brush.Muted}"
                                      HorizontalAlignment="Left" Margin="2,0,0,0">
                                 <Ellipse.RenderTransform>
                                     <TranslateTransform X="0"/>
@@ -128,7 +128,7 @@
                                         <Storyboard>
                                             <DoubleAnimation Storyboard.TargetName="knob"
                                                              Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                                                             To="16" Duration="0:0:0.16"/>
+                                                             To="21" Duration="0:0:0.16"/>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.EnterActions>
@@ -166,7 +166,7 @@
             <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseDown">
                 <Button x:Name="BackBtn" Style="{StaticResource BackButton}" Tag="{StaticResource Icon.ChevL}"
                         ToolTip="返回" Click="Back_Click" HorizontalAlignment="Left"/>
-                <TextBlock Text="设置" FontSize="13" FontWeight="SemiBold"
+                <TextBlock Text="设置" FontSize="15.5" FontWeight="SemiBold"
                            Foreground="{DynamicResource Brush.Text}"
                            VerticalAlignment="Center" HorizontalAlignment="Center"
                            IsHitTestVisible="False"/>
@@ -179,18 +179,18 @@
                     <!-- 待办数量上限 -->
                     <Grid Margin="0,10,0,0">
                         <StackPanel>
-                            <TextBlock Text="待办数量上限" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Text="待办数量上限" FontSize="15.5" FontWeight="SemiBold"
                                        Foreground="{DynamicResource Brush.Text}"/>
-                            <TextBlock Text="1~10 条；不可低于当前待办数量" FontSize="11"
+                            <TextBlock Text="1~10 条；不可低于当前待办数量" FontSize="13"
                                        Foreground="{DynamicResource Brush.Faint}" Margin="0,3,0,0"/>
                         </StackPanel>
                         <Border HorizontalAlignment="Right" VerticalAlignment="Center"
                                 BorderBrush="{DynamicResource Brush.CardBorder}" BorderThickness="1"
-                                CornerRadius="6" Height="28">
+                                CornerRadius="6" Height="32">
                             <StackPanel Orientation="Horizontal">
                                 <Button x:Name="MinusBtn" Style="{StaticResource StepBtn}" Content="−"
                                         Margin="1,0,0,0" Click="Minus_Click"/>
-                                <TextBlock x:Name="MaxValue" Text="10" FontSize="12" Width="20"
+                                <TextBlock x:Name="MaxValue" Text="10" FontSize="14" Width="28"
                                            TextAlignment="Center" VerticalAlignment="Center"
                                            Foreground="{DynamicResource Brush.Text}"
                                            Typography.NumeralAlignment="Tabular"/>
@@ -204,14 +204,14 @@
                     <!-- 时间显示制式 -->
                     <Grid Margin="0,10,0,0">
                         <StackPanel>
-                            <TextBlock Text="时间显示制式" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Text="时间显示制式" FontSize="15.5" FontWeight="SemiBold"
                                        Foreground="{DynamicResource Brush.Text}"/>
-                            <TextBlock Text="作用于主窗时钟" FontSize="11"
+                            <TextBlock Text="作用于主窗时钟" FontSize="13"
                                        Foreground="{DynamicResource Brush.Faint}" Margin="0,3,0,0"/>
                         </StackPanel>
                         <Border HorizontalAlignment="Right" VerticalAlignment="Center"
                                 BorderBrush="{DynamicResource Brush.CardBorder}" BorderThickness="1"
-                                CornerRadius="6" Height="26">
+                                CornerRadius="6" Height="28">
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton x:Name="Seg24" Content="24 小时制" Style="{StaticResource SegBtn}"
                                              GroupName="hour" Checked="Hour_Checked"/>
@@ -225,14 +225,14 @@
                     <!-- 界面主题 -->
                     <Grid Margin="0,10,0,0">
                         <StackPanel>
-                            <TextBlock Text="界面主题" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Text="界面主题" FontSize="15.5" FontWeight="SemiBold"
                                        Foreground="{DynamicResource Brush.Text}"/>
-                            <TextBlock Text="白天 / 夜间（即时生效）" FontSize="11"
+                            <TextBlock Text="白天 / 夜间（即时生效）" FontSize="13"
                                        Foreground="{DynamicResource Brush.Faint}" Margin="0,3,0,0"/>
                         </StackPanel>
                         <Border HorizontalAlignment="Right" VerticalAlignment="Center"
                                 BorderBrush="{DynamicResource Brush.CardBorder}" BorderThickness="1"
-                                CornerRadius="6" Height="26">
+                                CornerRadius="6" Height="28">
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton x:Name="SegDay" Content="白天" Style="{StaticResource SegBtn}"
                                              GroupName="theme" Checked="Theme_Checked"/>
@@ -246,9 +246,9 @@
                     <!-- 历史记录 -->
                     <Grid Margin="0,10,0,0">
                         <StackPanel>
-                            <TextBlock Text="历史记录" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Text="历史记录" FontSize="15.5" FontWeight="SemiBold"
                                        Foreground="{DynamicResource Brush.Text}"/>
-                            <TextBlock Text="按天查看已归档的完成事项" FontSize="11"
+                            <TextBlock Text="按天查看已归档的完成事项" FontSize="13"
                                        Foreground="{DynamicResource Brush.Faint}" Margin="0,3,0,0"/>
                         </StackPanel>
                         <Button Content="打开" Style="{StaticResource SmBtn}" HorizontalAlignment="Right"
@@ -258,9 +258,9 @@
 
                     <!-- 导入历史记录 -->
                     <StackPanel Margin="0,10,0,0">
-                        <TextBlock Text="导入历史记录" FontSize="13" FontWeight="SemiBold"
+                        <TextBlock Text="导入历史记录" FontSize="15.5" FontWeight="SemiBold"
                                    Foreground="{DynamicResource Brush.Text}"/>
-                        <TextBlock Text="只接受本软件导出的 CSV；覆盖导入会替换现有全部历史" FontSize="11"
+                        <TextBlock Text="只接受本软件导出的 CSV；覆盖导入会替换现有全部历史" FontSize="13"
                                    Foreground="{DynamicResource Brush.Faint}" Margin="0,3,0,8"/>
                         <StackPanel Orientation="Horizontal">
                             <Button Content="覆盖导入" Style="{StaticResource SmBtn}" Click="ImportCover_Click"/>
@@ -273,9 +273,9 @@
                     <!-- 恢复默认尺寸（体验说明书 ③.3） -->
                     <Grid Margin="0,10,0,0">
                         <StackPanel>
-                            <TextBlock Text="恢复默认尺寸" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Text="恢复默认尺寸" FontSize="15.5" FontWeight="SemiBold"
                                        Foreground="{DynamicResource Brush.Text}"/>
-                            <TextBlock Text="按当前屏重算（屏高 1/3）" FontSize="11"
+                            <TextBlock Text="按当前屏重算（屏高 1/3）" FontSize="13"
                                        Foreground="{DynamicResource Brush.Faint}" Margin="0,3,0,0"/>
                         </StackPanel>
                         <Button Content="重算" Style="{StaticResource SmBtn}" HorizontalAlignment="Right"
@@ -286,9 +286,9 @@
                     <!-- 开机自启 -->
                     <Grid Margin="0,10,0,0">
                         <StackPanel>
-                            <TextBlock Text="开机自启" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Text="开机自启" FontSize="15.5" FontWeight="SemiBold"
                                        Foreground="{DynamicResource Brush.Text}"/>
-                            <TextBlock Text="开启后开机直接显示组件窗口" FontSize="11"
+                            <TextBlock Text="开启后开机直接显示组件窗口" FontSize="13"
                                        Foreground="{DynamicResource Brush.Faint}" Margin="0,3,0,0"/>
                         </StackPanel>
                         <ToggleButton x:Name="AutoStartSwitch" Style="{StaticResource SwitchBtn}"
@@ -296,13 +296,13 @@
                                       Click="AutoStart_Click"/>
                     </Grid>
 
-                    <TextBlock Text="桌面待办 · WPF 新外观" FontSize="10"
+                    <TextBlock Text="桌面待办 · WPF 新外观" FontSize="12"
                                Foreground="{DynamicResource Brush.Faint}" Margin="0,12,0,0"/>
                 </StackPanel>
             </ScrollViewer>
         
             <!-- 二级窗等比缩放手柄（DialogScale：右下拖动 0.7~1.2，按组存档；无长度缩放） -->
-            <Grid x:Name="ScaleGrip" Width="24" Height="24"
+            <Grid x:Name="ScaleGrip" Grid.RowSpan="2" Width="24" Height="24"
                   HorizontalAlignment="Right" VerticalAlignment="Bottom"
                   Cursor="SizeNWSE" Background="Transparent" Panel.ZIndex="9">
                 <Border Width="13" Height="13" HorizontalAlignment="Right" VerticalAlignment="Bottom"

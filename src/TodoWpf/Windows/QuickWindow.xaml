@@ -307,10 +307,10 @@
                                                 </Canvas>
                                             </Viewbox>
                                         </Button>
-                                        <CheckBox Grid.Column="1" Width="16" Height="16"
+                                        <CheckBox Grid.Column="1" Width="20" Height="20"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                  Margin="0,0,1,0"
-                                                  IsChecked="{Binding Selected, Mode=OneWay}">
+                                                  IsChecked="{Binding Selected, Mode=OneWay}"
+                                                  Click="TplCheck_Click">
                                             <!-- 批量态显示（默认隐藏）；Visibility 只能在样式层设，
                                                  本地属性会压过样式触发器。Style 只能出现一次（元素形式）。 -->
                                             <CheckBox.Style>
