@@ -513,7 +513,11 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="16"/>
                                         </Grid.ColumnDefinitions>
+                                        <!-- UseLayoutRounding=False：竖线(2)与圆点(7)在非整数缩放下各自被独立吸附，
+                                             吸附方向可能相反 → 线心偏到点的一侧（用户 2026-11-04 实测）。
+                                             关掉取整后两者共用同一几何中心，任何缩放都同心。 -->
                                         <Border Grid.Column="1" Width="2" HorizontalAlignment="Center"
+                                                UseLayoutRounding="False"
                                                 Margin="0,22,0,22"
                                                 Background="{DynamicResource Brush.CardBorder}" Opacity="0.55"/>
                                     </Grid>
@@ -546,6 +550,7 @@
                                                                VerticalAlignment="Center"/>
                                                     <Grid Grid.Column="1">
                                                         <Ellipse Width="7" Height="7"
+                                                                 UseLayoutRounding="False"
                                                                  Fill="{DynamicResource Brush.Accent}"
                                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                     </Grid>
