@@ -56,6 +56,7 @@ public sealed class ClusterController : IDisposable
     /// </summary>
     private WinPoint _dragStartAnchor;
     private Point _dragStartMouse;
+    private WinRect _dragWorkArea;
 
     public ClusterController(AppData data, JsonFileRepository repository)
     {
@@ -144,6 +145,14 @@ public sealed class ClusterController : IDisposable
             UiState = _data.UiState with { QuickVisible = false, DoneVisible = false },
         };
         var startupArea = WorkArea();
+        // 启动时位置也要钳回可见范围：存档位置来自另一块屏/更高分辨率时，
+        // 窗口会整个落在屏外（本机 1024×768 实测：存档 x=1024 → 窗口 1024..1132 全在屏外，
+        // 用户看到"窗口不见了"且无法点中）。需求 §2.1：分辨率变化/拔显示器 → 回可见范围。
+        // 必须传真实主窗尺寸：传零尺寸矩形时钳制会允许贴到工作区右缘（窗口仍整个在屏外）
+        var clampedAnchor = ScreenClamp.ClampToWorkArea(
+            new WinRect(_anchor.X, _anchor.Y, PanelLayout.MainWidth * _scale, PanelLayout.MainBaseHeight * _scale),
+            startupArea);
+        _anchor = new WinPoint(clampedAnchor.X, clampedAnchor.Y);
         _scale = PanelLayout.ClampScale(_scale, startupArea, _anchor);
 
         ApplyThemeState();
@@ -276,10 +285,8 @@ public sealed class ClusterController : IDisposable
             _quick.UpdateLayout();
         }
 
-        // 白条定位：可见组水平中心、贴屏顶
-        var left = frame.Main.Rect.X;
-        var right = frame.Template.Visible ? frame.Template.Rect.Right : frame.Main.Rect.Right;
-        _tuckBar.Left = (left + right) / 2 - _tuckBar.Width / 2;
+        // 白条定位（用户 2026-11-04 裁定 D4）：**以待办主窗水平居中**、贴屏顶（不再按整组宽度居中）
+        _tuckBar.Left = frame.Main.Rect.X + frame.Main.Rect.Width / 2 - _tuckBar.Width / 2;
         _tuckBar.Top = workArea.Y;
 
         if (saveState)
@@ -310,9 +317,7 @@ public sealed class ClusterController : IDisposable
             (frame.Main.Rect, _main, true, PinEdge.Left),
             (tplRect, _quick, frame.Template.Visible, PinEdge.Left));
 
-        var left = frame.Main.Rect.X;
-        var right = frame.Template.Visible ? frame.Template.Rect.Right : frame.Main.Rect.Right;
-        var barLeft = (left + right) / 2 - _tuckBar.Width / 2;
+        var barLeft = frame.Main.Rect.X + frame.Main.Rect.Width / 2 - _tuckBar.Width / 2;
         if (_tuckBar.IsVisible && _tuckBar.Left != barLeft) { _tuckBar.Left = barLeft; }
     }
 
@@ -380,6 +385,7 @@ public sealed class ClusterController : IDisposable
 
         EndHover(); // 整组拖动时气泡悬空已失锚
         _dragging = true;
+        _dragWorkArea = WorkArea();
         _dragStartAnchor = _anchor;
         _dragStartMouse = ToScreen(window, e);
         _tuck.SetDragging(true);
@@ -401,33 +407,23 @@ public sealed class ClusterController : IDisposable
             _dragStartAnchor.X + mouse.X - _dragStartMouse.X,
             _dragStartAnchor.Y + mouse.Y - _dragStartMouse.Y);
 
-        // 四缘吸附（体验说明书 ④.3）：距工作区边缘 ≤8 DIP 贴齐。
-        // 顶边=贴顶触发缩进的原有语义（真正触碰上缘才贴齐）；左右下为贴合不触发缩进。
+        // 拖动钳制（用户 2026-11-04 裁定 D2，照 ele clampAnchorForEdges）：
+        // 主窗至少 90 DIP 可见（左右各留 90）、顶边不越工作区顶（可贴顶）、底部至少 50 DIP 可见。
+        // **只保留上边缘吸附**（裁定 D1：左/右/下边缘贴边在 ele 与需求文档「暂不做」清单里，
+        // 本批 ④-3 我越界加的四缘磁吸已移除——它也正是"拖不过屏幕"的根因：磁吸把整簇钳在屏内）。
         var area = WorkArea();
-        var ui = _data.UiState;
-        var clusterW = PanelLayout.MainWidth * _scale
-            + (ui.QuickVisible ? PanelLayout.Gap + PanelLayout.TemplateWidth * _scale : 0);
-        var clusterH = Math.Max(
-            PanelLayout.MainBaseHeight * _scale,
-            ui.QuickVisible ? TemplateWindowHeight() * _scale : 0);
-        const double snap = 8;
+        anchor = PanelLayout.ClampAnchorForDrag(
+            anchor, PanelLayout.MainWidth * _scale, area);
 
-        if (anchor.Y <= area.Y)
+        // 跨屏拖动：工作区变化时按新工作区重钳整簇缩放（裁定 D7，照 ele；只钳生效值、不动存档档位）
+        if (_dragWorkArea != area)
         {
-            anchor = anchor with { Y = area.Y }; // 顶边：真正触碰才贴（缩进触发门槛）
-        }
-        else if (anchor.Y + clusterH >= area.Bottom - snap)
-        {
-            anchor = anchor with { Y = Math.Max(area.Y, area.Bottom - clusterH) };
-        }
-
-        if (anchor.X <= area.X + snap)
-        {
-            anchor = anchor with { X = area.X };
-        }
-        else if (anchor.X + clusterW >= area.Right - snap)
-        {
-            anchor = anchor with { X = Math.Max(area.X, area.Right - clusterW) };
+            _dragWorkArea = area;
+            var reclamped = PanelLayout.ClampScale(_scale, area, anchor);
+            if (Math.Abs(reclamped - _scale) > 0.0001)
+            {
+                _scale = reclamped;
+            }
         }
 
         _anchor = anchor;
@@ -1284,12 +1280,21 @@ public sealed class ClusterController : IDisposable
         PushBatchBar();
     }
 
-    /// <summary>批量中：切换某行选中态（轻量推送：计数条+该行视觉，不整表重建）。</summary>
+    /// <summary>批量中：切换某行选中态（轻量推送：目标窗计数条 + 该行视觉，不整表重建）。</summary>
     public void ToggleBatchSelection(string id)
     {
         _batch.Toggle(id);
-        _main.SetBatchBar(_batch.IsActive, _batch.SelectedCount, _batch.CanDelete, _data.Todos.Count);
-        _main.UpdateRowSelection(id, _batch.IsSelected(id));
+        var selected = _batch.IsSelected(id);
+        if (_batch.Target == "templates")
+        {
+            _quick.UpdateRowSelection(id, selected);
+            _quick.SetTemplateBatch(true, _batch.SelectedCount, _batch.CanDelete, _data.Templates.Count);
+        }
+        else
+        {
+            _main.UpdateRowSelection(id, selected);
+            _main.SetBatchBar(_batch.IsActive, _batch.SelectedCount, _batch.CanDelete, _data.Todos.Count);
+        }
     }
 
     /// <summary>「全选 / 取消全选」切换（原型 batchAll 口径）。</summary>

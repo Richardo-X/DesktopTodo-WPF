@@ -13,20 +13,15 @@ public partial class TuckBarWindow : Window
 
     public event EventHandler? BarHit;
 
-    public event EventHandler? BarPressed;
-
     private void RaiseHit() => BarHit?.Invoke(this, EventArgs.Empty);
 
+    /// <summary>
+    /// 弹出途径**只有**"鼠标碰到白条本体"（用户 2026-11-04 裁定 D5，照 ele BarWindow：
+    /// 仅 mouseenter，无点击弹出）。mouseenter 是系统真实命中分发——被其他窗口遮挡时天然不弹。
+    /// </summary>
     protected override void OnMouseEnter(MouseEventArgs e)
     {
         base.OnMouseEnter(e);
-        RaiseHit();
-    }
-
-    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
-    {
-        base.OnMouseLeftButtonDown(e);
-        BarPressed?.Invoke(this, EventArgs.Empty);
         RaiseHit();
     }
 
