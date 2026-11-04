@@ -132,7 +132,9 @@
         <Style x:Key="RowCard" TargetType="Border">
             <Setter Property="Height" Value="44"/>
             <Setter Property="Margin" Value="0,2"/>
-            <Setter Property="Padding" Value="11,12"/>
+            <!-- 行内边距：WPF 写法是「左右,上下」——ele 为 padding:11px 12px（上下 11 / 左右 12）。
+                 此前写成 11,12（左右 11 / 上下 12）→ 行内可用高 = 44-24-2 = 18 < 勾选框 20 → 勾选框被挤溢出。 -->
+            <Setter Property="Padding" Value="12,11"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Background" Value="{DynamicResource Brush.RowCard}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.RowCardBorder}"/>
@@ -376,7 +378,7 @@
                                             <!-- 拖拽把手：透明命中区占满整列（原型 .grip 命中含 ±3px 延展），
                                                  点阵居中于"卡片左缘↔文字左缘"之间（用户 2026-11-03 裁定）；
                                                  此前命中=图标 6 个小点（每点约 2px）导致几乎点不中。 -->
-                                            <Border Grid.Column="0" Width="34" Margin="-12,0,0,0"
+                                            <Border Grid.Column="0" Width="32" Margin="-12,0,0,0"
                                                     Background="Transparent" Cursor="Hand"
                                                     MouseLeftButtonDown="Grip_MouseDown"
                                                     HorizontalAlignment="Left">
@@ -399,7 +401,8 @@
                                                 </Viewbox>
                                             </Border>
                                             <TextBlock Grid.Column="1" Text="{Binding Content}"
-                                                       FontSize="14.5" TextTrimming="CharacterEllipsis"
+                                                       FontSize="16.5" TextTrimming="CharacterEllipsis"
+                                                       LineHeight="20" LineStackingStrategy="BlockLineHeight"
                                                        VerticalAlignment="Center" Margin="6,0,2,0"
                                                        MouseEnter="RowText_MouseEnter" MouseLeave="RowText_MouseLeave">
                                                 <TextBlock.Style>
@@ -539,7 +542,9 @@
                                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                     </Grid>
                                                     <TextBlock Grid.Column="2" Text="{Binding Content}"
-                                                               FontSize="14.5" Foreground="{DynamicResource Brush.Muted}"
+                                                               FontSize="16.5" LineHeight="20"
+                                                               LineStackingStrategy="BlockLineHeight"
+                                                               Foreground="{DynamicResource Brush.Muted}"
                                                                TextTrimming="CharacterEllipsis"
                                                                VerticalAlignment="Center" Margin="8,0,8,0"
                                                                MouseEnter="RowText_MouseEnter" MouseLeave="RowText_MouseLeave"/>

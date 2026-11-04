@@ -253,7 +253,8 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="26"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="{Binding Content}" FontSize="14.5"
+                                        <TextBlock Text="{Binding Content}" FontSize="16.5" LineHeight="20"
+                                                   LineStackingStrategy="BlockLineHeight"
                                                    Foreground="{DynamicResource Brush.Text}"
                                                    TextTrimming="CharacterEllipsis"
                                                    VerticalAlignment="Center" Margin="6,0,8,0"
