@@ -45,9 +45,14 @@ public sealed class ClusterController : IDisposable
     /// （用户 2026-11-04 实测：两屏来回拖窗口会一路变小——根因就是原先把钳制值写回了这个字段）。</summary>
     private double _storedScale = 1;
 
-    /// <summary>实际布局用档位：用户档位按当前屏工作区钳制。</summary>
-    private double EffectiveScale(WinRect area, WinPoint anchor) =>
-        PanelLayout.ClampScale(_storedScale, area, anchor);
+    /// <summary>
+    /// 实际布局用档位 = **用户档位本身，不按屏钳制**。
+    /// 用户 2026-11-04 定：分辨率对尺寸的影响**只出现在首次安装**（唯一目的是防初始窗口过大卡死），
+    /// 之后一律以用户自己的调整为准 —— 所以换分辨率/跨屏都不再改尺寸。
+    /// （注：ele 是每次布局都按屏钳制[下限 0.7 / 上限屏高一半]，与本条相反；此处按用户最新指令执行，
+    ///   冲突已记入决策文档。）
+    /// </summary>
+    private double LayoutScale => _storedScale;
     private bool _clusterHidden;
 
     // 拖动/缩放进行中状态
@@ -160,10 +165,18 @@ public sealed class ClusterController : IDisposable
         var clampedAnchor = ScreenClamp.ClampToWorkArea(
             new WinRect(
                 _anchor.X, _anchor.Y,
-                PanelLayout.MainWidth * EffectiveScale(startupArea, _anchor),
-                PanelLayout.MainBaseHeight * EffectiveScale(startupArea, _anchor)),
+                PanelLayout.MainWidth * _storedScale,
+                PanelLayout.MainBaseHeight * _storedScale),
             startupArea);
         _anchor = new WinPoint(clampedAnchor.X, clampedAnchor.Y);
+
+        // 尺寸规则（用户 2026-11-04 定）：**分辨率只在首次安装影响尺寸**——
+        // 首次安装由 ResolveAnchor 按屏高 1/3 给默认并钳制（防初始窗口过大卡死）；
+        // 之后一律以存档的档位为准，只做绝对范围保护，不再按屏钳制。
+        if (_data.UiState.Pos is not null)
+        {
+            _storedScale = Math.Clamp(_storedScale, 0.15, PanelLayout.MaxScale);
+        }
 
         ApplyThemeState();
         _main.Controller = this;
@@ -207,7 +220,8 @@ public sealed class ClusterController : IDisposable
         var doneRows = MainViewService.DoneRows(_data, _data.Settings.DoneSort);
         _main.SetDoneRows(doneRows);
         _quick.SetTemplateRows(
-            MainViewService.TemplateRows(_data, tplBatch ? _batch : null), Core.Models.TemplateLimit.Max);
+            MainViewService.TemplateRows(_data, tplBatch ? _batch : null),
+            Core.Models.TemplateLimit.Max, tplBatch);
     }
 
     // ---------- 布局 ----------
@@ -270,7 +284,7 @@ public sealed class ClusterController : IDisposable
     {
         var ui = _data.UiState;
         var workArea = WorkArea();
-        var scale = EffectiveScale(workArea, SnappedAnchor());
+        var scale = LayoutScale;
         var frame = PanelLayout.Arrange(SnappedAnchor(), scale, ui.QuickVisible);
 
         // 模板窗用固定画布（零矩形变更）；主窗逐帧摆位。
@@ -317,7 +331,7 @@ public sealed class ClusterController : IDisposable
     private void MoveCluster()
     {
         var ui = _data.UiState;
-        var scale = EffectiveScale(WorkArea(), SnappedAnchor());
+        var scale = LayoutScale;
         var frame = PanelLayout.Arrange(SnappedAnchor(), scale, ui.QuickVisible);
 
         // 快捷窗在移动路径上也必须用**画布矩形**（与 ApplyLayout 一致）：
@@ -424,7 +438,7 @@ public sealed class ClusterController : IDisposable
         // **只保留上边缘吸附**（裁定 D1：左/右/下边缘贴边在 ele 与需求文档「暂不做」清单里，
         // 本批 ④-3 我越界加的四缘磁吸已移除——它也正是"拖不过屏幕"的根因：磁吸把整簇钳在屏内）。
         var area = WorkArea();
-        var dragScale = EffectiveScale(area, anchor);
+        var dragScale = LayoutScale;
         anchor = PanelLayout.ClampAnchorForDrag(
             anchor, PanelLayout.MainWidth * dragScale, area);
 
@@ -524,9 +538,10 @@ public sealed class ClusterController : IDisposable
         var targetMainWidth = Math.Max(
             PanelLayout.MainWidth * PanelLayout.MinScaleFor(workArea.Height),
             _resizeStartMainWidth + (mouse.X - _resizeStartMouse.X));
-        // 写用户档位：只做绝对范围保护，按屏钳制交给 EffectiveScale（这样拖回大屏能恢复）
-        _storedScale = Math.Clamp(
-            targetMainWidth / PanelLayout.MainWidth, 0.15, PanelLayout.MaxScale);
+        // 拖拽期间的边界按当前屏（用户主动调整时的自然限制）；写入的是用户档位，
+        // 加载时不再按屏钳制（见 LayoutScale 注释）。
+        _storedScale = PanelLayout.ClampScale(
+            targetMainWidth / PanelLayout.MainWidth, workArea, SnappedAnchor());
         RequestResizeLayout();
     }
 
@@ -708,7 +723,7 @@ public sealed class ClusterController : IDisposable
     {
         var ui = _data.UiState;
         var workArea = WorkArea();
-        var scale = EffectiveScale(workArea, SnappedAnchor());
+        var scale = LayoutScale;
         var frame = PanelLayout.Arrange(SnappedAnchor(), scale, ui.QuickVisible);
 
         var targets = new List<(Window Window, double DockedTop, double HiddenTop)>();
@@ -1407,8 +1422,11 @@ public sealed class ClusterController : IDisposable
         _main.SetFrozen(tplBatch);
 
         _quick.SetTemplateBatch(tplBatch, _batch.SelectedCount, _batch.CanDelete, _data.Templates.Count);
+        // ⚠ 必须把 tplBatch 传进去：漏传时默认 false，SetTemplateRows 会以为"批量态没变"而走只追加快路径，
+        //   旧行的 Selected/BatchMode 不会被清 → 退出批量后仍显示选中样式（用户 2026-11-04 二次反馈）。
         _quick.SetTemplateRows(
-            MainViewService.TemplateRows(_data, tplBatch ? _batch : null), Core.Models.TemplateLimit.Max);
+            MainViewService.TemplateRows(_data, tplBatch ? _batch : null),
+            Core.Models.TemplateLimit.Max, tplBatch);
         _quick.SetFrozen(mainBatch);
 
         _tuck.SetBatching(_batch.IsActive);
