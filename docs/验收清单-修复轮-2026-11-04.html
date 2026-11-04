@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>验收清单 · 修复轮（2026-11-04）</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif;
+  background:#eef1f6;color:#33383f;font-size:13px;line-height:1.6;padding-bottom:60px}
+.topbar{position:sticky;top:0;z-index:10;background:rgba(238,241,246,.96);backdrop-filter:blur(6px);
+  border-bottom:1px solid rgba(30,35,42,.12);padding:10px 16px 8px}
+.topbar .row{max-width:920px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.topbar h1{font-size:15px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar button{height:26px;padding:0 12px;border:1px solid rgba(30,35,42,.12);border-radius:6px;
+  background:transparent;color:#5c636c;font-size:11.5px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.topbar button:hover{background:rgba(30,35,42,.05);color:#33383f}
+.progress{max-width:920px;margin:6px auto 0;display:flex;align-items:center;gap:10px}
+.progress .track{flex:1;height:6px;background:rgba(30,35,42,.10);border-radius:3px;overflow:hidden}
+.progress .bar{height:100%;width:0;background:#4f7391;border-radius:3px;transition:width .2s}
+.progress .num{font-size:12px;color:#5c636c;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wrap{max-width:920px;margin:14px auto 0;padding:0 16px}
+.note{background:#fff;border:1px solid rgba(30,35,42,.08);border-radius:10px;
+  padding:12px 16px;color:#5c636c;font-size:12.5px;margin-bottom:14px}
+.note code{background:rgba(30,35,42,.06);border-radius:4px;padding:1px 5px;font-size:11.5px}
+section{margin-bottom:18px}
+section > h2{font-size:14px;font-weight:600;margin:0 0 10px}
+.group{background:#fff;border:1px solid rgba(30,35,42,.08);border-radius:10px;
+  padding:10px 16px 12px;margin-bottom:10px}
+.group.global{border-color:rgba(79,115,145,.35)}
+.group h3{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;margin:2px 0 8px}
+.gcount{font-size:11px;color:#fff;background:#4f7391;border-radius:9px;padding:1px 8px;
+  font-weight:500;font-variant-numeric:tabular-nums}
+.gcount.done{background:#3d8361}
+.checks .check{display:flex;align-items:flex-start;gap:10px;padding:7px 8px;margin:0 -8px;
+  border-radius:8px;cursor:pointer;user-select:none}
+.checks .check:hover{background:rgba(30,35,42,.04)}
+.checks .check + .check{border-top:1px dashed rgba(30,35,42,.06)}
+.check .box{flex:none;width:16px;height:16px;margin-top:2px;border:1px solid rgba(30,35,42,.26);
+  border-radius:4px;background:#fff;position:relative;transition:background .12s,border-color .12s}
+.check.on .box{background:#4f7391;border-color:#4f7391}
+.check .box::after{content:"";position:absolute;left:4.5px;top:1.5px;width:4px;height:8px;
+  border:solid #f7fafc;border-width:0 2px 2px 0;transform:rotate(45deg);opacity:0}
+.check.on .box::after{opacity:1}
+.check .text{flex:1;min-width:0}
+.check.on .text{color:#676d76;text-decoration:line-through;text-decoration-color:rgba(103,109,118,.5)}
+.check .text code,.note code,ul.plain code,ol.olist code{background:rgba(30,35,42,.06);
+  border-radius:4px;padding:1px 5px;font-size:11.5px}
+ul.plain{margin:6px 0 0 8px;color:#5c636c}
+ul.plain li{margin:3px 0;list-style:none;position:relative;padding-left:12px}
+ul.plain li::before{content:"·";position:absolute;left:0;color:#676d76}
+ol.olist{margin:6px 0 0 8px;color:#5c636c;padding-left:18px}
+ol.olist li{margin:3px 0}
+.fb{margin-top:10px;border-top:1px dashed rgba(30,35,42,.08);padding-top:8px}
+.fbl{display:block;font-size:11px;color:#676d76;margin-bottom:4px}
+textarea.fbt{width:100%;min-height:44px;resize:vertical;border:1px solid rgba(30,35,42,.14);
+  border-radius:6px;padding:6px 9px;font:inherit;font-size:12px;color:#33383f;background:#fbfcfd;outline:none}
+textarea.fbt:focus{border-color:#4f7391;box-shadow:0 0 0 3px rgba(79,115,145,.14)}
+footer{max-width:920px;margin:16px auto 0;padding:0 16px;color:#9099a3;font-size:11px}
+a{color:#4f7391}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:20;
+  background:rgba(20,24,30,.94);color:#eef3fa;font-size:12px;padding:8px 14px;border-radius:8px;
+  opacity:0;pointer-events:none;transition:opacity .15s}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="row">
+    <h1>验收清单 · 修复轮（2026-11-04）</h1>
+    <button id="copyBtn">复制汇总</button>
+    <button id="reset">重置全部</button>
+  </div>
+  <div class="progress">
+    <div class="track"><div class="bar" id="bar"></div></div>
+    <span class="num" id="num">已核对 0 / 50</span>
+  </div>
+</div>
+<div class="wrap">
+  <div class="note">范围：2026-11-03 你那份验收反馈（38/107 + 逐节文字反馈）所对应的全部修复，以及由此连带改动。<br>提交区间：<code>036bdc2</code> … <code>feaad98</code>（约 20 笔）。<br><strong>口径</strong>：一律说 <strong>px</strong>（不再用 DIP 术语）。界面尺寸按设计稿给值，再随窗口大小整体缩放——<br>你的窗口当前约 1.25 倍，所以屏幕上实际像素 ≈ 设计值 × 1.25。<br>对照基准：<strong>样式/位置/交互以 1C 原型为准</strong>；<strong>主窗内容尺寸以 ele 为准</strong>（你 2026-11-04 裁定）。<br>屏幕实测：2K 横 2560×1440 @100%（应用所在屏）；4K 竖 2160×3840 @175%。<br>&nbsp;<br>标记：✅ 你已判通过 · ⬜ 待你验收 · ⚠️ 我无法自测（必须你真机）</div>
+  <section><h2>一、拖拽排序 ⚠️</h2>
+<div class="group" data-label="一、拖拽排序 ⚠️"><h3><span class="gcount" data-g="a5e3b08132">0/8</span></h3><div class="checks"><label class="check" data-id="50734ed2e6"><span class="box"></span><span class="text">按住行首<strong>点阵</strong>拖动：被拖行<strong>跟手上下移动</strong>（不再往右跑）</span></label><label class="check" data-id="d505bc2edf"><span class="box"></span><span class="text">被拖行<strong>浮在其它行之上</strong>（不再被其它卡片遮住）</span></label><label class="check" data-id="88f3583265"><span class="box"></span><span class="text">其余行平滑让位，松手落位后顺序立即生效</span></label><label class="check" data-id="2036877a6a"><span class="box"></span><span class="text">点阵<strong>好抓</strong>（命中区是"卡片左缘↔文字左缘"整块，不是那几个小点）</span></label><label class="check" data-id="5604b8eb39"><span class="box"></span><span class="text">拖到列表上/下边缘附近会<strong>自动滚动</strong></span></label><label class="check" data-id="deb97fab24"><span class="box"></span><span class="text">拖动中按 <strong>Esc</strong> 取消、行滑回原位</span></label><label class="check" data-id="cd0cb88c7f"><span class="box"></span><span class="text"><strong>只点一下点阵不动</strong>：什么都不发生（不误触）</span></label><label class="check" data-id="73614b5c05"><span class="box"></span><span class="text">落位后<strong>重启应用</strong>，顺序保持</span></label></div><div class="fb"><span class="fbl">问题反馈（清单没覆盖的问题写这里，自动保存）</span><textarea class="fbt" data-note="a5e3b08132" placeholder="例：悬停气泡弹出位置偶尔偏下、批量条悬停色不对……"></textarea></div></div>
+</section>
+<section><h2>二、批量态 ⬜</h2>
+<div class="group" data-label="二、批量态 ⬜"><h3><span class="gcount" data-g="3a8e6ecc94">0/7</span></h3><div class="checks"><label class="check" data-id="8275681ee5"><span class="box"></span><span class="text">点垃圾桶进入批量：<strong>勾选后事项不再"消失"</strong></span></label><label class="check" data-id="e3ec80e6f4"><span class="box"></span><span class="text"><strong>行尾勾选框可以直接点</strong>（选中/取消），行任意处也可点</span></label><label class="check" data-id="a8b5554881"><span class="box"></span><span class="text"><strong>快速连点</strong>同一项能快速切换（自动化实测：连续 5 次 1→0→1→0→1 正常）</span></label><label class="check" data-id="ee0c0b5702"><span class="box"></span><span class="text">行选中观感：淡底 + 描边 + 正文变灰</span></label><label class="check" data-id="ae48d69165"><span class="box"></span><span class="text">「全选 / 取消全选」、「删除所选」置灰逻辑、「返回」/Esc 退出</span></label><label class="check" data-id="9118cc76a6"><span class="box"></span><span class="text">批量中：已完成段变暗、模板窗冻结、设置钮置灰、点阵禁用、双击不再开编辑</span></label><label class="check" data-id="84d983899a"><span class="box"></span><span class="text">待办为空时点垃圾桶：<strong>不进入批量</strong>，只出提示</span></label></div><div class="fb"><span class="fbl">问题反馈（清单没覆盖的问题写这里，自动保存）</span><textarea class="fbt" data-note="3a8e6ecc94" placeholder="例：悬停气泡弹出位置偶尔偏下、批量条悬停色不对……"></textarea></div></div>
+</section>
+<section><h2>三、卡片行内布局 ⬜</h2>
+<div class="group" data-label="三、卡片行内布局 ⬜"><h3><span class="gcount" data-g="5e09075edc">0/5</span></h3><div class="checks"><label class="check" data-id="dcd6599ee4"><span class="box"></span><span class="text"><strong>内容垂直居中</strong>：拖拽点阵、文字、勾选框在同一条水平中线上</span></label><label class="check" data-id="4ecceb02fb"><span class="box"></span><span class="text">卡片<strong>上下留白等宽</strong>；<strong>卡片外尺寸仍是 44</strong>（未变）</span></label><label class="check" data-id="b96e20b7d3"><span class="box"></span><span class="text"><strong>勾选框完整显示</strong>（上下不再被切）</span></label><label class="check" data-id="c17e5a4ceb"><span class="box"></span><span class="text">行内文字 <strong>16.5px</strong> 观感：大小是否合适、"偏低"是否消失</span></label><label class="check" data-id="e24ea6effb"><span class="box"></span><span class="text">行内文字可用宽度（比上轮多约 10px；把手占位让出 2px）</span></label></div><div class="fb"><span class="fbl">问题反馈（清单没覆盖的问题写这里，自动保存）</span><textarea class="fbt" data-note="5e09075edc" placeholder="例：悬停气泡弹出位置偶尔偏下、批量条悬停色不对……"></textarea></div></div>
+</section>
+<section><h2>四、滚动条 ✅</h2>
+<div class="group" data-label="四、滚动条 ✅"><h3><span class="gcount" data-g="0863304d2c">0/2</span></h3><div class="checks"><label class="check" data-id="0e9c8339e2"><span class="box"></span><span class="text">拖动滑块 / 滚轮 / 点轨道是否正常 ⚠️（自动化不投递鼠标，只能你真机）</span></label><label class="check" data-id="1aa82e090e"><span class="box"></span><span class="text">滚动条<strong>不再穿过右下角标</strong>（止于列表内容下限）</span></label></div><ul class="plain"><li>[x] 命中区 <strong>8px</strong>、滑块 <strong>4px</strong>、滑块居中 → 两侧各 2px</li><li>[x] 滑块贴窗口右缘、列表右边距窗口右边 <strong>14px</strong></li><li>[x] 滚动条不占内容宽度（两侧内容边距等距）</li></ul><div class="fb"><span class="fbl">问题反馈（清单没覆盖的问题写这里，自动保存）</span><textarea class="fbt" data-note="0863304d2c" placeholder="例：悬停气泡弹出位置偶尔偏下、批量条悬停色不对……"></textarea></div></div>
+</section>
+<section><h2>五、列表其它 ⬜</h2>
+<div class="group" data-label="五、列表其它 ⬜"><h3><span class="gcount" data-g="63b0f249b1">0/4</span></h3><div class="checks"><label class="check" data-id="8d3525fb37"><span class="box"></span><span class="text">最后一个卡片与「已完成」之间的间距（上轮"太大"已修：空态占位不再占 46px）</span></label><label class="check" data-id="dbbcaed317"><span class="box"></span><span class="text">「已完成 · N」那一行<strong>放大后</strong>观感：行高 36→<strong>40</strong>、字号 10→<strong>12</strong>、排序钮 16→<strong>24</strong>（图标 12→15）</span></label><label class="check" data-id="68f71a0c45"><span class="box"></span><span class="text"><strong>已完成行悬停样式</strong>（上轮缺失，现已补：悬停出行底色，可看清一行范围）</span></label><label class="check" data-id="4d8aea2fac"><span class="box"></span><span class="text">时间轴是否居中于圆点 ⚠️（上轮报"不在点中间"，我需真机截图像素采样定位；PMv2 启用后可能已改善）</span></label></div><div class="fb"><span class="fbl">问题反馈（清单没覆盖的问题写这里，自动保存）</span><textarea class="fbt" data-note="63b0f249b1" placeholder="例：悬停气泡弹出位置偶尔偏下、批量条悬停色不对……"></textarea></div></div>
+</section>
+<section><h2>六、窗口行为（按你裁定重做）⬜</h2>
+<div class="group" data-label="六、窗口行为（按你裁定重做）⬜"><h3><span class="gcount" data-g="d23966ccb5">0/5</span></h3><div class="checks"><label class="check" data-id="7658569571"><span class="box"></span><span class="text"><strong>能否把应用从一块屏拖到另一块屏</strong>（本轮重点：启用 PerMonitorV2 + 移除四缘磁吸）</span></label><label class="check" data-id="c427aa6998"><span class="box"></span><span class="text">左/右/下边缘<strong>不再磁吸</strong>；上边缘仍吸附（真正触碰才贴）</span></label><label class="check" data-id="f98278fd51"><span class="box"></span><span class="text">拖到边缘时<strong>主窗始终留 90px 可见</strong>、底部留 <strong>50px</strong> 可见（不会拖丢）</span></label><label class="check" data-id="9e2953f662"><span class="box"></span><span class="text">拖到 4K 竖屏后尺寸是否合适（按新屏工作区重钳）</span></label><label class="check" data-id="7d9331e7d3"><span class="box"></span><span class="text">启动时位置会被钳回可见范围（存档来自更大屏时，窗口不再跑到屏外）</span></label></div><div class="fb"><span class="fbl">问题反馈（清单没覆盖的问题写这里，自动保存）</span><textarea class="fbt" data-note="d23966ccb5" placeholder="例：悬停气泡弹出位置偶尔偏下、批量条悬停色不对……"></textarea></div></div>
+</section>
+<section><h2>七、缩进 / 白条 ⬜</h2>
+<div class="group" data-label="七、缩进 / 白条 ⬜"><h3><span class="gcount" data-g="647e8a62bc">0/6</span></h3><div class="checks"><label class="check" data-id="bca1cfc51b"><span class="box"></span><span class="text">白条位置：<strong>以待办主窗居中</strong>（不再按整组宽度居中）</span></label><label class="check" data-id="ab45f3fc07"><span class="box"></span><span class="text">白条样式：<strong>3px 细条</strong>（按 ele 1:1）</span></label><label class="check" data-id="e75101f5bb"><span class="box"></span><span class="text">弹出途径只有"<strong>鼠标碰到白条本体</strong>"（点击不再弹出）</span></label><label class="check" data-id="61d79a334f"><span class="box"></span><span class="text"><strong>遮挡场景</strong>：从白条移开鼠标后能正常缩进（不再卡在弹出态）</span></label><label class="check" data-id="247cde41b2"><span class="box"></span><span class="text"><strong>弹出后白条消失</strong>（不再残留）</span></label><label class="check" data-id="8a5fe43db6"><span class="box"></span><span class="text">缩进锁定图标有状态色；标题栏/动作行按钮有<strong>按压体感</strong></span></label></div><div class="fb"><span class="fbl">问题反馈（清单没覆盖的问题写这里，自动保存）</span><textarea class="fbt" data-note="647e8a62bc" placeholder="例：悬停气泡弹出位置偶尔偏下、批量条悬停色不对……"></textarea></div></div>
+</section>
+<section><h2>八、二级窗 ⬜</h2>
+<div class="group" data-label="八、二级窗 ⬜"><h3><span class="gcount" data-g="cddb569c47">0/7</span></h3><div class="checks"><label class="check" data-id="426b890563"><span class="box"></span><span class="text"><strong>右下角标位置正确</strong>（不再跑到标题栏；4 个二级窗都已修）</span></label><label class="check" data-id="5bb7683024"><span class="box"></span><span class="text"><strong>等比缩放手柄</strong>：右下拖动缩放，分组记忆，重启保持（0.7~1.2）</span></label><label class="check" data-id="1a4068ddc8"><span class="box"></span><span class="text"><strong>返回箭头</strong>：样式/位置/悬停都照原型（贴窗缘、弱色、悬停出行底色）</span></label><label class="check" data-id="012576f52f"><span class="box"></span><span class="text"><strong>设置窗整体放大</strong>（比 ele 再大 2px）：标题 15.5 / 说明 13 / 步进 30(字17) / 数值 14 / 分段 13 / 开关 42×23 / 版本 12</span></label><label class="check" data-id="b4db07d3d2"><span class="box"></span><span class="text">设置窗「−」到下限时<strong>弹提示</strong>（不再只是置灰）；开关有滑动动画</span></label><label class="check" data-id="5da458e12a"><span class="box"></span><span class="text">编辑窗：Enter 保存、Shift+Enter 换行、三档按钮、占位文字、还原、添加到模板</span></label><label class="check" data-id="d9153e7bb2"><span class="box"></span><span class="text">详情窗 420×438、历史窗可正常打开与返回</span></label></div><div class="fb"><span class="fbl">问题反馈（清单没覆盖的问题写这里，自动保存）</span><textarea class="fbt" data-note="cddb569c47" placeholder="例：悬停气泡弹出位置偶尔偏下、批量条悬停色不对……"></textarea></div></div>
+</section>
+<section><h2>九、托盘 ⬜</h2>
+<div class="group" data-label="九、托盘 ⬜"><h3><span class="gcount" data-g="d7292c51f3">0/1</span></h3><div class="checks"><label class="check" data-id="908de6dbb9"><span class="box"></span><span class="text"><strong>单击不再恢复</strong>（按你裁定取消）；<strong>双击</strong>切换显隐；右键菜单（显示/隐藏、退出）</span></label></div><div class="fb"><span class="fbl">问题反馈（清单没覆盖的问题写这里，自动保存）</span><textarea class="fbt" data-note="d7292c51f3" placeholder="例：悬停气泡弹出位置偶尔偏下、批量条悬停色不对……"></textarea></div></div>
+</section>
+<section><h2>十、回归抽查 ⬜</h2>
+<div class="group" data-label="十、回归抽查 ⬜"><h3><span class="gcount" data-g="49afa5be8f">0/5</span></h3><div class="checks"><label class="check" data-id="0981ceef48"><span class="box"></span><span class="text">启动高 = 屏高 1/3；最小 1/4；最大 2/3；<strong>仅右下角</strong>等比缩放</span></label><label class="check" data-id="166bd37824"><span class="box"></span><span class="text">多屏按窗口所在屏计算；<strong>竖屏无中间水平界线</strong></span></label><label class="check" data-id="5235720a56"><span class="box"></span><span class="text">图标按 24 视箱渲染（线宽不过粗、加号不过大）</span></label><label class="check" data-id="900537d6b8"><span class="box"></span><span class="text">主题切换（含重启后保持）、图钉、计数胶囊、时间轴、行间距 4px</span></label><label class="check" data-id="44e6168c79"><span class="box"></span><span class="text">二级窗打开期间组件保持弹出；缩进态托盘恢复自动弹出停留 3 秒</span></label></div><div class="fb"><span class="fbl">问题反馈（清单没覆盖的问题写这里，自动保存）</span><textarea class="fbt" data-note="49afa5be8f" placeholder="例：悬停气泡弹出位置偶尔偏下、批量条悬停色不对……"></textarea></div></div>
+</section>
+<section><h2>附：开发侧备注（非验收项）</h2>
+</section>
+<div class="group global"><h3><span class="gtitle">整体反馈（任何清单没地方写的问题）</span></h3><textarea class="fbt" id="globalNote" placeholder="例：整体动效偏快、某窗口位置越界、验收流程建议……"></textarea></div>
+</div>
+<footer>由 验收清单-一次性落地-批次05to09.md 渲染（docs/tools/md2checklist.py）· 生成于 2026-11-04 15:37 · 勾选与反馈保存在本浏览器（localStorage）</footer>
+<div id="toast"></div>
+<script>
+const KEY = 'checklist-05to09-v2';
+const OLD = 'checklist-05to09-v1';
+let state = null;
+try { state = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { state = null; }
+if (!state || typeof state !== 'object' || !state.checks) {
+  let old = {};
+  try { old = JSON.parse(localStorage.getItem(OLD) || '{}'); } catch (e) { old = {}; }
+  state = { checks: old, notes: {}, global: '' };  // 兼容旧版纯勾选数据
+}
+const checks = Array.from(document.querySelectorAll('.check'));
+const noteBoxes = Array.from(document.querySelectorAll('.fbt'));
+const groups = Array.from(document.querySelectorAll('.group'));
+const toast = document.getElementById('toast');
+
+function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+function groupLabel(el) {
+  const g = el.closest('.group');
+  if (!g) return '其他';
+  const t = g.querySelector('.gtitle');
+  return (t && t.textContent.trim()) || g.dataset.label || '其他';
+}
+
+function apply() {
+  let done = 0;
+  for (const el of checks) {
+    const on = !!state.checks[el.dataset.id];
+    el.classList.toggle('on', on);
+    if (on) done++;
+  }
+  document.getElementById('num').textContent = '已核对 ' + done + ' / ' + checks.length;
+  document.getElementById('bar').style.width = (checks.length ? done * 100 / checks.length : 0) + '%';
+  for (const g of groups) {
+    const list = g.querySelectorAll('.check');
+    if (!list.length) continue;
+    const d = Array.from(list).filter(x => x.classList.contains('on')).length;
+    const badge = g.querySelector('.gcount');
+    if (badge) {
+      badge.textContent = d + '/' + list.length;
+      badge.classList.toggle('done', d === list.length);
+    }
+  }
+}
+
+for (const el of checks) {
+  el.addEventListener('click', () => {
+    const id = el.dataset.id;
+    if (state.checks[id]) delete state.checks[id]; else state.checks[id] = true;
+    save();
+    apply();
+  });
+}
+
+for (const ta of noteBoxes) {
+  const key = ta.dataset.note;
+  ta.value = key === 'global' ? (state.global || '') : (state.notes[key] || '');
+  const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.max(44, ta.scrollHeight + 2) + 'px'; };
+  ta.addEventListener('input', () => {
+    if (key === 'global') state.global = ta.value; else state.notes[key] = ta.value;
+    save();
+    grow();
+  });
+  grow();
+}
+
+function summary() {
+  const lines = [];
+  const done = checks.filter(x => x.classList.contains('on')).length;
+  lines.push('验收进度：' + done + ' / ' + checks.length);
+  const undone = checks.filter(x => !x.classList.contains('on'));
+  if (undone.length) {
+    lines.push('', '未勾选项：');
+    const byGroup = new Map();
+    for (const el of undone) {
+      const label = groupLabel(el);
+      if (!byGroup.has(label)) byGroup.set(label, []);
+      byGroup.get(label).push(el.querySelector('.text').textContent.trim());
+    }
+    for (const [label, arr] of byGroup) {
+      lines.push('【' + label + '】');
+      for (const t of arr) lines.push('  - ' + t);
+    }
+  }
+  const fb = [];
+  for (const ta of noteBoxes) {
+    const v = ta.value.trim();
+    if (!v) continue;
+    const label = ta.id === 'globalNote' ? '整体' : groupLabel(ta);
+    fb.push('【' + label + '】');
+    for (const ln of v.split(/\r?\n/)) fb.push('  ' + ln);
+  }
+  if (fb.length) {
+    lines.push('', '问题反馈：');
+    for (const l of fb) lines.push(l);
+  }
+  return lines.join('\n');
+}
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const text = summary();
+  const done = () => showToast('汇总已复制，粘贴给开发即可');
+  const fail = () => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) { showToast('复制失败，请手动选中复制'); }
+    ta.remove();
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, fail);
+  } else {
+    fail();
+  }
+});
+
+document.getElementById('reset').addEventListener('click', () => {
+  if (!confirm('清空全部勾选与反馈记录？')) return;
+  state = { checks: {}, notes: {}, global: '' };
+  localStorage.removeItem(KEY);
+  localStorage.removeItem(OLD);
+  for (const ta of noteBoxes) ta.value = '';
+  apply();
+  for (const ta of noteBoxes) ta.dispatchEvent(new Event('input'));
+  showToast('已重置');
+});
+
+apply();
+</script>
+</body>
+</html>
