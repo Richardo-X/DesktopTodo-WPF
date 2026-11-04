@@ -106,6 +106,36 @@
         </Setter>
     </Style>
 
+    <!-- 覆盖式 ScrollViewer 模板（2026-11-04 实测修正）：
+         WPF 默认模板下 ScrollViewer.Padding 会把**滚动条一起往里推**（实测滚动条右缘 = 右内边距），
+         于是"调右内边距让内容两侧等距"必然同时把滚动条推离窗口右缘。
+         本模板把滚动条改为**覆盖层**（同一格、右对齐）：既不受 Padding 影响、也不占内容宽度，
+         内容两侧由 Padding 独立决定（14/14 等距），滚动条贴窗口右缘。
+         名字必须为 PART_ScrollContentPresenter / PART_VerticalScrollBar（ScrollViewer 按名接线）。 -->
+    <Style TargetType="ScrollViewer">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollViewer">
+                    <Grid Background="{TemplateBinding Background}">
+                        <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                                Margin="{TemplateBinding Padding}"
+                                                CanContentScroll="{TemplateBinding CanContentScroll}"
+                                                Content="{TemplateBinding Content}"
+                                                ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                        <ScrollBar x:Name="PART_VerticalScrollBar"
+                                   Orientation="Vertical"
+                                   HorizontalAlignment="Right" VerticalAlignment="Stretch"
+                                   Width="5"
+                                   Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                   Maximum="{TemplateBinding ScrollableHeight}"
+                                   ViewportSize="{TemplateBinding ViewportHeight}"
+                                   Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- 全应用滚动条：5px 命中区、4px 视觉细条居中、无箭头、透明轨道（用户 2026-11-04 规格）；
          不溢出（Maximum=0）时整条透明，不显示任何滑块。
          「不挤压内容」由调用方保证：滚动容器一律 VerticalScrollBarVisibility=Visible

@@ -360,7 +360,7 @@
                          Margin 收窄容器 → 滚动条命中下限 = 列表内容下限 -->
                     <ScrollViewer x:Name="ListScroll" Grid.Row="2" VerticalScrollBarVisibility="Visible"
                                   HorizontalScrollBarVisibility="Disabled"
-                                  Padding="14,0,9,0" Margin="0,0,0,24"
+                                  Padding="14,0,14,0" Margin="0,0,0,24"
                                   ScrollChanged="ListScroll_ScrollChanged">
                         <StackPanel>
                             <ItemsControl x:Name="TodoList" ItemsSource="{Binding Rows}"
