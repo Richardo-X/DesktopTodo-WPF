@@ -157,10 +157,11 @@
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
                                             <Grid Background="Transparent">
-                                                <!-- 视觉条在命中区内**右对齐**（用户 2026-11-04：滑块离列表太近、离窗口边远）：
-                                                     4 DIP 条贴到客户区右缘 → 离窗口边最近(0)，离列表最远(=右内边距 14 - 4 = 10 DIP)。
-                                                     命中区仍 8 DIP（好抓），多出的 4 DIP 在条内侧、不可见。 -->
-                                                <Border Width="4" HorizontalAlignment="Right"
+                                                <!-- 视觉条在命中区内**居中**（用户 2026-11-04 定稿）：
+                                                     命中区 8 DIP、视觉条 4 DIP → 两侧各留 2 DIP。
+                                                     代价：条右缘距窗口右边 2 DIP（不再贴边）；若日后想「既居中又贴边」，
+                                                     把命中区改为 4 DIP（与条同宽）即可。 -->
+                                                <Border Width="4" HorizontalAlignment="Center"
                                                         SnapsToDevicePixels="True"
                                                         Background="{DynamicResource Brush.CardBorder}"
                                                         CornerRadius="2"/>
