@@ -125,7 +125,7 @@
                         <ScrollBar x:Name="PART_VerticalScrollBar"
                                    Orientation="Vertical"
                                    HorizontalAlignment="Right" VerticalAlignment="Stretch"
-                                   Width="8"
+                                   Width="8" MinWidth="0"
                                    Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
                                    Maximum="{TemplateBinding ScrollableHeight}"
                                    ViewportSize="{TemplateBinding ViewportHeight}"
@@ -145,12 +145,15 @@
              125% 下 = 0.625 物理像素落不到整数 → 渲染吸附到一侧、看着不居中）。
              8 DIP 命中区 + 4 DIP 视觉条 → 每侧 2 DIP，100% 下精确居中；125% 下误差 ≤0.5px。 -->
         <Setter Property="Width" Value="8"/>
+        <!-- 必须清 MinWidth：WPF 主题默认 ScrollBar 样式带 MinWidth=系统滚动条宽(17)，
+             而 MinWidth 优先于 Width —— 这就是"写 8 却渲染 16"的根因（改 30 能生效是因为 30>17）。 -->
+        <Setter Property="MinWidth" Value="0"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="UseLayoutRounding" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ScrollBar">
-                    <Grid Background="Transparent">
+                    <Grid Background="{TemplateBinding Background}">
                         <Track x:Name="PART_Track" IsDirectionReversed="True">
                             <Track.Thumb>
                                 <Thumb>
