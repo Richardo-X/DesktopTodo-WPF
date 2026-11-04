@@ -64,6 +64,27 @@ public static class PanelLayout
     public static double ClampScale(double scale, WinRect workArea, WinPoint anchor) =>
         Math.Clamp(scale, MinScaleFor(workArea.Height), MaxScaleFor(workArea, anchor));
 
+    /// <summary>拖动时主窗至少保留的可见宽度（DIP；ele clampAnchorForEdges 口径）。</summary>
+    public const double DragVisibleWidth = 90;
+
+    /// <summary>拖动时主窗至少保留的可见高度（DIP；ele 口径）。</summary>
+    public const double DragVisibleHeight = 50;
+
+    /// <summary>
+    /// 拖动钳制（用户 2026-11-04 裁定 D2，照 ele `clampAnchorForEdges`）：
+    /// 水平不阻挡移动，但保证主窗至少 90 DIP 可见（左右各留 90）；顶边不越过工作区顶（可贴顶）；
+    /// 底部保证至少 50 DIP 可见。按主窗**所在屏**的工作区计算（副屏传带偏移的工作区）。
+    /// </summary>
+    public static WinPoint ClampAnchorForDrag(WinPoint anchor, double mainVisualWidth, WinRect workArea)
+    {
+        var minX = workArea.X + DragVisibleWidth - mainVisualWidth;
+        var maxX = workArea.X + workArea.Width - DragVisibleWidth;
+        var maxY = workArea.Y + workArea.Height - DragVisibleHeight;
+        return new WinPoint(
+            Math.Min(Math.Max(anchor.X, minX), Math.Max(minX, maxX)),
+            Math.Min(Math.Max(anchor.Y, workArea.Y), Math.Max(workArea.Y, maxY)));
+    }
+
     /// <summary>两窗几何：模板窗左缘 = 主窗视觉右缘 + 固定 4；模板窗高度只跟随缩放。</summary>
     public static PanelFrame Arrange(WinPoint anchor, double scale, bool templateVisible)
     {
