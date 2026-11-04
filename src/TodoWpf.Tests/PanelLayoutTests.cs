@@ -114,4 +114,43 @@ public class PanelLayoutTests
         var narrow = PanelLayout.FirstLaunchAnchor(new WinRect(0, 0, 500, 1040), 1.0, templateVisible: true);
         Assert.Equal((500 - (360 + 4 + 260)) / 2.0, narrow.X, 6);
     }
+
+    // ---------- 拖动钳制（修复轮，ele clampAnchorForEdges 口径；用户 2026-11-04 裁定 D2） ----------
+
+    [Fact]
+    public void DragClamp_KeepsMainWindowVisibleOnAllSides()
+    {
+        var wa = new WinRect(0, 0, 1920, 1040);
+        const double mainW = 360;
+
+        // 左上越界：主窗左缘最多到 wa.x + 90 - 主窗宽（保证右缘仍露出 90）；顶不越工作区顶
+        var tl = PanelLayout.ClampAnchorForDrag(new WinPoint(-500, -300), mainW, wa);
+        Assert.Equal(90 - mainW, tl.X, 6);
+        Assert.Equal(0, tl.Y, 6);
+
+        // 右下越界：主窗左缘最多到 wa.Right - 90；顶最多到 wa.Bottom - 50
+        var br = PanelLayout.ClampAnchorForDrag(new WinPoint(5000, 5000), mainW, wa);
+        Assert.Equal(1920 - 90, br.X, 6);
+        Assert.Equal(1040 - 50, br.Y, 6);
+    }
+
+    [Fact]
+    public void DragClamp_InsideBounds_Unchanged()
+    {
+        var wa = new WinRect(0, 0, 1920, 1040);
+        var p = new WinPoint(800, 300);
+        var clamped = PanelLayout.ClampAnchorForDrag(p, 360, wa);
+        Assert.Equal(p.X, clamped.X, 6);
+        Assert.Equal(p.Y, clamped.Y, 6);
+    }
+
+    [Fact]
+    public void DragClamp_UsesGivenWorkAreaOffset()
+    {
+        // 副屏（工作区有偏移）：钳制相对该屏计算
+        var wa = new WinRect(1920, 0, 2560, 1400);
+        var tl = PanelLayout.ClampAnchorForDrag(new WinPoint(0, -100), 360, wa);
+        Assert.Equal(1920 + 90 - 360, tl.X, 6);
+        Assert.Equal(0, tl.Y, 6);
+    }
 }
