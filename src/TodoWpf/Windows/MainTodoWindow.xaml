@@ -448,11 +448,6 @@
                                                     </Style>
                                                 </CheckBox.Style>
                                             </CheckBox>
-                                            <Grid.InputBindings>
-                                                <MouseBinding Gesture="LeftDoubleClick"
-                                                              Command="{Binding DataContext.EditRowCommand, ElementName=TodoList}"
-                                                              CommandParameter="{Binding}"/>
-                                            </Grid.InputBindings>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -520,13 +515,7 @@
                                     <ItemsControl x:Name="DoneList" ItemsSource="{Binding DoneRows}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid Height="44">
-                                                    <Grid.InputBindings>
-                                                        <!-- 双击已完成行 → 只读详情窗（需求 §2.6） -->
-                                                        <MouseBinding Gesture="LeftDoubleClick"
-                                                                      Command="{Binding DataContext.DoneDetailCommand, ElementName=DoneList}"
-                                                                      CommandParameter="{Binding}"/>
-                                                    </Grid.InputBindings>
+                                                <Grid Height="44" MouseLeftButtonDown="DoneRow_Click">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="34"/>
                                                         <ColumnDefinition Width="16"/>

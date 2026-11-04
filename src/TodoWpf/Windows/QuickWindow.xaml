@@ -325,11 +325,6 @@
                                                 </Style>
                                             </CheckBox.Style>
                                         </CheckBox>
-                                        <Grid.InputBindings>
-                                            <MouseBinding Gesture="LeftDoubleClick"
-                                                          Command="{Binding DataContext.EditTemplateCommand, ElementName=TemplateList}"
-                                                          CommandParameter="{Binding}"/>
-                                        </Grid.InputBindings>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

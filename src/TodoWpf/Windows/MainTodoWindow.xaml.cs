@@ -21,12 +21,6 @@ public partial class MainTodoWindow : Window
     {
         InitializeComponent();
         DataContext = this;
-        EditRowCommand = new RelayCommand<TodoRowView>(
-            row => row is not null && !InBatch, // 批量中禁用双击编辑（原型口径）
-            row => Controller?.OpenEditTodo(row.Id));
-        DoneDetailCommand = new RelayCommand<DoneRowView>(
-            row => row is not null,
-            row => Controller?.OpenDoneDetail(row.Id));
         WindowShell.ApplyFixed(this);
         _drag = new RowDragHelper(this);
         _toastTimer.Tick += (_, _) =>
@@ -143,15 +137,42 @@ public partial class MainTodoWindow : Window
         }
     }
 
-    /// <summary>批量中点行任意处 = 切换选中（原型批量分支整行可点）。</summary>
+    /// <summary>
+    /// 点行任意处。**用点击次数而非 MouseBinding 双击手势**：
+    /// InputBinding 的 LeftDoubleClick 只在该 Grid 的事件路由内生效，会吞掉快速连点中的第 2 击
+    /// （用户 2026-11-04 实测：文字上连点无效、卡片内边距区有效）→ 改为在点击处理里看 ClickCount。
+    /// 批量中=切换选中（任何一次点击都切）；常规态双击=打开编辑窗。
+    /// </summary>
     private void Row_Click(object sender, MouseButtonEventArgs e)
     {
-        if (!InBatch || (sender as Border)?.DataContext is not TodoRowView row)
+        if ((sender as Border)?.DataContext is not TodoRowView row)
         {
             return;
         }
 
-        Controller?.ToggleBatchSelection(row.Id);
+        if (InBatch)
+        {
+            Controller?.ToggleBatchSelection(row.Id);
+            e.Handled = true;
+            return;
+        }
+
+        if (e.ClickCount == 2)
+        {
+            Controller?.OpenEditTodo(row.Id);
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>已完成行：双击打开只读详情窗（需求 §2.6）。</summary>
+    private void DoneRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount != 2 || (sender as System.Windows.Controls.Grid)?.DataContext is not DoneRowView row)
+        {
+            return;
+        }
+
+        Controller?.OpenDoneDetail(row.Id);
         e.Handled = true;
     }
 
@@ -218,30 +239,7 @@ public partial class MainTodoWindow : Window
         }
     }
 
-    /// <summary>双击行 → 编辑。</summary>
-    public System.Windows.Input.ICommand EditRowCommand { get; }
 
-    /// <summary>双击已完成行 → 只读详情窗。</summary>
-    public System.Windows.Input.ICommand DoneDetailCommand { get; }
-
-    private sealed class RelayCommand<T> : System.Windows.Input.ICommand
-        where T : class
-    {
-        private readonly Func<T?, bool> _can;
-        private readonly Action<T?> _run;
-
-        public RelayCommand(Func<T?, bool> can, Action<T?> run)
-        {
-            _can = can;
-            _run = run;
-        }
-
-        public event EventHandler? CanExecuteChanged { add { } remove { } }
-
-        public bool CanExecute(object? p) => _can(p as T);
-
-        public void Execute(object? p) => _run(p as T);
-    }
 
     public void SetCount(int current, int max) => CountText.Text = $"{current}/{max}";
 

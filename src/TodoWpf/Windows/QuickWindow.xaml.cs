@@ -13,16 +13,10 @@ public partial class QuickWindow : Window
     /// <summary>模板行（真实数据投影）。</summary>
     public ObservableCollection<TemplateRowView> TemplateRows { get; } = new();
 
-    /// <summary>双击模板行 → 编辑。</summary>
-    public System.Windows.Input.ICommand EditTemplateCommand { get; }
-
     public QuickWindow()
     {
         InitializeComponent();
         DataContext = this;
-        EditTemplateCommand = new RelayCommand<TemplateRowView>(
-            row => row is not null && Controller?.IsTemplateBatch != true, // 批量中禁用双击编辑
-            row => Controller?.OpenEditTemplate(row.Id));
         WindowShell.ApplyFixed(this);
     }
 
@@ -182,16 +176,29 @@ public partial class QuickWindow : Window
         }
     }
 
-    /// <summary>批量中点行任意处 = 切换选中（与主窗同构；常规态交给行内按钮/双击）。</summary>
+    /// <summary>
+    /// 点模板行：批量中=切换选中；常规态双击=编辑（同主窗：用 ClickCount 而非 MouseBinding 双击手势，
+    /// 避免吞掉快速连点的第 2 击）。
+    /// </summary>
     private void TplRow_Click(object sender, MouseButtonEventArgs e)
     {
-        if (Controller is not { IsTemplateBatch: true } || (sender as System.Windows.Controls.Grid)?.DataContext is not TemplateRowView row)
+        if ((sender as System.Windows.Controls.Border)?.DataContext is not TemplateRowView row)
         {
             return;
         }
 
-        Controller.ToggleBatchSelection(row.Id);
-        e.Handled = true;
+        if (Controller is { IsTemplateBatch: true })
+        {
+            Controller.ToggleBatchSelection(row.Id);
+            e.Handled = true;
+            return;
+        }
+
+        if (e.ClickCount == 2)
+        {
+            Controller?.OpenEditTemplate(row.Id);
+            e.Handled = true;
+        }
     }
 
     // ---------- 悬停气泡（批次05①） ----------

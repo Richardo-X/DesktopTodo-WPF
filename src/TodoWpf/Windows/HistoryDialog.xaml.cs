@@ -43,7 +43,6 @@ public partial class HistoryDialog : Window
         CurDatePicker.SelectedDate = ParseDate(_cur);
         FromPicker.SelectedDate = ParseDate(EarliestDate());
         ToPicker.SelectedDate = ParseDate(today);
-        DetailCommand = new RelayCommand<HistRowView>(row => row is not null, row => OpenDetail(row));
         DialogScale.Attach(this, CardRoot, ScaleGrip, "history", 420, 560, controller);
         UpdateSortIcon();
         Render();
@@ -235,10 +234,22 @@ public partial class HistoryDialog : Window
         Render();
     }
 
+    /// <summary>点历史行：批量中=切换选中；常规态双击=只读详情（用 ClickCount，同主窗口径）。</summary>
     private void Row_Click(object sender, MouseButtonEventArgs e)
     {
-        if (!_batching || (sender as FrameworkElement)?.DataContext is not HistRowView row)
+        if ((sender as FrameworkElement)?.DataContext is not HistRowView row)
         {
+            return;
+        }
+
+        if (!_batching)
+        {
+            if (e.ClickCount == 2)
+            {
+                OpenDetail(row);
+                e.Handled = true;
+            }
+
             return;
         }
 
@@ -263,8 +274,6 @@ public partial class HistoryDialog : Window
         UpdateSortIcon();
         Render();
     }
-
-    private System.Windows.Input.ICommand DetailCommand { get; }
 
     private void OpenDetail(HistRowView row)
     {
@@ -300,9 +309,10 @@ public partial class HistoryDialog : Window
     private string LatestDateKey()
     {
         var keys = _controller.Data.Archive.Keys.ToList();
+        // keys 非空时 Max/Min 必非 null（Count==0 已由上一分支处理）
         return keys.Count == 0
             ? ShiftDateKey(LocalDate.Key(DateTimeOffset.Now), -1)
-            : keys.Max(StringComparer.Ordinal);
+            : keys.Max(StringComparer.Ordinal)!;
     }
 
     private string EarliestDate()
@@ -310,7 +320,7 @@ public partial class HistoryDialog : Window
         var keys = _controller.Data.Archive.Keys.ToList();
         return keys.Count == 0
             ? ShiftDateKey(LocalDate.Key(DateTimeOffset.Now), -1)
-            : keys.Min(StringComparer.Ordinal);
+            : keys.Min(StringComparer.Ordinal)!;
     }
 
     private static DateTime? ParseDate(string key) =>

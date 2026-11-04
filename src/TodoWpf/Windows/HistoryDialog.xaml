@@ -191,11 +191,6 @@
                                             </Style>
                                         </Border.Style>
                                         <Grid Height="36">
-                                        <Grid.InputBindings>
-                                            <MouseBinding Gesture="LeftDoubleClick"
-                                                          Command="{Binding DataContext.DetailCommand, ElementName=HistList}"
-                                                          CommandParameter="{Binding}"/>
-                                        </Grid.InputBindings>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
