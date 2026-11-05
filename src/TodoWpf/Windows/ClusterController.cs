@@ -1451,13 +1451,20 @@ public sealed class ClusterController : IDisposable
         }
     }
 
-    /// <summary>已完成退回（已完成窗行；上限已满时提示）。</summary>
+    /// <summary>已完成退回（已完成行勾选框反选；上限已满时提示）。</summary>
     public void ReturnRow(string id)
     {
         var r = TodoOpsService.ReturnTodo(_data, id, LocalDate.Key(DateTimeOffset.Now), DateTimeOffset.Now);
         if (r.Ok)
         {
             ApplyOps(r);
+            return;
+        }
+
+        // 退回场景的文案要跟"添加"区分开：共用 ReasonLimitReached，但说"无法添加"会看不懂
+        if (r.Reason == TodoOpsService.ReasonLimitReached)
+        {
+            ShowToast($"待办数量已达上限（{_data.Settings.MaxItems} 条），无法退回");
         }
         else
         {

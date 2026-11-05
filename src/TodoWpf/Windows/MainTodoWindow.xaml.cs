@@ -179,6 +179,19 @@ public partial class MainTodoWindow : Window
         e.Handled = true;
     }
 
+    /// <summary>
+    /// 已完成行勾选框：**点 = 反选退回待办**（需求 §2.6：末尾 + 按今日重算逾期 + 受上限）。
+    /// 用 Click 而非 Checked/Unchecked：绑定回灌不会触发 Click，不会"一次点击切两次"。
+    /// 上限已满时由控制器给 toast 提示，不做静默失败。
+    /// </summary>
+    private void DoneCheck_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as System.Windows.Controls.CheckBox)?.DataContext is DoneRowView row)
+        {
+            Controller?.ReturnRow(row.Id);
+        }
+    }
+
     /// <summary>批量条可见/计数/删除可用性由控制器推送；连带推送：空态文案变体、
     /// 已完成段变暗（原型 .dimdone）、设置入口冻结（原型 .frozen-btn）。</summary>
     public void SetBatchBar(bool visible, int selected, bool canDelete, int total)

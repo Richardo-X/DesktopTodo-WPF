@@ -576,8 +576,13 @@
                                                                TextTrimming="CharacterEllipsis"
                                                                VerticalAlignment="Center" Margin="8,0,8,0"
                                                                MouseEnter="RowText_MouseEnter" MouseLeave="RowText_MouseLeave"/>
+                                                    <!-- 已完成行勾选框：点 = 反选退回待办（需求 §2.6：末尾+重算逾期+受上限）。
+                                                         此前写死 IsEnabled=False，等于该功能一直没接上（用户 2026-11-05）。
+                                                         勾选框自己会吃掉鼠标事件（ButtonBase 置 Handled），
+                                                         所以点它不会连带触发整行双击开详情。 -->
                                                     <CheckBox Grid.Column="3" Style="{StaticResource RowCheck}"
-                                                              IsChecked="True" IsEnabled="False"
+                                                              IsChecked="True" ToolTip="退回待办"
+                                                              Click="DoneCheck_Click"
                                                               VerticalAlignment="Center"/>
                                                 </Grid>
                                                 </Border>
