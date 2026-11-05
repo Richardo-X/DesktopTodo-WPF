@@ -619,18 +619,7 @@
                 </Grid>
             </Grid>
 
-            <!-- toast（原型 .toasts：fixed 定位、不随主窗缩放；底部居中深色胶囊，
-                 2.2s 自动消失；纯展示层不接鼠标） -->
-            <Border x:Name="ToastPill" Panel.ZIndex="30"
-                    VerticalAlignment="Bottom" HorizontalAlignment="Center"
-                    Margin="0,0,0,28" IsHitTestVisible="False" Visibility="Collapsed"
-                    Background="{DynamicResource Brush.Toast}" CornerRadius="8" Padding="14,9">
-                <Border.RenderTransform>
-                    <TranslateTransform x:Name="ToastShift" Y="0"/>
-                </Border.RenderTransform>
-                <TextBlock x:Name="ToastText" FontSize="12" LineHeight="18"
-                           Foreground="{DynamicResource Brush.ToastFg}"/>
-            </Border>
+
 
             <Grid x:Name="ScaleGrip" Width="24" Height="24"
                   HorizontalAlignment="Right" VerticalAlignment="Bottom"

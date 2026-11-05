@@ -23,33 +23,14 @@ public partial class MainTodoWindow : Window
         DataContext = this;
         WindowShell.ApplyFixed(this);
         _drag = new RowDragHelper(this);
-        _toastTimer.Tick += (_, _) =>
-        {
-            _toastTimer.Stop();
-            ToastPill.Visibility = Visibility.Collapsed;
-        };
     }
-
-    private readonly System.Windows.Threading.DispatcherTimer _toastTimer = new()
-    {
-        Interval = TimeSpan.FromMilliseconds(2200),
-    };
 
     /// <summary>
-    /// toast 提示（原型 .toasts 口径）：底部居中深色胶囊，0.18s 淡入上移，
-    /// 2.2s 后消失（原型到期直接移除，无退场动画）。重复调用重置计时并换文案。
+    /// toast 提示（原型 .toasts 口径）。实现已抽到 <see cref="ToastPresenter"/>（6 个窗口共用一份）：
+    /// 此前只在主窗 XAML 里做，控制器又写死发主窗 → 二级窗的提示被盖住（用户 2026-11-05）。
+    /// 现在由控制器按"当前活动窗口"选目标，本方法只是主窗自己的入口。
     /// </summary>
-    public void ShowToast(string message)
-    {
-        ToastText.Text = message;
-        ToastPill.Visibility = Visibility.Visible;
-        var fadeIn = new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180));
-        var riseIn = new System.Windows.Media.Animation.DoubleAnimation(6, 0, TimeSpan.FromMilliseconds(180));
-        ToastPill.BeginAnimation(OpacityProperty, fadeIn);
-        ToastShift.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty, riseIn);
-        _toastTimer.Stop();
-        _toastTimer.Start();
-    }
+    public void ShowToast(string message) => ToastPresenter.Show(this, message);
 
     public event EventHandler<MouseButtonEventArgs>? TitlebarPressed;
 

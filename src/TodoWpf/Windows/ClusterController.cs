@@ -1472,8 +1472,19 @@ public sealed class ClusterController : IDisposable
         }
     }
 
-    /// <summary>toast 提示（主窗底部深色胶囊；批次05①）。</summary>
-    public void ShowToast(string message) => _main.ShowToast(message);
+    /// <summary>
+    /// toast 提示（主窗底部深色胶囊；批次05①）。
+    /// **画在"当前活动窗口"上**（用户 2026-11-05 裁定）：此前写死发主窗，设置窗/历史窗
+    /// 触发的提示全被模态二级窗盖住；现在谁在用就显示在谁身上。
+    /// </summary>
+    public void ShowToast(string message) => ToastPresenter.Show(ToastTarget(), message);
+
+    /// <summary>提示宿主 = 本应用当前活动的那个窗口（气泡/白条是 ShowActivated=False，天然不会中选）；没有则回落主窗。</summary>
+    private Window ToastTarget() =>
+        System.Windows.Application.Current.Windows
+            .OfType<Window>()
+            .FirstOrDefault(w => w.IsActive && w.IsVisible)
+        ?? _main;
 
     /// <summary>操作失败提示（机器可读 Reason → 用户文案；批次05：原型 toast）。</summary>
     private void ShowOpsError(string? reason) =>
