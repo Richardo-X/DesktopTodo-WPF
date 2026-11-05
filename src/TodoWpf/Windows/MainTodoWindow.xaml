@@ -526,8 +526,9 @@
                                             </ControlTemplate>
                                         </Button.Template>
                                         <!-- 图标放在 Content（不在模板里）：模板内的元素无法被代码按名引用，
-                                             而排序翻转要改这条 Path 的 Data -->
-                                        <Viewbox Width="12" Height="12">
+                                             而排序翻转要改这条 Path 的 Data。
+                                             图标 16（用户 2026-11-05：12 太小，加到 16；原型为 12，此处按用户裁定） -->
+                                        <Viewbox Width="16" Height="16">
                                             <Canvas Width="24" Height="24">
                                                 <Path x:Name="DoneSortIcon" Data="{StaticResource Icon.SortAsc}"
                                                       Stroke="{DynamicResource Brush.Faint}" StrokeThickness="1.8"

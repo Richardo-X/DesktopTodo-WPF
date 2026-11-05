@@ -170,7 +170,8 @@
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Button.Template>
-                        <Viewbox Width="12" Height="12">
+                        <!-- 图标 16（用户 2026-11-05：与主窗已完成段一致） -->
+                        <Viewbox Width="16" Height="16">
                             <Canvas Width="24" Height="24">
                                 <Path x:Name="SortIcon" Data="{StaticResource Icon.SortAsc}"
                                       Stroke="{DynamicResource Brush.Faint}" StrokeThickness="1.8"
