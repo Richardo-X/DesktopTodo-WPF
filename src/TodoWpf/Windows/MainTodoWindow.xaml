@@ -491,7 +491,11 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="16"/>
+                                        <!-- 16→30（用户 2026-11-05：排序按钮左移、贴近左边的横线）：
+                                             按钮靠左放 → 中心落到 x=324，与行尾勾选框列的中心对齐
+                                             （原型 .sortbtn 注释「中心与行尾勾选框列对齐」的本意）；
+                                             线是弹性列，会缩短 14 跟过来，与按钮的间距仍是右内边距 3。 -->
+                                        <ColumnDefinition Width="30"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="已完成 · " FontSize="12"
@@ -509,6 +513,7 @@
                                          此前写成 24×24/15px 图标，比 16 宽的列宽 7 物理像素 →
                                          悬停底色右侧溢出内容区、贴着窗口边（用户 2026-11-05 反馈）。 -->
                                     <Button x:Name="DoneSortBtn" Grid.Column="2" Width="16" Height="16"
+                                            HorizontalAlignment="Left"
                                             Background="Transparent" BorderThickness="0" Cursor="Hand"
                                             ToolTip="按完成时间排序" Click="DoneSort_Click">
                                         <Button.Template>
