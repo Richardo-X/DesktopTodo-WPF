@@ -62,6 +62,15 @@ internal static class ToastPresenter
             Visibility = Visibility.Collapsed,
         };
         Panel.SetZIndex(pill, 30);
+        var root = HostRoot(window);
+        // 跨满所有行列：二级窗的根 Grid 带行定义（标题栏 40 + 内容 *），
+        // 不跨行时提示会落进第 0 行（标题栏行）——实测跑到窗口顶部去了。
+        if (root is Grid grid)
+        {
+            Grid.SetRowSpan(pill, Math.Max(1, grid.RowDefinitions.Count));
+            Grid.SetColumnSpan(pill, Math.Max(1, grid.ColumnDefinitions.Count));
+        }
+
         // 主题色一律走动态资源引用：切日/夜主题时跟随（与其它控件同一纪律）
         pill.SetResourceReference(Border.BackgroundProperty, "Brush.Toast");
 
@@ -79,9 +88,8 @@ internal static class ToastPresenter
             pill.Visibility = Visibility.Collapsed;
         };
 
-        HostRoot(window).Children.Add(pill);
-        return new Host(pill, text, shift, timer);
-    }
+        root.Children.Add(pill);
+        return new Host(pill, text, shift, timer);    }
 
     /// <summary>
     /// 找承载 toast 的面板：窗口内容往下找第一个 Panel（各窗口结构都是 Border→Grid）。
