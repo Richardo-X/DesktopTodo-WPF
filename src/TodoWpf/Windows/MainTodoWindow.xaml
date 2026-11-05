@@ -564,8 +564,12 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <!-- 已完成行悬停（用户 2026-11-04 指出此前没有）：外层 Border 承载圆角+悬停底色，
-                                                     让"一行到底占多宽"可见。 -->
-                                                <Border CornerRadius="6" MouseLeftButtonDown="DoneRow_Click">
+                                                     让"一行到底占多宽"可见。
+                                                     Padding 右侧 12 = 与待办行卡片的内边距一致（用户 2026-11-05：
+                                                     已完成行勾选框要与待办行勾选框在同一竖线上）。
+                                                     只加右侧：左侧不动 → 时间轴位置保持已验收的样子；
+                                                     内边距不影响背景 → 悬停底色仍铺满整行。 -->
+                                                <Border CornerRadius="6" Padding="0,0,12,0" MouseLeftButtonDown="DoneRow_Click">
                                                     <Border.Style>
                                                         <Style TargetType="Border">
                                                             <Setter Property="Background" Value="Transparent"/>
