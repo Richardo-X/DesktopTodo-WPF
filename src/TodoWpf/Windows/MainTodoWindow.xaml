@@ -499,7 +499,9 @@
                                         <TextBlock x:Name="DoneCount" Text="0" FontSize="12"
                                                    Foreground="{DynamicResource Brush.Faint}"/>
                                     </StackPanel>
-                                    <Border Grid.Column="1" Height="1" Margin="8,0,8,0" VerticalAlignment="Center"
+                                    <!-- 分隔线右侧 8→3（用户 2026-11-05：排序按钮左移贴近左边的横线）：
+                                         线往右多伸 5，视觉上按钮紧贴线；按钮自身位置不动（右缘仍与行卡右缘齐）。 -->
+                                    <Border Grid.Column="1" Height="1" Margin="8,0,3,0" VerticalAlignment="Center"
                                             Background="{DynamicResource Brush.Hairline}"/>
                                     <!-- 排序按钮照原型 .sortbtn：可视框 16×16、圆角 4、图标 12，
                                          中心与行尾勾选框列对齐；命中区靠模板根 Grid 的 -6 外边距外扩到 28×28
