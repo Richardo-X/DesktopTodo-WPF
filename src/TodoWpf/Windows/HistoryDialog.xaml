@@ -55,12 +55,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="DatePickerStyle" TargetType="DatePicker">
-            <Setter Property="Width" Value="118"/>
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Padding" Value="6,0"/>
-        </Style>
+        <!-- 日期控件外观见 Themes/DateField.xaml（2026-11-05：系统默认模板太丑，改为自绘 28 高圆角字段） -->
 
         <!-- 勾选框（与主窗同款 16×16 r4）：批量行尾槽位用 -->
         <Style x:Key="HistRowCheck" TargetType="CheckBox">
@@ -123,7 +118,7 @@
                 <!-- 单日导航 -->
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,4,0,0">
                     <Button x:Name="PrevBtn" Content="前一天" Style="{StaticResource HistSbtn}" Click="Prev_Click"/>
-                    <DatePicker x:Name="CurDatePicker" Margin="6,0" Style="{StaticResource DatePickerStyle}"
+                    <DatePicker x:Name="CurDatePicker" Margin="6,0" Style="{StaticResource DateField}"
                                 SelectedDateFormat="Short" SelectedDateChanged="Date_Changed"/>
                     <Button x:Name="NextBtn" Content="后一天" Style="{StaticResource HistSbtn}" Click="Next_Click"/>
                     <Button x:Name="TodayBtn" Content="回到今天" Style="{StaticResource HistSbtn}"
@@ -248,11 +243,11 @@
                     <StackPanel x:Name="ExportPanel" Orientation="Horizontal">
                         <TextBlock Text="导出" FontSize="11" Foreground="{DynamicResource Brush.Muted}"
                                    VerticalAlignment="Center"/>
-                        <DatePicker x:Name="FromPicker" Margin="6,0,0,0" Width="102" Height="28"
-                                    FontSize="11" Padding="6,0"/>
+                        <DatePicker x:Name="FromPicker" Margin="6,0,0,0" Style="{StaticResource DateField}"
+                                    Width="102"/>
                         <TextBlock Text="至" FontSize="11" Foreground="{DynamicResource Brush.Muted}"
                                    Margin="6,0" VerticalAlignment="Center"/>
-                        <DatePicker x:Name="ToPicker" Width="102" Height="28" FontSize="11" Padding="6,0"/>
+                        <DatePicker x:Name="ToPicker" Style="{StaticResource DateField}" Width="102"/>
                         <Button Content="导出 CSV" Style="{StaticResource HistSbtn}"
                                 Margin="6,0,0,0" Click="Export_Click"/>
                     </StackPanel>

@@ -127,6 +127,7 @@ public partial class App : Application
         }
         merged.Add(Load("Themes/Icons.xaml"));
         merged.Add(Load("Themes/Controls.xaml"));
+        merged.Add(Load("Themes/DateField.xaml"));
 
         if (_dayTokens["Color.Accent"].ToString()?.EndsWith("0A63B8", StringComparison.OrdinalIgnoreCase) == true)
         {

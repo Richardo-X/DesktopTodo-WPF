@@ -1,0 +1,139 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+      日期输入框（用户 2026-11-05 反馈「日期选择的组件太丑，为什么一直没解决」）。
+
+      此前 HistoryDialog 里只写了 DatePickerStyle 的宽高字号、**没有任何 Template**，
+      于是三处日期框一直是 WPF 系统默认模板：方形、3D 灰边、系统日历按钮，
+      与圆角卡片语言完全不搭 —— 等于「起了样式名没实做」。
+
+      原型定稿（1C 原型 .dlg input[type=date]）：
+        height 28 / border 1px card-border / radius 6 / background card / font 11 / padding 0 6。
+      本文件分两步落地：① 字段外观（本笔）② 日历弹层（下一步 DateFieldCalendar）。
+
+      关键：WPF DatePicker 的模板要素必须按名接线（缺一个就不工作）
+        PART_Root / PART_TextBox(DatePickerTextBox) / PART_Button(打开日历)
+        PART_Popup / PART_Calendar(Calendar)
+    -->
+
+    <!-- 文本区：去掉系统 DatePickerTextBox 的边框/内边距/水印，只留文字 -->
+    <Style x:Key="DateFieldTextBox" TargetType="DatePickerTextBox">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="SelectionBrush" Value="{DynamicResource Brush.SoftAccent}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DatePickerTextBox">
+                    <ScrollViewer x:Name="PART_ContentHost" Focusable="False"
+                                  HorizontalScrollBarVisibility="Hidden"
+                                  VerticalScrollBarVisibility="Hidden"
+                                  VerticalAlignment="Center"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 字段外观：28 高 / 圆角 6 / 1px 描边 / 卡片白底 / 字 11 / 右侧日历图标 -->
+    <Style x:Key="DateField" TargetType="DatePicker">
+        <Setter Property="Width" Value="118"/>
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+        <Setter Property="Background" Value="{DynamicResource Brush.FieldSurface}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.FieldSurfaceBorder}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DatePicker">
+                    <Grid x:Name="PART_Root">
+                        <Border x:Name="bd" CornerRadius="6" SnapsToDevicePixels="True"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"/>
+
+                        <Grid Margin="8,0,6,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- 文本区（DatePicker 自己负责把 SelectedDate 显示进来） -->
+                            <DatePickerTextBox x:Name="PART_TextBox" Grid.Column="0"
+                                               Style="{StaticResource DateFieldTextBox}"
+                                               Foreground="{TemplateBinding Foreground}"
+                                               VerticalAlignment="Center"/>
+
+                            <!-- 打开日历的按钮：只画一枚 13px 日历线稿，不占系统按钮外观 -->
+                            <Button x:Name="PART_Button" Grid.Column="1"
+                                    Width="18" Height="18" Background="Transparent"
+                                    BorderThickness="0" Cursor="Hand" Focusable="False"
+                                    VerticalAlignment="Center">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="btnBd" Background="Transparent" CornerRadius="4">
+                                            <Viewbox Width="13" Height="13">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="{StaticResource Icon.Calendar}"
+                                                          Stroke="{DynamicResource Brush.Faint}"
+                                                          StrokeThickness="1.6"
+                                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                          StrokeLineJoin="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="btnBd" Property="Background"
+                                                        Value="{DynamicResource Brush.Hover}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </Grid>
+
+                        <!-- 日历弹层（弹窗自带透明度：圆角与投影才不会被方形边框裁掉） -->
+                        <Popup x:Name="PART_Popup" AllowsTransparency="True"
+                               Placement="Bottom" StaysOpen="False" VerticalOffset="4"
+                               PlacementTarget="{Binding ElementName=bd}">
+                            <Border x:Name="popBd" CornerRadius="8"
+                                    Background="{DynamicResource Brush.FieldSurface}"
+                                    BorderBrush="{DynamicResource Brush.FieldSurfaceBorder}"
+                                    BorderThickness="1" Padding="6">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#0A1428" Opacity="0.18"
+                                                      BlurRadius="18" ShadowDepth="6" Direction="270"/>
+                                </Border.Effect>
+                                <Calendar x:Name="PART_Calendar"/>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <!-- 悬停：描边加深（与行卡悬停同一语言） -->
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Muted}"/>
+                        </Trigger>
+                        <!-- 聚焦/展开：描边变强调色 -->
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+                        </Trigger>
+                        <Trigger Property="IsDropDownOpen" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>
