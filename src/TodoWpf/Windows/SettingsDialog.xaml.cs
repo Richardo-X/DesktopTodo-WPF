@@ -33,17 +33,11 @@ public partial class SettingsDialog : Window
         };
         if (dialog.Owner is not null)
         {
-            dialog.Loaded += (_, _) =>
-            {
-                var workArea = MonitorLayout.WorkAreaDips(dialog.Owner);
-                const double edge = 8;
-                dialog.Left = Math.Min(Math.Max(
-                    dialog.Owner.Left + (dialog.Owner.ActualWidth - dialog.ActualWidth) / 2,
-                    workArea.X + edge), Math.Max(workArea.X + edge, workArea.Right - dialog.ActualWidth - edge));
-                dialog.Top = Math.Min(Math.Max(
-                    dialog.Owner.Top + (dialog.Owner.ActualHeight - dialog.ActualHeight) / 2,
-                    workArea.Y + edge), Math.Max(workArea.Y + edge, workArea.Bottom - dialog.ActualHeight - edge));
-            };
+            // 物理像素定位必须在窗口可见前（SourceInitialized）：
+            // ① Loaded 时窗口已显示过，用户会看到它从默认位置跳到定位处（残影，2026-11-06 实测日志：
+            //    SourceInitialized=(26,26) → Loaded 移动后=(713,547)）；
+            // ② 混合 DPI 下 Left/Top 按当前所在屏的 DPI 解释，DIP 空间不连续 → 会落到别的屏。
+            dialog.SourceInitialized += (_, _) => MonitorLayout.CenterOnOwnerPhysical(dialog, dialog.Owner, edgeDips: 8);
         }
 
         dialog.ShowDialog();

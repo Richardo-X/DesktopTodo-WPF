@@ -64,15 +64,8 @@ public partial class DetailDialog : Window
             return;
         }
 
-        dialog.Loaded += (_, _) =>
-        {
-            var workArea = MonitorLayout.WorkAreaDips(anchor);
-            const double edge = 8;
-            var x = anchor.Left + (anchor.ActualWidth - dialog.ActualWidth) / 2;
-            var y = anchor.Top + (anchor.ActualHeight - dialog.ActualHeight) / 2;
-            dialog.Left = Math.Min(Math.Max(x, workArea.X + edge), Math.Max(workArea.X + edge, workArea.Right - dialog.ActualWidth - edge));
-            dialog.Top = Math.Min(Math.Max(y, workArea.Y + edge), Math.Max(workArea.Y + edge, workArea.Bottom - dialog.ActualHeight - edge));
-        };
+        // 同设置窗：物理像素定位必须在可见前（SourceInitialized）
+        dialog.SourceInitialized += (_, _) => MonitorLayout.CenterOnOwnerPhysical(dialog, anchor, edgeDips: 8);
     }
 
     private void Back_Click(object sender, RoutedEventArgs e) => Close();

@@ -100,15 +100,8 @@ public partial class HistoryDialog : Window
         };
         if (dialog.Owner is not null)
         {
-            dialog.Loaded += (_, _) =>
-            {
-                var workArea = MonitorLayout.WorkAreaDips(dialog.Owner);
-                const double edge = 8;
-                dialog.Left = dialog.Owner.Left + (dialog.Owner.ActualWidth - dialog.ActualWidth) / 2;
-                dialog.Top = Math.Min(Math.Max(
-                    dialog.Owner.Top + (dialog.Owner.ActualHeight - dialog.ActualHeight) / 2,
-                    workArea.Y + edge), Math.Max(workArea.Y + edge, workArea.Bottom - dialog.ActualHeight - edge));
-            };
+            // 同设置窗：物理像素定位必须在可见前（SourceInitialized）
+            dialog.SourceInitialized += (_, _) => MonitorLayout.CenterOnOwnerPhysical(dialog, dialog.Owner, edgeDips: 8);
         }
 
         dialog.ShowDialog();

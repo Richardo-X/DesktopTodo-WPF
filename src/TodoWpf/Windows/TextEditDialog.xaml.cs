@@ -241,16 +241,8 @@ public partial class TextEditDialog : Window
             return;
         }
 
-        var loaded = new RoutedEventHandler((_, _) =>
-        {
-            var workArea = MonitorLayout.WorkAreaDips(anchor);
-            const double edge = 8;
-            var x = anchor.Left + (anchor.ActualWidth - ActualWidth) / 2;
-            var y = anchor.Top + (anchor.ActualHeight - ActualHeight) / 2;
-            Left = Math.Min(Math.Max(x, workArea.X + edge), Math.Max(workArea.X + edge, workArea.Right - ActualWidth - edge));
-            Top = Math.Min(Math.Max(y, workArea.Y + edge), Math.Max(workArea.Y + edge, workArea.Bottom - ActualHeight - edge));
-        });
-        Loaded += loaded;
+        // 同设置窗：物理像素定位必须在可见前（SourceInitialized）
+        SourceInitialized += (_, _) => MonitorLayout.CenterOnOwnerPhysical(this, anchor, edgeDips: 8);
     }
 
     private void Input_Changed(object sender, TextChangedEventArgs e)

@@ -48,8 +48,10 @@ internal static class DialogScale
             }
 
             var m = ToDip(win, e);
+            // 灵敏度 500→1000（用户 2026-11-06：鼠标移动一点缩放幅度较大、不跟手）：
+            // 同样位移的缩放变化减半，4K 屏（175%）上尤其明显。
             var next = Math.Clamp(
-                startScale + ((m.X - startMouse.X) + (m.Y - startMouse.Y) * (baseH / baseW)) / 500,
+                startScale + ((m.X - startMouse.X) + (m.Y - startMouse.Y) * (baseH / baseW)) / 1000,
                 Min, Max);
             if (Math.Abs(next - transform.ScaleX) < 0.001)
             {

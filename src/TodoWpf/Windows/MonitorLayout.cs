@@ -124,4 +124,73 @@ internal static class MonitorLayout
         var area = SystemParameters.WorkArea;
         return new WinRect(area.Left, area.Top, area.Width, area.Height);
     }
+
+    // ---------- 物理像素定位（混合 DPI 多屏专用，2026-11-06） ----------
+
+    [DllImport("user32.dll")]
+    private static extern bool GetWindowRect(IntPtr hwnd, out NativeRect rect);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr hwnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MonitorInfoNative
+    {
+        public int Size;
+        public NativeRect Monitor;
+        public NativeRect Work;
+        public uint Flags;
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    private static extern bool GetMonitorInfoNative(IntPtr monitor, ref MonitorInfoNative info);
+
+    private const uint SwpNoSize = 0x0001;
+    private const uint SwpNoZOrder = 0x0004;
+    private const uint SwpNoActivate = 0x0010;
+
+    /// <summary>
+    /// 把对话框用**物理像素**定位到「锚窗所在屏、两轴居中于锚窗」，越界钳回该屏工作区。
+    /// 必须在 <c>SourceInitialized</c>（窗口可见之前）调用，两个原因（2026-11-06 实测）：
+    /// ① 在 Loaded 里才设 Left/Top 时窗口已经显示过，用户会看到它从默认位置跳过来（残影）；
+    /// ② 混合 DPI 下 Left/Top 按**窗口当前所在屏**的 DPI 解释（DIP 空间按屏不连续），
+    ///    按锚窗 DIP 空间算出的坐标会被解释到别的屏去（实测确认框/设置窗被放到 2K 屏，应用在 4K 屏）。
+    /// 尺寸不动（SWP_NOSIZE）——调用时 WPF 已按创建时的 DPI 定好物理尺寸。
+    /// </summary>
+    public static void CenterOnOwnerPhysical(Window dialog, Window owner, double edgeDips)
+    {
+        var hwnd = new WindowInteropHelper(dialog).Handle;
+        var ownerHwnd = new WindowInteropHelper(owner).Handle;
+        if (hwnd == System.IntPtr.Zero || ownerHwnd == System.IntPtr.Zero)
+        {
+            return;
+        }
+
+        if (!GetWindowRect(ownerHwnd, out var ownerRect) || !GetWindowRect(hwnd, out var dialogRect))
+        {
+            return;
+        }
+
+        var monitor = MonitorFromWindow(ownerHwnd, MonitorDefaultToNearest);
+        var info = new MonitorInfoNative { Size = Marshal.SizeOf<MonitorInfoNative>() };
+        if (monitor == System.IntPtr.Zero || !GetMonitorInfoNative(monitor, ref info))
+        {
+            return;
+        }
+
+        var work = info.Work;
+        var edge = (int)System.Math.Round(edgeDips * GetDpiForWindow(ownerHwnd) / 96.0);
+
+        // 尺寸也按目标屏的 DPI 换算：窗口一出生就在目标屏上、DIP 账目自洽，
+        // 不会出现"先按主屏尺寸创建、跨屏后又被 WM_DPICHANGED 放大"的二段式跳变。
+        var ownerDpi = GetDpiForWindow(ownerHwnd);
+        var ownerScale = ownerDpi == 0 ? 1.0 : ownerDpi / 96.0;
+        int w = (int)System.Math.Round(dialog.Width * ownerScale);
+        int h = (int)System.Math.Round(dialog.Height * ownerScale);
+        int x = ownerRect.Left + ((ownerRect.Right - ownerRect.Left) - w) / 2;
+        int y = ownerRect.Top + ((ownerRect.Bottom - ownerRect.Top) - h) / 2;
+        x = System.Math.Min(System.Math.Max(x, work.Left + edge), System.Math.Max(work.Left + edge, work.Right - w - edge));
+        y = System.Math.Min(System.Math.Max(y, work.Top + edge), System.Math.Max(work.Top + edge, work.Bottom - h - edge));
+        SetWindowPos(hwnd, System.IntPtr.Zero, x, y, w, h, SwpNoZOrder | SwpNoActivate);
+    }
 }
