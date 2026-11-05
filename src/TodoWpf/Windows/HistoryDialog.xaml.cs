@@ -42,9 +42,13 @@ public partial class HistoryDialog : Window
         }
 
         CurDatePicker.DisplayDateStart = ParseDate(EarliestDate());
+        // 上限 = 今天（用户 2026-11-05）：历史里没有未来记录，未来日期灰显不可点
+        CurDatePicker.DisplayDateEnd = ParseDate(today);
         CurDatePicker.SelectedDate = ParseDate(_cur);
         FromPicker.SelectedDate = ParseDate(EarliestDate());
+        FromPicker.DisplayDateEnd = ParseDate(today);
         ToPicker.SelectedDate = ParseDate(today);
+        ToPicker.DisplayDateEnd = ParseDate(today);
         DialogScale.Attach(this, CardRoot, ScaleGrip, "history", 420, 560, controller);
         UpdateSortIcon();
         Render();
