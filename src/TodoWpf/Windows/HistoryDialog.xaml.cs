@@ -35,11 +35,9 @@ public partial class HistoryDialog : Window
         DataContext = this;
 
         var today = LocalDate.Key(DateTimeOffset.Now);
-        _cur = LatestDateKey();
-        if (_cur == today)
-        {
-            _cur = ShiftDateKey(today, -1); // 默认看昨天（原型 openHistory 默认 yesterdayKey）
-        }
+        // 默认昨天（用户 2026-11-05）：当天的完成项只在主窗「已完成」里，
+        // 跨天结算后才进历史 → 历史窗默认看昨天。
+        _cur = ShiftDateKey(today, -1);
 
         CurDatePicker.DisplayDateStart = ParseDate(EarliestDate());
         // 上限 = 今天（用户 2026-11-05）：历史里没有未来记录，未来日期灰显不可点
@@ -310,15 +308,6 @@ public partial class HistoryDialog : Window
     {
         _batching = false;
         _selected.Clear();
-    }
-
-    private string LatestDateKey()
-    {
-        var keys = _controller.Data.Archive.Keys.ToList();
-        // keys 非空时 Max/Min 必非 null（Count==0 已由上一分支处理）
-        return keys.Count == 0
-            ? ShiftDateKey(LocalDate.Key(DateTimeOffset.Now), -1)
-            : keys.Max(StringComparer.Ordinal)!;
     }
 
     private string EarliestDate()
