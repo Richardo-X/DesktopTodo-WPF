@@ -98,7 +98,11 @@
             </Setter>
         </Style>
 
-        <!-- 开关（原型 .switch：36×20 胶囊 + 14 knob） -->
+        <!-- 开关（用户 2026-11-05 裁定方案 A：白钮 + 实色轨道）。
+             尺寸沿用已验收规格 42×23；钮 17 + 1px 描边（视觉 18）→ 轨道内上下各留 2.5，
+             左内缩 3、行程 19（关闭左距 2.5 / 开启右距 2.5 对称）。
+             旧实现的问题：轨道底 = 6% 黑（几乎与面板同色）+ 26% 黑描边 + 中灰钮
+             → 看着像"灰描边空胶囊里一颗灰点"，开/关两态几乎没差别。 -->
         <Style x:Key="SwitchBtn" TargetType="ToggleButton">
             <Setter Property="Width" Value="42"/>
             <Setter Property="Height" Value="23"/>
@@ -106,12 +110,13 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
-                        <Grid>
-                            <Border x:Name="track" CornerRadius="99"
-                                    Background="{DynamicResource Brush.CounterChip}"
-                                    BorderBrush="{DynamicResource Brush.Line}" BorderThickness="1"/>
-                            <Ellipse x:Name="knob" Width="17" Height="17" Fill="{DynamicResource Brush.Muted}"
-                                     HorizontalAlignment="Left" Margin="2,0,0,0">
+                        <Grid Background="Transparent">
+                            <Border x:Name="track" CornerRadius="11.5"
+                                    Background="{DynamicResource Brush.SwitchTrackOff}"/>
+                            <Ellipse x:Name="knob" Width="17" Height="17"
+                                     HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3,0,0,0"
+                                     Fill="{DynamicResource Brush.SwitchKnob}"
+                                     Stroke="{DynamicResource Brush.SwitchKnobEdge}" StrokeThickness="1">
                                 <Ellipse.RenderTransform>
                                     <TranslateTransform X="0"/>
                                 </Ellipse.RenderTransform>
@@ -119,15 +124,17 @@
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="track" Property="Background" Value="{DynamicResource Brush.SoftAccent}"/>
-                                <Setter TargetName="track" Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
-                                <Setter TargetName="knob" Property="Fill" Value="{DynamicResource Brush.Accent}"/>
+                                <Setter TargetName="track" Property="Background" Value="{DynamicResource Brush.Accent}"/>
                                 <Trigger.EnterActions>
                                     <BeginStoryboard>
                                         <Storyboard>
                                             <DoubleAnimation Storyboard.TargetName="knob"
                                                              Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                                                             To="21" Duration="0:0:0.16"/>
+                                                             To="19" Duration="0:0:0.16">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.EnterActions>
@@ -136,10 +143,18 @@
                                         <Storyboard>
                                             <DoubleAnimation Storyboard.TargetName="knob"
                                                              Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                                                             To="0" Duration="0:0:0.16"/>
+                                                             To="0" Duration="0:0:0.16">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
