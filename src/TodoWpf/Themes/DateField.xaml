@@ -126,9 +126,15 @@
                         <Trigger Property="IsInactive" Value="True">
                             <Setter Property="Opacity" Value="0.35"/>
                         </Trigger>
+                        <!-- 越界日期（今天之后 / 早于最早归档）：灰显**且彻底不可点**。
+                             只靠 Calendar 的黑名单其实已经选不中（实测点击与手动输入都不会改值），
+                             但日格仍会给悬停反馈、光标还是手型 → 看着"还能点"（用户 2026-11-05）。
+                             这里再断掉命中测试并清掉悬停底色，让它完全无反应。 -->
                         <Trigger Property="IsBlackedOut" Value="True">
                             <Setter Property="Opacity" Value="0.25"/>
                             <Setter Property="Cursor" Value="Arrow"/>
+                            <Setter Property="IsHitTestVisible" Value="False"/>
+                            <Setter TargetName="Fill" Property="Background" Value="Transparent"/>
                         </Trigger>
                         <!-- 选中放最后：优先级最高（底与环都让位给实蓝底） -->
                         <Trigger Property="IsSelected" Value="True">
