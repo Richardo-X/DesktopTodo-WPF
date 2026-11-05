@@ -310,7 +310,9 @@
 
     <!-- 字段外观：28 高 / 圆角 6 / 1px 描边 / 卡片白底 / 字 11 / 右侧日历图标 -->
     <Style x:Key="DateField" TargetType="DatePicker">
-        <Setter Property="Width" Value="118"/>
+        <!-- 宽度 92（用户 2026-11-05）：日期最长 2026/12/31 = 8 位数字 + 2 个斜杠（10 字符）
+             ≈ 57 + 左内边距 8 + 图标 18 + 右内边距 6 = 89，留 3px 余量 -->
+        <Setter Property="Width" Value="92"/>
         <Setter Property="Height" Value="28"/>
         <Setter Property="FontSize" Value="11"/>
         <Setter Property="Padding" Value="0"/>

@@ -243,11 +243,10 @@
                     <StackPanel x:Name="ExportPanel" Orientation="Horizontal">
                         <TextBlock Text="导出" FontSize="11" Foreground="{DynamicResource Brush.Muted}"
                                    VerticalAlignment="Center"/>
-                        <DatePicker x:Name="FromPicker" Margin="6,0,0,0" Style="{StaticResource DateField}"
-                                    Width="102"/>
+                        <DatePicker x:Name="FromPicker" Margin="6,0,0,0" Style="{StaticResource DateField}"/>
                         <TextBlock Text="至" FontSize="11" Foreground="{DynamicResource Brush.Muted}"
                                    Margin="6,0" VerticalAlignment="Center"/>
-                        <DatePicker x:Name="ToPicker" Style="{StaticResource DateField}" Width="102"/>
+                        <DatePicker x:Name="ToPicker" Style="{StaticResource DateField}"/>
                         <Button Content="导出 CSV" Style="{StaticResource HistSbtn}"
                                 Margin="6,0,0,0" Click="Export_Click"/>
                     </StackPanel>
