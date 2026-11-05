@@ -32,6 +32,18 @@ public partial class ConfirmDialog : Window
                                bool danger = false, Window? anchor = null)
     {
         var dialog = new ConfirmDialog(title, body, okText, danger);
+
+        // **必须在 ShowDialog 前设 Owner**：没有 Owner 时 WPF 用主屏的 DPI 解释 Left/Top，
+        // 在混合 DPI（2K@100% + 4K@175%）下会把确认框放到主屏去 —— 用户 2026-11-05 实测：
+        // 覆盖导入 / 批量删除的确认框出现在 2K 屏，而应用在 4K 屏。
+        // 另外四个二级窗本来就设了 Owner，所以只有确认框有这个毛病。
+        anchor ??= System.Windows.Application.Current.Windows
+            .OfType<Window>().FirstOrDefault(w => w.Title == "桌面待办");
+        if (anchor is not null && !ReferenceEquals(anchor, dialog))
+        {
+            dialog.Owner = anchor;
+        }
+
         dialog.CenterOn(anchor);
         dialog.ShowDialog();
         return dialog._confirmed;
@@ -40,9 +52,6 @@ public partial class ConfirmDialog : Window
     /// <summary>居中于锚窗（两轴），越界钳回所在屏工作区（原型 EDGE=8 口径）。</summary>
     private void CenterOn(Window? anchor)
     {
-        anchor ??= System.Windows.Application.Current.Windows
-            .OfType<Window>().FirstOrDefault(w => ReferenceEquals(w, Owner) || w.Title == "桌面待办");
-
         var loaded = new RoutedEventHandler((_, _) =>
         {
             if (anchor is null)
