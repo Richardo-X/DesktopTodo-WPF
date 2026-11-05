@@ -142,7 +142,7 @@ internal static class MonitorLayout
         public uint Flags;
     }
 
-    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    [DllImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
     private static extern bool GetMonitorInfoNative(IntPtr monitor, ref MonitorInfoNative info);
 
     private const uint SwpNoSize = 0x0001;
