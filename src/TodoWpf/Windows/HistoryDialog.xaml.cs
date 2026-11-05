@@ -39,17 +39,55 @@ public partial class HistoryDialog : Window
         // 跨天结算后才进历史 → 历史窗默认看昨天。
         _cur = ShiftDateKey(today, -1);
 
-        CurDatePicker.DisplayDateStart = ParseDate(EarliestDate());
-        // 上限 = 今天（用户 2026-11-05）：历史里没有未来记录，未来日期灰显不可点
-        CurDatePicker.DisplayDateEnd = ParseDate(today);
         CurDatePicker.SelectedDate = ParseDate(_cur);
         FromPicker.SelectedDate = ParseDate(EarliestDate());
-        FromPicker.DisplayDateEnd = ParseDate(today);
         ToPicker.SelectedDate = ParseDate(today);
-        ToPicker.DisplayDateEnd = ParseDate(today);
+
+        // 可选范围（用户 2026-11-05：未来日期要置灰）：用 BlackoutDates 而不是
+        // DisplayDateStart/End —— 后者会让超范围的日格**根本不生成**（日历下半片空白）。
+        // BlackoutDates 则保留日格、按 IsBlackedOut 渲染成灰字且不可点。
+        LimitSelectableRange(CurDatePicker, EarliestDate(), today);
+        LimitSelectableRange(FromPicker, EarliestDate(), today);
+        LimitSelectableRange(ToPicker, EarliestDate(), today);
         DialogScale.Attach(this, CardRoot, ScaleGrip, "history", 420, 560, controller);
         UpdateSortIcon();
         Render();
+    }
+
+
+    /// <summary>
+    /// 把可选日期限制在 [minKey, maxKey]：范围外一律加入 BlackoutDates（灰显不可点）。
+    /// 必须在日历已创建后调用——DatePicker 的 Calendar 在我们的模板 Popup 里，
+    /// 所以挂 CalendarOpened，取 PART_Popup 的 Child（就是 Calendar）。
+    /// </summary>
+    private static void LimitSelectableRange(DatePicker picker, string minKey, string maxKey)
+    {
+        picker.CalendarOpened += (_, _) =>
+        {
+            if (picker.Template?.FindName("PART_Popup", picker) is not System.Windows.Controls.Primitives.Popup popup
+                || popup.Child is not System.Windows.Controls.Calendar calendar
+                || calendar.Tag is "range-limited")
+            {
+                return;
+            }
+
+            var min = ParseDate(minKey) ?? DateTime.Today;
+            var max = ParseDate(maxKey) ?? DateTime.Today;
+            var floor = new DateTime(1900, 1, 1);
+            var ceiling = new DateTime(2100, 12, 31);
+
+            if (min > floor)
+            {
+                calendar.BlackoutDates.Add(new CalendarDateRange(floor, min.AddDays(-1)));
+            }
+
+            if (max < ceiling)
+            {
+                calendar.BlackoutDates.Add(new CalendarDateRange(max.AddDays(1), ceiling));
+            }
+
+            calendar.Tag = "range-limited";
+        };
     }
 
     /// <summary>打开历史记录（模态；从设置窗打开时嵌套）。</summary>
