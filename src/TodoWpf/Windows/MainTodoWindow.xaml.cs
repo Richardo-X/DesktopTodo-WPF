@@ -278,7 +278,11 @@ public partial class MainTodoWindow : Window
 
     public void SetTuckLock(bool on)
     {
-        TuckLockBtn.Foreground = on ? (Brush)FindResource("Brush.Accent") : (Brush)FindResource("Brush.Faint");
+        // 必须用 SetResourceReference：直接赋 FindResource 得到的画笔实例，会在切主题后
+        // 仍指向旧主题那支（夜间 Faint 很浅，切回白天后就"偏浅"）——用户 2026-11-05 反馈
+        // 「每次切换后一般态线条颜色偏浅，要点两次激活再切回来才正常」就是这个原因。
+        TuckLockBtn.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty,
+            on ? "Brush.Accent" : "Brush.Faint");
         TuckLockBtn.ToolTip = on ? "缩进锁定：已开启（贴边保持弹出）" : "缩进锁定";
         // 激活态短线（用户 2026-11-05 裁定）：与置顶同款
         TuckActiveBar.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
