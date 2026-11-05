@@ -501,10 +501,33 @@
                                     </StackPanel>
                                     <Border Grid.Column="1" Height="1" Margin="8,0,8,0" VerticalAlignment="Center"
                                             Background="{DynamicResource Brush.Hairline}"/>
-                                    <Button x:Name="DoneSortBtn" Grid.Column="2" Width="24" Height="24" Background="Transparent"
-                                            BorderThickness="0" Cursor="Hand" ToolTip="按完成时间排序"
-                                            Click="DoneSort_Click">
-                                        <Viewbox Width="15" Height="15">
+                                    <!-- 排序按钮照原型 .sortbtn：可视框 16×16、圆角 4、图标 12，
+                                         中心与行尾勾选框列对齐；命中区靠模板根 Grid 的 -6 外边距外扩到 28×28
+                                         （原型 ::after{inset:-6px}），悬停底色只画在 16×16 可视框内。
+                                         此前写成 24×24/15px 图标，比 16 宽的列宽 7 物理像素 →
+                                         悬停底色右侧溢出内容区、贴着窗口边（用户 2026-11-05 反馈）。 -->
+                                    <Button x:Name="DoneSortBtn" Grid.Column="2" Width="16" Height="16"
+                                            Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                            ToolTip="按完成时间排序" Click="DoneSort_Click">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Grid Background="Transparent" Margin="-6">
+                                                    <Border x:Name="bd" Width="16" Height="16" CornerRadius="4"
+                                                            Background="Transparent"
+                                                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                        <!-- 图标放在 Content（不在模板里）：模板内的元素无法被代码按名引用，
+                                             而排序翻转要改这条 Path 的 Data -->
+                                        <Viewbox Width="12" Height="12">
                                             <Canvas Width="24" Height="24">
                                                 <Path x:Name="DoneSortIcon" Data="{StaticResource Icon.SortAsc}"
                                                       Stroke="{DynamicResource Brush.Faint}" StrokeThickness="1.8"
