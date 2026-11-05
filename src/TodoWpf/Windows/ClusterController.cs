@@ -219,6 +219,7 @@ public sealed class ClusterController : IDisposable
         _main.SetCount(_data.Todos.Count, _data.Settings.MaxItems);
         var doneRows = MainViewService.DoneRows(_data, _data.Settings.DoneSort);
         _main.SetDoneRows(doneRows);
+        _main.SetDoneSortState(_data.Settings.DoneSort == "desc");
         _quick.SetTemplateRows(
             MainViewService.TemplateRows(_data, tplBatch ? _batch : null),
             Core.Models.TemplateLimit.Max, tplBatch);

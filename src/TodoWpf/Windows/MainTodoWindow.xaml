@@ -501,12 +501,12 @@
                                     </StackPanel>
                                     <Border Grid.Column="1" Height="1" Margin="8,0,8,0" VerticalAlignment="Center"
                                             Background="{DynamicResource Brush.Hairline}"/>
-                                    <Button Grid.Column="2" Width="24" Height="24" Background="Transparent"
+                                    <Button x:Name="DoneSortBtn" Grid.Column="2" Width="24" Height="24" Background="Transparent"
                                             BorderThickness="0" Cursor="Hand" ToolTip="按完成时间排序"
                                             Click="DoneSort_Click">
                                         <Viewbox Width="15" Height="15">
                                             <Canvas Width="24" Height="24">
-                                                <Path Data="{StaticResource Icon.SortAsc}"
+                                                <Path x:Name="DoneSortIcon" Data="{StaticResource Icon.SortAsc}"
                                                       Stroke="{DynamicResource Brush.Faint}" StrokeThickness="1.8"
                                                       StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                                             </Canvas>

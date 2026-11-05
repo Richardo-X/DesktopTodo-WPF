@@ -300,6 +300,17 @@ public partial class MainTodoWindow : Window
 
     private void DoneSort_Click(object sender, RoutedEventArgs e) => Controller?.ToggleDoneSort();
 
+    /// <summary>
+    /// 已完成排序按钮的状态回显（用户 2026-11-05：点了按钮自身毫无变化）。
+    /// 此前 Path 的 Data 写死为升序图标，没有人更新它 → 连点只改列表顺序。
+    /// 口径（用户 2026-11-05 裁定）：**只翻图标、不变色**。
+    /// </summary>
+    public void SetDoneSortState(bool desc)
+    {
+        DoneSortIcon.Data = (Geometry)FindResource(desc ? "Icon.SortDesc" : "Icon.SortAsc");
+        DoneSortBtn.ToolTip = desc ? "当前倒序，点击切换为正序" : "当前正序，点击切换为倒序";
+    }
+
     /// <summary>内容缩放比（拖拽把屏幕位移换算回内容坐标用）。</summary>
     public double ContentScaleFactor => ((ScaleTransform)ContentScale).ScaleX;
 
