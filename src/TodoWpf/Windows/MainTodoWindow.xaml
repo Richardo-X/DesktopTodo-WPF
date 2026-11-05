@@ -533,7 +533,7 @@
                                              关掉取整后两者共用同一几何中心，任何缩放都同心。 -->
                                         <Border Grid.Column="1" Width="2" HorizontalAlignment="Center"
                                                 UseLayoutRounding="False"
-                                                Margin="0,22,0,22"
+                                                Margin="0,20,0,20"
                                                 Background="{DynamicResource Brush.CardBorder}" Opacity="0.55"/>
                                     </Grid>
                                     <ItemsControl x:Name="DoneList" ItemsSource="{Binding DoneRows}">
@@ -552,7 +552,7 @@
                                                             </Style.Triggers>
                                                         </Style>
                                                     </Border.Style>
-                                                <Grid Height="44">
+                                                <Grid Height="40">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="34"/>
                                                         <ColumnDefinition Width="16"/>
