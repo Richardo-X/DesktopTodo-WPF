@@ -256,12 +256,12 @@ public partial class MainTodoWindow : Window
     public void SetPanelToggles(bool quickVisible, bool doneVisible)
     {
         // 原型 .sidebtn.on：边框与图标同时变强调色；仅改图标时夜间 Muted→Accent 差异过小，看不出来
-        QuickBtn.Foreground = quickVisible
-            ? (Brush)FindResource("Brush.Accent")
-            : (Brush)FindResource("Brush.Muted");
-        QuickBtn.BorderBrush = quickVisible
-            ? (Brush)FindResource("Brush.Accent")
-            : (Brush)FindResource("Brush.CardBorder");
+        // 必须用 SetResourceReference（动态引用）：直接赋 FindResource 的实例会把"当前主题那支画笔"
+        // 焊死为本地值，切主题后仍是旧主题颜色（与缩进锁定同款问题，2026-11-05 一并修）
+        QuickBtn.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty,
+            quickVisible ? "Brush.Accent" : "Brush.Muted");
+        QuickBtn.SetResourceReference(System.Windows.Controls.Control.BorderBrushProperty,
+            quickVisible ? "Brush.Accent" : "Brush.CardBorder");
     }
 
     public void SetTopMost(bool on)
