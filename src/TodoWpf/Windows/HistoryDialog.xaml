@@ -148,9 +148,28 @@
                         <Button x:Name="BatchExitBtn" Content="返回" Style="{StaticResource HistSbtn}"
                                 Margin="8,0,0,0" Click="BatchExit_Click"/>
                     </StackPanel>
+                    <!-- 排序按钮照原型 .sortbtn（与主窗已完成段共用同一规格）：
+                         可视框 16×16 / 圆角 4 / 图标 12；命中区靠模板根 Grid 的 -6 外边距外扩到 28×28。
+                         可视框右对齐到内容右缘，悬停底色只画在 16×16 内、不会溢出到窗口边。 -->
                     <Button x:Name="SortBtn" Width="16" Height="16" HorizontalAlignment="Right"
                             VerticalAlignment="Center" Background="Transparent" BorderThickness="0"
                             Cursor="Hand" ToolTip="按完成时间排序" Click="Sort_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Grid Background="Transparent" Margin="-6">
+                                    <Border x:Name="bd" Width="16" Height="16" CornerRadius="4"
+                                            Background="Transparent"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </Grid>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
                         <Viewbox Width="12" Height="12">
                             <Canvas Width="24" Height="24">
                                 <Path x:Name="SortIcon" Data="{StaticResource Icon.SortAsc}"
