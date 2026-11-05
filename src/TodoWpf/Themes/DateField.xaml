@@ -39,6 +39,275 @@
         </Setter>
     </Style>
 
+    <!-- ===== 日历弹层（② 本笔）=====
+         WPF Calendar 的模板要素同样按名接线，缺一不工作：
+           Calendar  → PART_CalendarItem
+           CalendarItem → PART_Root / PART_PreviousButton / PART_NextButton /
+                          PART_HeaderButton / PART_MonthView(7 列 7 行) / PART_YearView(4 列 3 行)
+                         （PART_MonthView 第 0 行由控件填入星期标题，故本模板只留 6 行日期）
+         星期起始 = 周一（用户 2026-11-05 裁定）。 -->
+
+    <!-- 上/下月箭头（24×24 圆角 6，悬停出底色） -->
+    <Style x:Key="DateFieldNavBtn" TargetType="Button">
+        <Setter Property="Width" Value="24"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" Background="Transparent" CornerRadius="6">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 年月标题（点击可切到月/年视图；CalendarItem 负责写入 Content） -->
+    <Style x:Key="DateFieldHeaderBtn" TargetType="Button">
+        <Setter Property="Height" Value="26"/>
+        <Setter Property="Padding" Value="8,0"/>
+        <Setter Property="FontSize" Value="12.5"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" Background="Transparent" CornerRadius="6"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 日期格：28 高、圆角 6；悬停出底色 / 今天蓝细环 / 选中实蓝底白字 / 非本月与越界灰显 -->
+    <Style x:Key="DateFieldDayBtn" TargetType="CalendarDayButton">
+        <Setter Property="FontSize" Value="11.5"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="MinWidth" Value="0"/>
+        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CalendarDayButton">
+                    <Grid Background="Transparent">
+                        <Border x:Name="Fill" Margin="1" CornerRadius="6" Background="Transparent"/>
+                        <Border x:Name="Ring" Margin="1" CornerRadius="6"
+                                BorderThickness="1" BorderBrush="Transparent"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Fill" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                        </Trigger>
+                        <!-- 今天：蓝色细环（不填充，避免与"选中"混淆） -->
+                        <Trigger Property="IsToday" Value="True">
+                            <Setter TargetName="Ring" Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+                        </Trigger>
+                        <Trigger Property="IsInactive" Value="True">
+                            <Setter Property="Opacity" Value="0.35"/>
+                        </Trigger>
+                        <Trigger Property="IsBlackedOut" Value="True">
+                            <Setter Property="Opacity" Value="0.25"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                        <!-- 选中放最后：优先级最高（底与环都让位给实蓝底） -->
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Fill" Property="Background" Value="{DynamicResource Brush.Accent}"/>
+                            <Setter TargetName="Ring" Property="BorderBrush" Value="Transparent"/>
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.AccentFg}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 月/年视图格（点标题切过去时出现） -->
+    <Style x:Key="DateFieldCalBtn" TargetType="CalendarButton">
+        <Setter Property="FontSize" Value="11.5"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="MinWidth" Value="0"/>
+        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CalendarButton">
+                    <Grid Background="Transparent">
+                        <Border x:Name="Fill" Margin="2" CornerRadius="6" Background="Transparent"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Fill" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                        </Trigger>
+                        <Trigger Property="IsInactive" Value="True">
+                            <Setter Property="Opacity" Value="0.35"/>
+                        </Trigger>
+                        <!-- CalendarButton 没有 IsSelected，用 HasSelectedDays（"该月/年含已选日期"） -->
+                        <Trigger Property="HasSelectedDays" Value="True">
+                            <Setter TargetName="Fill" Property="Background" Value="{DynamicResource Brush.SoftAccent}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DateFieldCalendarItem" TargetType="CalendarItem">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CalendarItem">
+                    <ControlTemplate.Resources>
+                        <!-- 星期标题模板（控件用这个 key 找它，必须原样保留） -->
+                        <DataTemplate x:Key="{x:Static CalendarItem.DayTitleTemplateResourceKey}">
+                            <TextBlock Text="{Binding}" FontSize="10"
+                                       Foreground="{DynamicResource Brush.Faint}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </ControlTemplate.Resources>
+
+                    <Grid x:Name="PART_Root" Width="220">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- 头部：‹ 年月 › -->
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="28"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="28"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button x:Name="PART_PreviousButton" Grid.Column="0"
+                                    Style="{StaticResource DateFieldNavBtn}"
+                                    HorizontalAlignment="Left">
+                                <Viewbox Width="11" Height="11">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="{StaticResource Icon.ChevL}"
+                                              Stroke="{DynamicResource Brush.Muted}" StrokeThickness="2"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                              StrokeLineJoin="Round"/>
+                                    </Canvas>
+                                </Viewbox>
+                            </Button>
+
+                            <Button x:Name="PART_HeaderButton" Grid.Column="1"
+                                    Style="{StaticResource DateFieldHeaderBtn}"
+                                    HorizontalAlignment="Center"/>
+
+                            <Button x:Name="PART_NextButton" Grid.Column="2"
+                                    Style="{StaticResource DateFieldNavBtn}"
+                                    HorizontalAlignment="Right">
+                                <Viewbox Width="11" Height="11">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="{StaticResource Icon.ChevR}"
+                                              Stroke="{DynamicResource Brush.Muted}" StrokeThickness="2"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                              StrokeLineJoin="Round"/>
+                                    </Canvas>
+                                </Viewbox>
+                            </Button>
+                        </Grid>
+
+                        <!-- 月视图：7 列；行 0 = 星期标题（18），行 1~6 = 日期（28×6） -->
+                        <Grid x:Name="PART_MonthView" Grid.Row="1" Visibility="Visible">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="18"/>
+                                <RowDefinition Height="28"/>
+                                <RowDefinition Height="28"/>
+                                <RowDefinition Height="28"/>
+                                <RowDefinition Height="28"/>
+                                <RowDefinition Height="28"/>
+                                <RowDefinition Height="28"/>
+                            </Grid.RowDefinitions>
+                        </Grid>
+
+                        <!-- 年视图：4 列 × 3 行 -->
+                        <Grid x:Name="PART_YearView" Grid.Row="1" Visibility="Hidden">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="30"/>
+                                <RowDefinition Height="30"/>
+                                <RowDefinition Height="30"/>
+                            </Grid.RowDefinitions>
+                        </Grid>
+
+                        <Rectangle x:Name="PART_DisabledVisual" Grid.RowSpan="2"
+                                   Fill="{DynamicResource Brush.Shell}" Opacity="0.5" Visibility="Collapsed"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DateFieldCalendar" TargetType="Calendar">
+        <Setter Property="FirstDayOfWeek" Value="Monday"/>
+        <!-- 白底/描边由 Calendar 自己的模板画（不能挂在外层 Border 上：
+             DatePicker 打开弹层时会把 Calendar 放进 Popup，外层容器不保证参与渲染） -->
+        <Setter Property="Background" Value="{DynamicResource Brush.FieldSurface}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.FieldSurfaceBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CalendarItemStyle" Value="{StaticResource DateFieldCalendarItem}"/>
+        <Setter Property="CalendarDayButtonStyle" Value="{StaticResource DateFieldDayBtn}"/>
+        <Setter Property="CalendarButtonStyle" Value="{StaticResource DateFieldCalBtn}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Calendar">
+                    <!-- Margin 10 = 给投影留出空间（弹窗窗口按内容尺寸，超出会被裁掉） -->
+                    <Border x:Name="calBd" Margin="10" CornerRadius="8" Padding="6"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <Border.Effect>
+                            <DropShadowEffect Color="#0A1428" Opacity="0.18"
+                                              BlurRadius="18" ShadowDepth="6" Direction="270"/>
+                        </Border.Effect>
+                        <CalendarItem x:Name="PART_CalendarItem"
+                                      Style="{TemplateBinding CalendarItemStyle}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- 字段外观：28 高 / 圆角 6 / 1px 描边 / 卡片白底 / 字 11 / 右侧日历图标 -->
     <Style x:Key="DateField" TargetType="DatePicker">
         <Setter Property="Width" Value="118"/>
@@ -48,6 +317,7 @@
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
         <Setter Property="Background" Value="{DynamicResource Brush.FieldSurface}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.FieldSurfaceBorder}"/>
+        <Setter Property="CalendarStyle" Value="{StaticResource DateFieldCalendar}"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -98,20 +368,15 @@
                             </Button>
                         </Grid>
 
-                        <!-- 日历弹层（弹窗自带透明度：圆角与投影才不会被方形边框裁掉） -->
+                        <!-- 日历弹层。内容只有 Calendar 一项：白底/圆角/描边/投影都在
+                             Calendar 自己的模板里画（见 DateFieldCalendar）——因为
+                             DatePicker 打开弹层时会把 Calendar 放进 Popup，
+                             外层容器不保证参与渲染（2026-11-05 实测：外层 Border 底色不显示）。
+                             VerticalOffset = 4 - 10（模板内为投影留的 10px 外边距）→ 卡片仍离字段 4px。 -->
                         <Popup x:Name="PART_Popup" AllowsTransparency="True"
-                               Placement="Bottom" StaysOpen="False" VerticalOffset="4"
+                               Placement="Bottom" StaysOpen="False" VerticalOffset="-6"
                                PlacementTarget="{Binding ElementName=bd}">
-                            <Border x:Name="popBd" CornerRadius="8"
-                                    Background="{DynamicResource Brush.FieldSurface}"
-                                    BorderBrush="{DynamicResource Brush.FieldSurfaceBorder}"
-                                    BorderThickness="1" Padding="6">
-                                <Border.Effect>
-                                    <DropShadowEffect Color="#0A1428" Opacity="0.18"
-                                                      BlurRadius="18" ShadowDepth="6" Direction="270"/>
-                                </Border.Effect>
-                                <Calendar x:Name="PART_Calendar"/>
-                            </Border>
+                            <Calendar x:Name="PART_Calendar"/>
                         </Popup>
                     </Grid>
                     <ControlTemplate.Triggers>
