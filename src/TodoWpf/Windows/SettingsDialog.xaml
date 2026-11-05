@@ -236,25 +236,8 @@
                     </Grid>
                     <Border Style="{StaticResource Divider}" Margin="0,10"/>
 
-                    <!-- 界面主题 -->
-                    <Grid Margin="0,10,0,0">
-                        <StackPanel>
-                            <TextBlock Text="界面主题" FontSize="15.5" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource Brush.Text}"/>
-                            <TextBlock Text="白天 / 夜间（即时生效）" FontSize="13"
-                                       Foreground="{DynamicResource Brush.Faint}" Margin="0,3,0,0"/>
-                        </StackPanel>
-                        <Border HorizontalAlignment="Right" VerticalAlignment="Center"
-                                BorderBrush="{DynamicResource Brush.CardBorder}" BorderThickness="1"
-                                CornerRadius="6" Height="28">
-                            <StackPanel Orientation="Horizontal">
-                                <RadioButton x:Name="SegDay" Content="白天" Style="{StaticResource SegBtn}"
-                                             GroupName="theme" Checked="Theme_Checked"/>
-                                <RadioButton x:Name="SegNight" Content="夜间" Style="{StaticResource SegBtn}"
-                                             GroupName="theme" BorderThickness="0" Checked="Theme_Checked"/>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
+                    <!-- 界面主题行已删除（用户 2026-11-05：有标题栏的切换就够了） -->
+
                     <Border Style="{StaticResource Divider}" Margin="0,10"/>
 
                     <!-- 历史记录 -->

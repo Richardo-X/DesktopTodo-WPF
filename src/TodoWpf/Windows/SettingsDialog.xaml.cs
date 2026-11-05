@@ -59,8 +59,7 @@ public partial class SettingsDialog : Window
 
         Seg24.IsChecked = !settings.Hour12;
         Seg12.IsChecked = settings.Hour12;
-        SegDay.IsChecked = !App.IsNight;
-        SegNight.IsChecked = App.IsNight;
+        // 主题分段已移除（用户 2026-11-05：标题栏切换即可）
         AutoStartSwitch.IsChecked = settings.AutoStart;
     }
 
@@ -89,14 +88,6 @@ public partial class SettingsDialog : Window
         if (IsLoaded && (Seg12.IsChecked == true) != _controller.Data.Settings.Hour12)
         {
             _controller.SetHour12(Seg12.IsChecked == true);
-        }
-    }
-
-    private void Theme_Checked(object sender, RoutedEventArgs e)
-    {
-        if (IsLoaded && (SegNight.IsChecked == true) != App.IsNight)
-        {
-            _controller.SetTheme(SegNight.IsChecked == true);
         }
     }
 
