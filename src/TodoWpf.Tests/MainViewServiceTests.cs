@@ -259,6 +259,55 @@ public class MainViewServiceTests
         Assert.True(row.Selected);
     }
 
+
+    // ---------- 列表行只显示一行（2026-11-06 用户反馈） ----------
+    // 编辑窗允许 Shift+Enter 换行；但列表行必须只显示一行。规则：取第一个换行之前的内容；
+    // **开头的换行忽略**（否则"先敲回车再写字"会让行内容为空）。
+
+    [Theory]
+    [InlineData("abc", "abc")]
+    [InlineData("abc\ndef", "abc")]
+    [InlineData("abc\r\ndef", "abc")]
+    [InlineData("abc\n", "abc")]
+    [InlineData("第一行\n第二行\n第三行", "第一行")]
+    [InlineData("\nabc", "abc")]          // 开头换行 → 忽略，取后面的内容
+    [InlineData("\n\nabc", "abc")]        // 连续开头换行同样忽略
+    [InlineData("\nabc\ndef", "abc")]     // 忽略开头换行后，仍在下一个换行处截断
+    [InlineData("\n", "")]                 // 只有换行 → 没有可显示内容
+    [InlineData("", "")]
+    [InlineData("  前后有空格  ", "  前后有空格  ")]   // 只处理换行，不 trim
+    public void 行显示文本_只取第一行_开头换行忽略(string input, string expected)
+    {
+        Assert.Equal(expected, MainViewService.RowText(input));
+    }
+
+    [Fact]
+    public void 行显示文本_null安全()
+    {
+        Assert.Equal("", MainViewService.RowText(null));
+    }
+
+    [Fact]
+    public void 待办行_内容含换行时_只显示第一行()
+    {
+        var a = Todo("第一行\n第二行", "2026-10-13T01:00:00.000Z");
+        var row = Assert.Single(MainViewService.TodoRows(WithTodos(a), Today));
+
+        Assert.Equal("第一行", row.Content);
+    }
+
+    [Fact]
+    public void 已完成行与模板行_同样只显示第一行()
+    {
+        var d = Done("完成甲\n完成乙", "2026-10-13T01:00:00.000Z", "2026-10-13T02:00:00.000Z");
+        var data = new AppData { Completed = [d] };
+        Assert.Equal("完成甲", Assert.Single(MainViewService.DoneRows(data, "asc")).Content);
+
+        var t = new TemplateItem { Id = "t1", Content = "模板甲\n模板乙" };
+        var tplData = new AppData { Templates = [t] };
+        Assert.Equal("模板甲", Assert.Single(MainViewService.TemplateRows(tplData)).Content);
+    }
+
     [Fact]
     public void 时钟_24h与12h()
     {
