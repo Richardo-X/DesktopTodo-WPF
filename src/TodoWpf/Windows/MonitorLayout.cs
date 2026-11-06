@@ -193,4 +193,47 @@ internal static class MonitorLayout
         y = System.Math.Min(System.Math.Max(y, work.Top + edge), System.Math.Max(work.Top + edge, work.Bottom - h - edge));
         SetWindowPos(hwnd, System.IntPtr.Zero, x, y, w, h, SwpNoZOrder | SwpNoActivate);
     }
+
+    /// <summary>当前光标屏幕位置（物理像素）；失败返回 false。</summary>
+    public static bool TryGetCursorPosition(out int x, out int y)
+    {
+        if (GetCursorPos(out var p))
+        {
+            x = p.X;
+            y = p.Y;
+            return true;
+        }
+
+        x = 0;
+        y = 0;
+        return false;
+    }
+
+    /// <summary>
+    /// 把窗口移到 (x, y)（物理像素），并**钳进它当前所在屏的工作区**（整窗可见）。
+    /// 拖动中每帧调用：窗口跟着鼠标走、但永远留在屏内（需求 §一「可单独拖动（限屏内）」）。
+    /// 用物理像素算：混合 DPI 下 DIP 空间按屏不连续，DIP 数学会算到别的屏去（2026-11-06 实测）。
+    /// </summary>
+    public static void MovePhysicalClamped(IntPtr hwnd, int x, int y)
+    {
+        if (hwnd == System.IntPtr.Zero || !GetWindowRect(hwnd, out var rect))
+        {
+            return;
+        }
+
+        var monitor = MonitorFromWindow(hwnd, MonitorDefaultToNearest);
+        var info = new MonitorInfoNative { Size = Marshal.SizeOf<MonitorInfoNative>() };
+        if (monitor == System.IntPtr.Zero || !GetMonitorInfoNative(monitor, ref info))
+        {
+            SetWindowPos(hwnd, System.IntPtr.Zero, x, y, 0, 0, SwpNoSize | SwpNoZOrder | SwpNoActivate);
+            return;
+        }
+
+        var work = info.Work;
+        int w = rect.Right - rect.Left;
+        int h = rect.Bottom - rect.Top;
+        x = System.Math.Clamp(x, work.Left, System.Math.Max(work.Left, work.Right - w));
+        y = System.Math.Clamp(y, work.Top, System.Math.Max(work.Top, work.Bottom - h));
+        SetWindowPos(hwnd, System.IntPtr.Zero, x, y, 0, 0, SwpNoSize | SwpNoZOrder | SwpNoActivate);
+    }
 }

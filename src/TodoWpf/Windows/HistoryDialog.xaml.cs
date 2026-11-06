@@ -364,5 +364,7 @@ public partial class HistoryDialog : Window
 
     private void Back_Click(object sender, RoutedEventArgs e) => Close();
 
-    private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e) => DragMove();
+    /// <summary>标题栏拖动：走 WindowShell 的物理像素实现（拖动中持续钳屏，需求「限屏内」）。
+    /// 不能用 WPF 的 DragMove()——它没有范围限制，窗口能被拖出屏幕抓不回来（2026-11-06 查漏）。</summary>
+    private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e) => WindowShell.BeginDialogDrag(this, e);
 }
