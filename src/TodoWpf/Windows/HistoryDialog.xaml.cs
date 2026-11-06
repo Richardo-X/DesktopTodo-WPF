@@ -95,8 +95,7 @@ public partial class HistoryDialog : Window
     {
         var dialog = new HistoryDialog(controller)
         {
-            Owner = System.Windows.Application.Current.Windows
-                .OfType<Window>().FirstOrDefault(w => w.Title == "桌面待办"),
+            Owner = AppWindows.Main(),
         };
         if (dialog.Owner is not null)
         {

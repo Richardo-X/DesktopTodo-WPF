@@ -1842,11 +1842,7 @@ public sealed class ClusterController : IDisposable
 
         // 用户 2026-11-06 裁定：恢复时"一级窗之外的其他窗口直接关闭"——二级窗不再跟着回来。
         // 模板窗是一级窗（有自己的开关状态），仍按 ui.QuickVisible 恢复；这里只关对话框。
-        foreach (var dialog in System.Windows.Application.Current.Windows
-                     .OfType<System.Windows.Window>()
-                     .Where(w => w is not MainTodoWindow and not QuickWindow
-                                 and not TuckBarWindow and not BubbleWindow)
-                     .ToList())
+        foreach (var dialog in AppWindows.Dialogs().ToList())
         {
             dialog.Close();
         }

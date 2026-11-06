@@ -28,8 +28,7 @@ public partial class SettingsDialog : Window
     {
         var dialog = new SettingsDialog(controller)
         {
-            Owner = System.Windows.Application.Current.Windows
-                .OfType<Window>().FirstOrDefault(w => w.Title == "桌面待办"),
+            Owner = AppWindows.Main(),
         };
         if (dialog.Owner is not null)
         {

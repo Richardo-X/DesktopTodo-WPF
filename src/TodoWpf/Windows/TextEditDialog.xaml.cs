@@ -222,8 +222,7 @@ public partial class TextEditDialog : Window
         public TextEditDialog Build(ClusterController? controller = null)
         {
             _dialog._controller = controller;
-            _dialog.Owner = System.Windows.Application.Current.Windows
-                .OfType<Window>().FirstOrDefault(w => w.Title == "桌面待办");
+            _dialog.Owner = AppWindows.Main();
             _dialog.AttachScale();
             _dialog.CenterOnOwner();
             return _dialog;
@@ -272,8 +271,7 @@ public partial class TextEditDialog : Window
     /// <summary>与主窗当前视觉矩形两轴居中（越界钳回所在屏工作区，需求 R2）。</summary>
     private void CenterOnOwner()
     {
-        var anchor = Owner ?? System.Windows.Application.Current.Windows
-            .OfType<Window>().FirstOrDefault(w => w.Title == "桌面待办");
+        var anchor = Owner ?? AppWindows.Main();
         if (anchor is null)
         {
             return;

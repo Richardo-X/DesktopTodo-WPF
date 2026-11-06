@@ -63,8 +63,7 @@ public partial class ConfirmDialog : Window
         // 在混合 DPI（2K@100% + 4K@175%）下会把确认框放到主屏去 —— 用户 2026-11-05 实测：
         // 覆盖导入 / 批量删除的确认框出现在 2K 屏，而应用在 4K 屏。
         // 另外四个二级窗本来就设了 Owner，所以只有确认框有这个毛病。
-        anchor ??= System.Windows.Application.Current.Windows
-            .OfType<Window>().FirstOrDefault(w => w.Title == "桌面待办");
+        anchor ??= AppWindows.Main();
         if (anchor is not null && !ReferenceEquals(anchor, dialog))
         {
             dialog.Owner = anchor;
@@ -75,24 +74,24 @@ public partial class ConfirmDialog : Window
         return dialog._outcome;
     }
 
-    /// <summary>居中于锚窗（两轴），越界钳回所在屏工作区（原型 EDGE=8 口径）。</summary>
+    /// <summary>
+    /// 居中于锚窗（两轴），越界钳回锚窗所在屏工作区（原型 EDGE=8 口径）。
+    /// 用**物理像素**在 <c>SourceInitialized</c>（窗口可见之前）定位——与其它四个二级窗同一实现，
+    /// 避免混合 DPI 下 DIP 空间按屏不连续导致跑到别的屏（2026-11-06 统一）。
+    /// 本窗 SizeToContent，SourceInitialized 时尺寸还没算出来，故先 UpdateLayout 强制布局取尺寸。
+    /// </summary>
     private void CenterOn(Window? anchor)
     {
-        var loaded = new RoutedEventHandler((_, _) =>
+        if (anchor is null)
         {
-            if (anchor is null)
-            {
-                return;
-            }
+            return;
+        }
 
-            var workArea = MonitorLayout.WorkAreaDips(anchor);
-            const double edge = 8;
-            var x = anchor.Left + (anchor.ActualWidth - ActualWidth) / 2;
-            var y = anchor.Top + (anchor.ActualHeight - ActualHeight) / 2;
-            Left = Math.Min(Math.Max(x, workArea.X + edge), Math.Max(workArea.X + edge, workArea.Right - ActualWidth - edge));
-            Top = Math.Min(Math.Max(y, workArea.Y + edge), Math.Max(workArea.Y + edge, workArea.Bottom - ActualHeight - edge));
-        });
-        Loaded += loaded;
+        SourceInitialized += (_, _) =>
+        {
+            UpdateLayout();
+            MonitorLayout.CenterOnOwnerPhysical(this, anchor, edgeDips: 8);
+        };
     }
 
     private void Ok_Click(object sender, RoutedEventArgs e)

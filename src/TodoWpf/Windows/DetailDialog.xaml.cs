@@ -47,8 +47,7 @@ public partial class DetailDialog : Window
     {
         var dialog = new DetailDialog(title, createdText, completedText, overdue, content, onConfirmedDelete, controller)
         {
-            Owner = System.Windows.Application.Current.Windows
-                .OfType<Window>().FirstOrDefault(w => w.Title == "桌面待办"),
+            Owner = AppWindows.Main(),
         };
         CenterOnOwner(dialog);
         dialog.ShowDialog();
@@ -57,8 +56,7 @@ public partial class DetailDialog : Window
     /// <summary>与主窗当前视觉矩形两轴居中（越界钳回所在屏工作区，需求 R2）。</summary>
     private static void CenterOnOwner(DetailDialog dialog)
     {
-        var anchor = dialog.Owner ?? System.Windows.Application.Current.Windows
-            .OfType<Window>().FirstOrDefault(w => w.Title == "桌面待办");
+        var anchor = dialog.Owner ?? AppWindows.Main();
         if (anchor is null)
         {
             return;
