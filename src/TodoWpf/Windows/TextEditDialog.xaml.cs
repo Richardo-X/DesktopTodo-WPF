@@ -222,12 +222,30 @@ public partial class TextEditDialog : Window
     internal void AttachScale() =>
         DialogScale.Attach(this, CardRoot, ScaleGrip, "edit", 420, 560, _controller);
 
+    /// <summary>
+    /// 当前打开的编辑窗（同一时刻最多一个——模态）。供退出确认判断"是否有未保存输入"
+    /// （需求 §2.2：右键退出弹确认框，有未保存编辑时一并提示；2026-11-06 查漏补齐）。
+    /// </summary>
+    public static TextEditDialog? Current { get; private set; }
+
+    /// <summary>输入是否与打开时不同（有未保存内容）。新建时初始为空串 → 有输入即为真。</summary>
+    public bool HasUnsavedInput => Editor.Text.Trim() != _initialText.Trim();
+
     public static string? Open(Action<TextEditDialog.Builder> configure, ClusterController? controller = null)
     {
         var builder = new Builder();
         configure(builder);
         var dialog = builder.Build(controller);
-        dialog.ShowDialog();
+        Current = dialog;
+        try
+        {
+            dialog.ShowDialog();
+        }
+        finally
+        {
+            Current = null;
+        }
+
         return dialog._result;
     }
 

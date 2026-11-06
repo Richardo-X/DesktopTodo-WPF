@@ -51,9 +51,11 @@ public sealed class TrayIcon : IDisposable
 
     private async Task ExitAsync()
     {
+        // 需求 §2.2：有未保存编辑时一并提示（2026-11-06 查漏补齐）
+        var unsaved = TextEditDialog.Current?.HasUnsavedInput == true;
         var ok = ConfirmDialog.Confirm(
             "退出桌面待办",
-            "确定要退出桌面待办吗？",
+            unsaved ? "有未保存的输入，退出后会丢失。确定要退出吗？" : "确定要退出桌面待办吗？",
             "退出");
         if (ok)
         {
