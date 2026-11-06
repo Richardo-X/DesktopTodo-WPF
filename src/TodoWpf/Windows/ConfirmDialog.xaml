@@ -88,37 +88,37 @@
          定位 = 居中于「打开它的窗口」（Confirm 传入锚窗），越界钳回所在屏工作区。 -->
     <Border Background="{DynamicResource Brush.Shell}"
             BorderBrush="{DynamicResource Brush.CardBorder}" BorderThickness="1"
-            CornerRadius="{StaticResource Radius.Dialog}" Padding="20">
-        <StackPanel>
-            <!-- 标题行：标题左、右上角 X（仅未保存询问这类"可回到编辑窗"的确认框显示，
-                 作用 = 关掉弹窗、回到打开它的窗口，不做任何选择） -->
-            <Grid>
-                <TextBlock x:Name="TitleText" Text="确认" FontSize="13" FontWeight="SemiBold"
-                           Foreground="{DynamicResource Brush.Text}" VerticalAlignment="Center"/>
-                <Button x:Name="CloseBtn" Width="24" Height="24" HorizontalAlignment="Right"
-                        VerticalAlignment="Top" Margin="0,-4,-4,0" Visibility="Collapsed"
-                        Background="Transparent" BorderThickness="0" Cursor="Hand"
-                        ToolTip="关闭" Click="Close_Click">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border x:Name="bd" Background="Transparent" CornerRadius="6">
-                                <Viewbox Width="11" Height="11">
-                                    <Canvas Width="24" Height="24">
-                                        <Path Data="{StaticResource Icon.X}"
-                                              Stroke="{DynamicResource Brush.Muted}" StrokeThickness="1.8"
-                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                                    </Canvas>
-                                </Viewbox>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
-            </Grid>
+            CornerRadius="{StaticResource Radius.Dialog}">
+        <!-- 内容自己带 20 内边距；X 放在 Grid 里贴右上角（距上/右各 8），
+             不再受内边距挤在内容区里（用户 2026-11-06：把 X 移到右上角） -->
+        <Grid>
+            <Button x:Name="CloseBtn" Width="24" Height="24" HorizontalAlignment="Right"
+                    VerticalAlignment="Top" Margin="0,8,8,0" Visibility="Collapsed"
+                    Background="Transparent" BorderThickness="0" Cursor="Hand"
+                    ToolTip="关闭" Click="Close_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="Transparent" CornerRadius="6">
+                            <Viewbox Width="11" Height="11">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="{StaticResource Icon.X}"
+                                          Stroke="{DynamicResource Brush.Muted}" StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                </Canvas>
+                            </Viewbox>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        <StackPanel Margin="20">
+            <!-- 标题（右侧留 28 给右上角 X，避免长标题压到它） -->
+            <TextBlock x:Name="TitleText" Text="确认" FontSize="13" FontWeight="SemiBold"
+                       Foreground="{DynamicResource Brush.Text}" Margin="0,0,28,0"/>
             <TextBlock x:Name="BodyText" Text="" FontSize="12" LineHeight="20"
                        Foreground="{DynamicResource Brush.Muted}" TextWrapping="Wrap"
                        Margin="0,8,0,0"/>
@@ -130,5 +130,6 @@
                         Click="Ok_Click"/>
             </StackPanel>
         </StackPanel>
+        </Grid>
     </Border>
 </Window>
