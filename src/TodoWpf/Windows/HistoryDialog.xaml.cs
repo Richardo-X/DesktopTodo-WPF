@@ -356,8 +356,8 @@ public partial class HistoryDialog : Window
     private static string? FormatDate(DateTime? date) =>
         date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-    private static string ShiftDateKey(string key, int days) =>
-        (ParseDate(key) ?? DateTime.Today).AddDays(days).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    /// <summary>日期键平移：统一走 Core 的 LocalDate.Shift（2026-11-06 去重）。</summary>
+    private static string ShiftDateKey(string key, int days) => LocalDate.Shift(key, days);
 
     private void ShowToastStatic(string message) => _controller.ShowToast(message);
 

@@ -162,6 +162,17 @@ public static class MainViewService
         return breakAt >= 0 && rest[(breakAt + 1)..].Trim().Length > 0;
     }
 
+    /// <summary>中文星期字（周日起）。**全应用唯一一份**（此前 App 与 ClusterController 各写一份）。</summary>
+    private static readonly string[] CnWeekdays = ["日", "一", "二", "三", "四", "五", "六"];
+
+    /// <summary>中文长日期（时钟用）：2026年11月6日 星期五（不补零）。</summary>
+    public static string CnDateText(DateTimeOffset local) =>
+        $"{local.Year}年{local.Month}月{local.Day}日 星期{CnWeekdays[(int)local.DayOfWeek]}";
+
+    /// <summary>中文短日期（详情/编辑窗属性行用）：11月6日 星期五（不带时间，不补零）。</summary>
+    public static string CnDateShortText(DateTimeOffset local) =>
+        $"{local.Month}月{local.Day}日 星期{CnWeekdays[(int)local.DayOfWeek]}";
+
     public static bool CanAddTodo(int activeCount, int maxItems) => activeCount < maxItems;
 
     public static List<TodoRowView> TodoRows(AppData data, string todayKey, BatchState? batch = null) =>

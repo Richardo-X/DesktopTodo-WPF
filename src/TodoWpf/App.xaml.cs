@@ -14,8 +14,6 @@ public partial class App : Application
     private const string MutexName = @"Local\DesktopTodo-WPF-SingleInstance";
     private const string WakeEventName = @"Local\DesktopTodo-WPF-Wake";
 
-    private static readonly string[] Weekdays = ["日", "一", "二", "三", "四", "五", "六"];
-
     private static Mutex? _instanceMutex;
 
     private static EventWaitHandle? _wakeEvent;
@@ -28,8 +26,9 @@ public partial class App : Application
 
     public static bool IsNight { get; private set; }
 
+    /// <summary>中文长日期（时钟用）。实现统一在 Core 的 MainViewService.CnDateText（2026-11-06 去重）。</summary>
     public static string FormatCnDate(DateTime local) =>
-        $"{local.Year}年{local.Month}月{local.Day}日 星期{Weekdays[(int)local.DayOfWeek]}";
+        TodoWpf.Core.Services.MainViewService.CnDateText(new DateTimeOffset(local));
 
     protected override void OnStartup(StartupEventArgs e)
     {

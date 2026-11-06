@@ -21,8 +21,6 @@ namespace TodoWpf.Windows;
 /// </summary>
 public sealed class ClusterController : IDisposable
 {
-    private static readonly string[] Weekdays = ["日", "一", "二", "三", "四", "五", "六"];
-
     private AppData _data;
     private readonly JsonFileRepository _repository;
 
@@ -844,7 +842,7 @@ public sealed class ClusterController : IDisposable
 
         _main.SetClock(
             MainViewService.ClockText(now, _data.Settings.Hour12),
-            $"{now.Year}年{now.Month}月{now.Day}日 星期{Weekdays[(int)now.DayOfWeek]}");
+            MainViewService.CnDateText(now));
     }
 
     // ---------- 批次04：待办 CRUD（二级窗 + 原子数据操作） ----------
@@ -1754,7 +1752,7 @@ public sealed class ClusterController : IDisposable
     private static string CreatedTimeText(string createdAtIso)
     {
         var local = IsoTime.ParseLocal(createdAtIso);
-        return $"{local.Month}月{local.Day}日 星期{Weekdays[(int)local.DayOfWeek]} {local:HH:mm}";
+        return $"{MainViewService.CnDateShortText(local)} {local:HH:mm}";
     }
 
     /// <summary>点已完成行 → 只读详情窗（方案 H 420×438；删除走确认框后关闭）。</summary>
