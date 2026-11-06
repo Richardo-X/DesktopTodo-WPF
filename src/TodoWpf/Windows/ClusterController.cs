@@ -1209,6 +1209,10 @@ public sealed class ClusterController : IDisposable
             return;
         }
 
+        // 需求 §2.4：返回时"无输入直接退、有输入询问"（2026-11-06 查漏：此前只有编辑路径有询问）
+        var saved = false;
+        var latestText = "";
+
         BeginModal();
         TextEditDialog.Open(b =>
         {
@@ -1218,6 +1222,7 @@ public sealed class ClusterController : IDisposable
                  var r = TodoOpsService.AddTemplate(_data, d.Editor.Text, DateTimeOffset.Now);
                  if (r.Ok)
                  {
+                     saved = true;
                      ApplyOps(r);
                      ShowToast("模板已新建");
                      d.Close();
@@ -1229,11 +1234,27 @@ public sealed class ClusterController : IDisposable
              })
              .OnTextChanged(d =>
              {
+                 latestText = d.Editor.Text;
                  var ok = ContentRules.Validate(d.Editor.Text).Ok;
                  ((System.Windows.Controls.Button)((System.Windows.Controls.Panel)d.ActionsPanel).Children[0]).IsEnabled = ok;
              });
         }, this);
         EndModal();
+
+        if (!saved && latestText.Trim().Length > 0
+            && ConfirmDialog.Confirm("未保存的输入", "输入的内容还没保存，保存吗？", "保存", anchor: _main))
+        {
+            var r = TodoOpsService.AddTemplate(_data, latestText, DateTimeOffset.Now);
+            if (r.Ok)
+            {
+                ApplyOps(r);
+                ShowToast("模板已新建");
+            }
+            else
+            {
+                ShowOpsError(r.Reason);
+            }
+        }
     }
 
     /// <summary>编辑模板（双击模板行；返回时已改询问）。</summary>
@@ -1509,6 +1530,10 @@ public sealed class ClusterController : IDisposable
             return;
         }
 
+        // 需求 §2.4：返回时"无输入直接退、有输入询问"（2026-11-06 查漏：此前只有编辑路径有询问）
+        var saved = false;
+        var latestText = "";
+
         BeginModal();
         TextEditDialog.Open(b =>
         {
@@ -1519,6 +1544,7 @@ public sealed class ClusterController : IDisposable
                  var r = TodoOpsService.AddTodo(_data, d.Editor.Text, DateTimeOffset.Now);
                  if (r.Ok)
                  {
+                     saved = true;
                      ApplyOps(r);
                      ShowToast("已新建");
                      d.Close();
@@ -1530,11 +1556,28 @@ public sealed class ClusterController : IDisposable
              })
              .OnTextChanged(d =>
              {
+                 latestText = d.Editor.Text;
                  var ok = ContentRules.Validate(d.Editor.Text).Ok;
                  ((System.Windows.Controls.Button)((System.Windows.Controls.Panel)d.ActionsPanel).Children[0]).IsEnabled = ok;
              });
         }, this);
         EndModal();
+
+        // 有输入但没保存就退出 → 询问（空输入直接退，不问）
+        if (!saved && latestText.Trim().Length > 0
+            && ConfirmDialog.Confirm("未保存的输入", "输入的内容还没保存，保存吗？", "保存", anchor: _main))
+        {
+            var r = TodoOpsService.AddTodo(_data, latestText, DateTimeOffset.Now);
+            if (r.Ok)
+            {
+                ApplyOps(r);
+                ShowToast("已新建");
+            }
+            else
+            {
+                ShowOpsError(r.Reason);
+            }
+        }
     }
 
     /// <summary>编辑待办（双击行；返回时已改询问；删除有确认框）。</summary>
