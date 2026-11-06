@@ -13,10 +13,12 @@ public sealed class TodoRowView : System.ComponentModel.INotifyPropertyChanged
     private bool _selected;
 
     public TodoRowView(string id, string content, bool overdue,
-                       bool completed = false, bool selected = false, bool batchMode = false)
+                       bool completed = false, bool selected = false, bool batchMode = false,
+                       string? fullContent = null)
     {
         Id = id;
         Content = content;
+        FullContent = fullContent ?? content;
         Overdue = overdue;
         Completed = completed;
         _selected = selected;
@@ -25,7 +27,11 @@ public sealed class TodoRowView : System.ComponentModel.INotifyPropertyChanged
 
     public string Id { get; }
 
+    /// <summary>行内显示文本（只一行，见 MainViewService.RowText）。</summary>
     public string Content { get; }
+
+    /// <summary>完整内容（可含换行）；悬停气泡显示它，详情窗另有数据源。</summary>
+    public string FullContent { get; }
 
     public bool Overdue { get; }
 
@@ -53,24 +59,34 @@ public sealed class TodoRowView : System.ComponentModel.INotifyPropertyChanged
     public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
 }
 
-public sealed record DoneRowView(string Id, string Content, bool Overdue, string CompletedTimeText);
+public sealed record DoneRowView(string Id, string Content, bool Overdue, string CompletedTimeText)
+{
+    /// <summary>完整内容（可含换行）；悬停气泡显示它。</summary>
+    public string FullContent { get; init; } = "";
+}
 
 /// <summary>模板行投影（同 TodoRowView：Selected 就地可变）。</summary>
 public sealed class TemplateRowView : System.ComponentModel.INotifyPropertyChanged
 {
     private bool _selected;
 
-    public TemplateRowView(string id, string content, bool selected = false, bool batchMode = false)
+    public TemplateRowView(string id, string content, bool selected = false, bool batchMode = false,
+                           string? fullContent = null)
     {
         Id = id;
         Content = content;
+        FullContent = fullContent ?? content;
         _selected = selected;
         BatchMode = batchMode;
     }
 
     public string Id { get; }
 
+    /// <summary>行内显示文本（只一行）。</summary>
     public string Content { get; }
+
+    /// <summary>完整内容（可含换行）；悬停气泡显示它。</summary>
+    public string FullContent { get; }
 
     public bool BatchMode { get; }
 
@@ -124,6 +140,28 @@ public static class MainViewService
         return breakAt < 0 ? rest : rest[..breakAt];
     }
 
+    /// <summary>
+    /// 首行之后是否还有内容（决定是否弹悬停气泡）：跳过开头换行后，第一个换行**之后还有非空白文字**。
+    /// 背景（用户 2026-11-06）：列表行只显示第一行后，"首行放得下、换行后还有字"的内容在行里看不全，
+    /// 必须靠气泡显示全文；而"只有尾随换行/换行后全是空白"不算（行里已经看全了）。
+    /// </summary>
+    public static bool HasContentAfterFirstLine(string? content)
+    {
+        const char LF = (char)10;
+        const char CR = (char)13;
+
+        var text = content ?? string.Empty;
+        var start = 0;
+        while (start < text.Length && (text[start] == LF || text[start] == CR))
+        {
+            start++;
+        }
+
+        var rest = text[start..];
+        var breakAt = rest.IndexOfAny([LF, CR]);
+        return breakAt >= 0 && rest[(breakAt + 1)..].Trim().Length > 0;
+    }
+
     public static bool CanAddTodo(int activeCount, int maxItems) => activeCount < maxItems;
 
     public static List<TodoRowView> TodoRows(AppData data, string todayKey, BatchState? batch = null) =>
@@ -134,7 +172,8 @@ public static class MainViewService
                 OverdueService.IsActiveOverdue(item, todayKey),
                 false,
                 batch is { IsActive: true } && batch.IsSelected(item.Id),
-                batch is { IsActive: true }))
+                batch is { IsActive: true },
+                item.Content))
             .ToList();
 
     public static List<DoneRowView> DoneRows(AppData data, string sort)
@@ -148,7 +187,10 @@ public static class MainViewService
                 item.Id,
                 RowText(item.Content),
                 OverdueService.IsCompletedOverdue(item),
-                CompletedTimeText(item.CompletedAt)))
+                CompletedTimeText(item.CompletedAt))
+            {
+                FullContent = item.Content,
+            })
             .ToList();
     }
 
@@ -170,7 +212,8 @@ public static class MainViewService
                 t.Id,
                 RowText(t.Content),
                 batch is { IsActive: true } && batch.IsSelected(t.Id),
-                batch is { IsActive: true }))
+                batch is { IsActive: true },
+                t.Content))
             .ToList();
 
     /// <summary>

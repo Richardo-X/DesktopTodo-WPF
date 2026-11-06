@@ -917,6 +917,15 @@ public sealed class ClusterController : IDisposable
         _bubble.Hide();
     }
 
+    /// <summary>行元素的完整内容（气泡用）：三种行投影都带 FullContent；取不到就回退行内文本。</summary>
+    private static string? FullContentOf(FrameworkElement? row) => row?.DataContext switch
+    {
+        TodoRowView t => t.FullContent,
+        DoneRowView d => d.FullContent,
+        TemplateRowView t => t.FullContent,
+        _ => null,
+    };
+
     private void ShowHoverBubble()
     {
         _hoverTimer.Stop();
@@ -925,16 +934,19 @@ public sealed class ClusterController : IDisposable
             return;
         }
 
-        if (!BubbleWindow.IsTruncated(tb, tb.Text))
+        // 弹气泡的两种情形（用户 2026-11-06）：
+        // ① 行内文本被截断（宽度放不下）；② 行只显示第一行、而换行后还有文字（行里看不全）。
+        var full = FullContentOf(_hoverRow) ?? tb.Text;
+        if (!BubbleWindow.IsTruncated(tb, tb.Text) && !MainViewService.HasContentAfterFirstLine(full))
         {
-            return; // 未截断：全文已在行内，不弹
+            return; // 全文已在行内看全，不弹
         }
 
         // 缩放比跟所属窗：模板窗行用模板窗缩放，其余按主窗（原型 --bubble-scale 口径）
         var scale = ReferenceEquals(Window.GetWindow(tb), _quick)
             ? _quick.ContentScaleFactor
             : _main.ContentScaleFactor;
-        _bubble.Show(_hoverRow, tb.Text, scale, MonitorLayout.WorkAreaDips(_main));
+        _bubble.Show(_hoverRow, full, scale, MonitorLayout.WorkAreaDips(_main));   // 气泡显示全文（可含换行）
     }
 
     /// <summary>勾选完成（主窗行）。</summary>
