@@ -113,44 +113,20 @@
                         <Grid Background="Transparent">
                             <Border x:Name="track" CornerRadius="11.5"
                                     Background="{DynamicResource Brush.SwitchTrackOff}"/>
+                            <!-- 滑块位置用 Margin 表达（左 3=关 / 左 22=开）：Setter 可即时切换，
+                                 滑动动画在代码里只对用户点击播（见 SettingsDialog.xaml.cs AnimateSwitchKnob） -->
                             <Ellipse x:Name="knob" Width="17" Height="17"
                                      HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3,0,0,0"
                                      Fill="{DynamicResource Brush.SwitchKnob}"
-                                     Stroke="{DynamicResource Brush.SwitchKnobEdge}" StrokeThickness="1">
-                                <Ellipse.RenderTransform>
-                                    <TranslateTransform X="0"/>
-                                </Ellipse.RenderTransform>
-                            </Ellipse>
+                                     Stroke="{DynamicResource Brush.SwitchKnobEdge}" StrokeThickness="1"/>
                         </Grid>
                         <ControlTemplate.Triggers>
+                            <!-- 状态用**即时 Setter**表达（滑块位置），滑动动画移到代码里、只在用户点击时播：
+                                 此前动画挂在触发器上，导致"每次打开设置页"把初值设成开时都会播一遍右滑
+                                 （用户 2026-11-06 反馈）。 -->
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="track" Property="Background" Value="{DynamicResource Brush.Accent}"/>
-                                <Trigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="knob"
-                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                                                             To="19" Duration="0:0:0.16">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <CubicEase EasingMode="EaseOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.EnterActions>
-                                <Trigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="knob"
-                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                                                             To="0" Duration="0:0:0.16">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <CubicEase EasingMode="EaseOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.ExitActions>
+                                <Setter TargetName="knob" Property="Margin" Value="22,0,0,0"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.45"/>

@@ -105,8 +105,37 @@ public partial class SettingsDialog : Window
     private void AutoStart_Click(object sender, RoutedEventArgs e)
     {
         var on = AutoStartSwitch.IsChecked == true;
+        AnimateSwitchKnob(on);   // 只有用户操作才播滑动动画（初值设定不播，见样式注释）
         _controller.SetAutoStart(on); // 注册表失败时控制器只提示不改数据；下方回读真实状态
         AutoStartSwitch.IsChecked = _controller.Data.Settings.AutoStart;
+    }
+
+    /// <summary>
+    /// 开关滑块滑动动画（用户 2026-11-06 起改由代码触发）：只在**用户点击**时播，
+    /// 打开设置页设定初值时不播（否则每次开窗都会看到一遍右滑）。
+    /// FillBehavior=Stop：动画结束后回到触发器 Setter 的静态值（=动画终点），不会长期霸占属性。
+    /// </summary>
+    private void AnimateSwitchKnob(bool on)
+    {
+        if (AutoStartSwitch.Template?.FindName("knob", AutoStartSwitch)
+            is not System.Windows.Shapes.Ellipse knob)
+        {
+            return;
+        }
+
+        knob.BeginAnimation(
+            FrameworkElement.MarginProperty,
+            new System.Windows.Media.Animation.ThicknessAnimation(
+                fromValue: new Thickness(on ? 3 : 22, 0, 0, 0),
+                toValue: new Thickness(on ? 22 : 3, 0, 0, 0),
+                duration: TimeSpan.FromMilliseconds(160))
+            {
+                FillBehavior = System.Windows.Media.Animation.FillBehavior.Stop,
+                EasingFunction = new System.Windows.Media.Animation.CubicEase
+                {
+                    EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut,
+                },
+            });
     }
 
     private void Back_Click(object sender, RoutedEventArgs e) => Close();
