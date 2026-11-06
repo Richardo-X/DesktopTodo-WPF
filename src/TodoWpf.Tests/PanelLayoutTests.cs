@@ -20,6 +20,38 @@ public class PanelLayoutTests
         Assert.Equal(3.0, PanelLayout.MaxScale);
     }
 
+
+    // ---------- 下限口径（2026-11-06 查漏补测：MinMainHeight/MinScaleFor 此前无直接用例） ----------
+
+    [Fact]
+    public void MinMainHeight_屏高四分之一与绝对下限取大()
+    {
+        // 屏高 1/4 = 360 > 192 → 取 360
+        Assert.Equal(1440 / 4.0, PanelLayout.MinMainHeight(1440), 6);
+        // 屏高 1/4 = 150 < 192 → 取绝对下限 192
+        Assert.Equal(192, PanelLayout.MinMainHeight(600), 6);
+        // 恰好相等时取 192（Math.Max 同值时返回该值）
+        Assert.Equal(192, PanelLayout.MinMainHeight(768), 6);
+    }
+
+    [Fact]
+    public void MinScaleFor_由最小布局高换算()
+    {
+        Assert.Equal(PanelLayout.MinMainHeight(1440) / PanelLayout.MainBaseHeight, PanelLayout.MinScaleFor(1440), 6);
+        Assert.Equal(192 / PanelLayout.MainBaseHeight, PanelLayout.MinScaleFor(600), 6);
+    }
+
+    [Fact]
+    public void ClampScale_下界就是MinScaleFor_上界就是MaxScaleFor()
+    {
+        var anchor = new WinPoint(0, 0);
+        var below = PanelLayout.ClampScale(0.01, WorkArea, anchor);
+        var above = PanelLayout.ClampScale(99.0, WorkArea, anchor);
+
+        Assert.Equal(PanelLayout.MinScaleFor(WorkArea.Height), below, 6);
+        Assert.Equal(PanelLayout.MaxScaleFor(WorkArea, anchor), above, 6);
+    }
+
     [Fact]
     public void DefaultMainHeight_IsThirdOfWorkArea()
     {
