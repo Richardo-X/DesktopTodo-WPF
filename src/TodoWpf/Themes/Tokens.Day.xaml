@@ -32,10 +32,8 @@
     <!-- 卡面底：逐值取自基准（#f3f6fb α.94 → #F0F3F6FB）；真磨砂专项已撤，恢复基准透明度 -->
     <SolidColorBrush x:Key="Brush.WinBg" Color="#F0F3F6FB"/>
     <!-- 不透明卡面底：拖拽缩放期间临时替换（抑制透明窗逐帧合成的拖影） -->
-    <SolidColorBrush x:Key="Brush.WinBgSolid" Color="#F3F6FB"/>
     <SolidColorBrush x:Key="Brush.Card" Color="#F7F8F9"/>
     <SolidColorBrush x:Key="Brush.CardBorder" Color="#1F1E232A"/>
-    <SolidColorBrush x:Key="Brush.Field" Color="#E6FFFFFF"/>
     <SolidColorBrush x:Key="Brush.Hover" Color="#0D1E232A"/>
     <SolidColorBrush x:Key="Brush.Active" Color="#17000000"/>
     <SolidColorBrush x:Key="Brush.Btn" Color="#BFFFFFFF"/>
@@ -44,7 +42,6 @@
 
     <!-- 蒙层与模态置灰（L1：色调化 rgba(10,20,40,.46) / rgba(20,20,25,.20)） -->
     <SolidColorBrush x:Key="Brush.Mask" Color="#750A1428"/>
-    <SolidColorBrush x:Key="Brush.BlockedVeil" Color="#33141419"/>
 
     <!-- 缩进白条（1:1 ele BarWindow.vue：日 α.55 / 悬停 .85） -->
     <SolidColorBrush x:Key="Brush.TuckBar" Color="#8CFFFFFF"/>
@@ -54,7 +51,6 @@
     <SolidColorBrush x:Key="Brush.Shell" Color="#FFEEF1F6"/>
     <SolidColorBrush x:Key="Brush.RowCard" Color="#FFFFFFFF"/>
     <SolidColorBrush x:Key="Brush.RowCardBorder" Color="#0F1E232A"/>
-    <SolidColorBrush x:Key="Brush.RowCardHover" Color="#FFF5F7F9"/>
     <SolidColorBrush x:Key="Brush.FieldSurface" Color="#FFFFFFFF"/>
     <SolidColorBrush x:Key="Brush.FieldSurfaceBorder" Color="#1A1E232A"/>
     <SolidColorBrush x:Key="Brush.SoftAccent" Color="#244F7391"/>

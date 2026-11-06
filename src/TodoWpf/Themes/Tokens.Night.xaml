@@ -31,10 +31,8 @@
          hover .06→0F / active .12→1F / btn .08→14 / btn-border .15→26 / btn-hover .16→29） -->
     <!-- 卡面底：逐值取自基准（#1e1e21 α.96 → #F51E1E21） -->
     <SolidColorBrush x:Key="Brush.WinBg" Color="#F51E1E21"/>
-    <SolidColorBrush x:Key="Brush.WinBgSolid" Color="#1E1E21"/>
     <SolidColorBrush x:Key="Brush.Card" Color="#1D2127"/>
     <SolidColorBrush x:Key="Brush.CardBorder" Color="#1AFFFFFF"/>
-    <SolidColorBrush x:Key="Brush.Field" Color="#12FFFFFF"/>
     <SolidColorBrush x:Key="Brush.Hover" Color="#0FFFFFFF"/>
     <SolidColorBrush x:Key="Brush.Active" Color="#1FFFFFFF"/>
     <SolidColorBrush x:Key="Brush.Btn" Color="#14FFFFFF"/>
@@ -43,7 +41,6 @@
 
     <!-- 蒙层与模态置灰（日夜同值，继承日间定义） -->
     <SolidColorBrush x:Key="Brush.Mask" Color="#750A1428"/>
-    <SolidColorBrush x:Key="Brush.BlockedVeil" Color="#33141419"/>
 
     <!-- 缩进白条（1:1 ele BarWindow.vue：夜 α.28 / 悬停 .5） -->
     <SolidColorBrush x:Key="Brush.TuckBar" Color="#47FFFFFF"/>
@@ -53,7 +50,6 @@
     <SolidColorBrush x:Key="Brush.Shell" Color="#FF171A1F"/>
     <SolidColorBrush x:Key="Brush.RowCard" Color="#FF252930"/>
     <SolidColorBrush x:Key="Brush.RowCardBorder" Color="#0EFFFFFF"/>
-    <SolidColorBrush x:Key="Brush.RowCardHover" Color="#FF2B3038"/>
     <SolidColorBrush x:Key="Brush.FieldSurface" Color="#FF252930"/>
     <SolidColorBrush x:Key="Brush.FieldSurfaceBorder" Color="#17FFFFFF"/>
     <SolidColorBrush x:Key="Brush.SoftAccent" Color="#2E8FB0C9"/>

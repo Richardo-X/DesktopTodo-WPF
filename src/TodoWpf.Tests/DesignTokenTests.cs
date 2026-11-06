@@ -102,7 +102,6 @@ public class DesignTokenTests
 
         // 蒙层 rgba(10,20,40,.46) → #750A1428；模态置灰 rgba(20,20,25,.20) → #33141419
         Assert.Equal("#750A1428", Argb(day["Brush.Mask"]));
-        Assert.Equal("#33141419", Argb(day["Brush.BlockedVeil"]));
     }
 
     [Fact]
