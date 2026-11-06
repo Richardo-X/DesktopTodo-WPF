@@ -1245,15 +1245,20 @@ public sealed class ClusterController : IDisposable
                      return true;   // 已保存 或 空输入 → 直接关
                  }
 
-                // 有输入未保存 → 弹在编辑窗**之上**（模态），编辑窗不先消失；
-                // 「确认」= 确认放弃退出，「保存」= 保存后退出（用户 2026-11-06 裁定）
-                if (ConfirmDialog.Confirm("未保存的输入", "输入的内容还没保存，确认退出吗？",
-                                          "保存", anchor: d, cancelText: "确认"))
+                // 有未保存输入 → 弹在编辑窗**之上**（模态），编辑窗不先消失（用户 2026-11-06 裁定）
+                var outcome = ConfirmDialog.Ask("未保存的输入", "输入的内容还没保存，确认退出吗？",
+                                                "保存", anchor: d, cancelText: "确认", showCloseButton: true);
+                if (outcome == ConfirmDialog.Outcome.Closed)
+                {
+                    return false;   // 右上角 X → 关掉弹窗、回到编辑窗继续编辑
+                }
+
+                if (outcome == ConfirmDialog.Outcome.Ok)
                 {
                     var r = TodoOpsService.AddTemplate(_data, latestText, DateTimeOffset.Now);
                     if (!r.Ok)
                     {
-                        ShowOpsError(r.Reason);   // 保存失败（上限/查重/超长）→ 不关闭
+                        ShowOpsError(r.Reason);   // 保存失败 → 不关闭（与"保存失败不关窗"一致）
                         return false;
                     }
 
@@ -1262,7 +1267,7 @@ public sealed class ClusterController : IDisposable
                     ShowToast("模板已新建");
                 }
 
-                return true;
+                return true;   // 「确认」= 确认放弃 → 关闭编辑窗
             });
         }, this);
         EndModal();
@@ -1321,10 +1326,15 @@ public sealed class ClusterController : IDisposable
                      return true;   // 未改过 → 直接关
                  }
 
-                // 有未保存输入 → 弹在编辑窗**之上**（模态），编辑窗不先消失；
-                // 「确认」= 确认放弃修改退出，「保存」= 保存后退出（用户 2026-11-06 裁定）
-                if (ConfirmDialog.Confirm("未保存的修改", "输入的内容还没保存，确认退出吗？",
-                                          "保存", anchor: d, cancelText: "确认"))
+                // 有未保存输入 → 弹在编辑窗**之上**（模态），编辑窗不先消失（用户 2026-11-06 裁定）
+                var outcome = ConfirmDialog.Ask("未保存的修改", "输入的内容还没保存，确认退出吗？",
+                                                "保存", anchor: d, cancelText: "确认", showCloseButton: true);
+                if (outcome == ConfirmDialog.Outcome.Closed)
+                {
+                    return false;   // 右上角 X → 关掉弹窗、回到编辑窗继续编辑
+                }
+
+                if (outcome == ConfirmDialog.Outcome.Ok)
                 {
                     var r = TodoOpsService.EditTemplate(_data, id, latestText);
                     if (!r.Ok)
@@ -1338,7 +1348,7 @@ public sealed class ClusterController : IDisposable
                     ShowToast("模板已保存");
                 }
 
-                return true;
+                return true;   // 「确认」= 确认放弃 → 关闭编辑窗
             });
         }, this);
         EndModal();
@@ -1594,15 +1604,20 @@ public sealed class ClusterController : IDisposable
                      return true;   // 已保存 或 空输入 → 直接关（需求：无输入直接退）
                  }
 
-                // 有输入未保存 → 弹在编辑窗**之上**（模态），编辑窗不先消失；
-                // 「确认」= 确认放弃退出，「保存」= 保存后退出（用户 2026-11-06 裁定）
-                if (ConfirmDialog.Confirm("未保存的输入", "输入的内容还没保存，确认退出吗？",
-                                          "保存", anchor: d, cancelText: "确认"))
+                // 有未保存输入 → 弹在编辑窗**之上**（模态），编辑窗不先消失（用户 2026-11-06 裁定）
+                var outcome = ConfirmDialog.Ask("未保存的输入", "输入的内容还没保存，确认退出吗？",
+                                                "保存", anchor: d, cancelText: "确认", showCloseButton: true);
+                if (outcome == ConfirmDialog.Outcome.Closed)
+                {
+                    return false;   // 右上角 X → 关掉弹窗、回到编辑窗继续编辑
+                }
+
+                if (outcome == ConfirmDialog.Outcome.Ok)
                 {
                     var r = TodoOpsService.AddTodo(_data, latestText, DateTimeOffset.Now);
                     if (!r.Ok)
                     {
-                        ShowOpsError(r.Reason);   // 保存失败（上限/查重/超长）→ 不关闭
+                        ShowOpsError(r.Reason);   // 保存失败 → 不关闭（与"保存失败不关窗"一致）
                         return false;
                     }
 
@@ -1611,7 +1626,7 @@ public sealed class ClusterController : IDisposable
                     ShowToast("已新建");
                 }
 
-                return true;
+                return true;   // 「确认」= 确认放弃 → 关闭编辑窗
             });
         }, this);
         EndModal();
@@ -1675,10 +1690,15 @@ public sealed class ClusterController : IDisposable
                      return true;   // 未改过 → 直接关
                  }
 
-                // 有未保存输入 → 弹在编辑窗**之上**（模态），编辑窗不先消失；
-                // 「确认」= 确认放弃修改退出，「保存」= 保存后退出（用户 2026-11-06 裁定）
-                if (ConfirmDialog.Confirm("未保存的修改", "输入的内容还没保存，确认退出吗？",
-                                          "保存", anchor: d, cancelText: "确认"))
+                // 有未保存输入 → 弹在编辑窗**之上**（模态），编辑窗不先消失（用户 2026-11-06 裁定）
+                var outcome = ConfirmDialog.Ask("未保存的修改", "输入的内容还没保存，确认退出吗？",
+                                                "保存", anchor: d, cancelText: "确认", showCloseButton: true);
+                if (outcome == ConfirmDialog.Outcome.Closed)
+                {
+                    return false;   // 右上角 X → 关掉弹窗、回到编辑窗继续编辑
+                }
+
+                if (outcome == ConfirmDialog.Outcome.Ok)
                 {
                     var r = TodoOpsService.EditTodo(_data, id, latestText);
                     if (!r.Ok)
@@ -1692,7 +1712,7 @@ public sealed class ClusterController : IDisposable
                     ShowToast("已保存");
                 }
 
-                return true;
+                return true;   // 「确认」= 确认放弃 → 关闭编辑窗
             });
         }, this);
         EndModal();

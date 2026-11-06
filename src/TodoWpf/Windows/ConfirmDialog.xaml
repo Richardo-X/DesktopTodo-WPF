@@ -90,8 +90,35 @@
             BorderBrush="{DynamicResource Brush.CardBorder}" BorderThickness="1"
             CornerRadius="{StaticResource Radius.Dialog}" Padding="20">
         <StackPanel>
-            <TextBlock x:Name="TitleText" Text="确认" FontSize="13" FontWeight="SemiBold"
-                       Foreground="{DynamicResource Brush.Text}"/>
+            <!-- 标题行：标题左、右上角 X（仅未保存询问这类"可回到编辑窗"的确认框显示，
+                 作用 = 关掉弹窗、回到打开它的窗口，不做任何选择） -->
+            <Grid>
+                <TextBlock x:Name="TitleText" Text="确认" FontSize="13" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Brush.Text}" VerticalAlignment="Center"/>
+                <Button x:Name="CloseBtn" Width="24" Height="24" HorizontalAlignment="Right"
+                        VerticalAlignment="Top" Margin="0,-4,-4,0" Visibility="Collapsed"
+                        Background="Transparent" BorderThickness="0" Cursor="Hand"
+                        ToolTip="关闭" Click="Close_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bd" Background="Transparent" CornerRadius="6">
+                                <Viewbox Width="11" Height="11">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="{StaticResource Icon.X}"
+                                              Stroke="{DynamicResource Brush.Muted}" StrokeThickness="1.8"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    </Canvas>
+                                </Viewbox>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Hover}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
             <TextBlock x:Name="BodyText" Text="" FontSize="12" LineHeight="20"
                        Foreground="{DynamicResource Brush.Muted}" TextWrapping="Wrap"
                        Margin="0,8,0,0"/>
