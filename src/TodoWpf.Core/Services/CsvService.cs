@@ -20,7 +20,7 @@ public static class CsvService
     /// <summary>导出 [from, to] 闭区间（本地日期键）内的已完成与归档项；无记录返回 null。</summary>
     public static string? Export(AppData data, string from, string to)
     {
-        if (!ValidDateKey(from) || !ValidDateKey(to) || string.CompareOrdinal(from, to) > 0)
+        if (!LocalDate.IsValidKey(from) || !LocalDate.IsValidKey(to) || string.CompareOrdinal(from, to) > 0)
         {
             return null;
         }
@@ -80,7 +80,7 @@ public static class CsvService
             var date = row[0].Trim();
             var hm = row[1].Trim();
             var content = row[2].Trim();
-            if (content.Length == 0 || !ValidDateKey(date) || !System.Text.RegularExpressions.Regex.IsMatch(hm, @"^\d{2}:\d{2}"))
+            if (content.Length == 0 || !LocalDate.IsValidKey(date) || !System.Text.RegularExpressions.Regex.IsMatch(hm, @"^\d{2}:\d{2}"))
             {
                 continue;
             }
@@ -186,9 +186,6 @@ public static class CsvService
             int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), 0);
         return new DateTimeOffset(localDateTime, TimeZoneInfo.Local.GetUtcOffset(localDateTime));
     }
-
-    private static bool ValidDateKey(string text) =>
-        System.Text.RegularExpressions.Regex.IsMatch(text, @"^\d{4}-\d{2}-\d{2}$");
 
     private static string EscapeField(string field) =>
         field.Any(c => c is ',' or '"' or '\r' or '\n')
