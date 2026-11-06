@@ -301,7 +301,7 @@
                                             </Button.Style>
                                             <Viewbox Width="13" Height="13">
                                                 <Canvas Width="24" Height="24">
-                                                    <Path x:Name="PlusIcon" Data="{StaticResource Icon.Plus}"
+                                                    <Path Data="{StaticResource Icon.Plus}"
                                                           Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                                           StrokeThickness="2.2"
                                                           StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>

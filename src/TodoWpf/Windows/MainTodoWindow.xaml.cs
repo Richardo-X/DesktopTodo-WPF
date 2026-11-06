@@ -64,7 +64,6 @@ public partial class MainTodoWindow : Window
     }
 
     /// <summary>卡面内容。</summary>
-    public FrameworkElement CardBody => CardContent;
 
     /// <summary>整批刷新待办行。</summary>
     public void SetRows(IReadOnlyList<TodoRowView> rows)
@@ -294,7 +293,6 @@ public partial class MainTodoWindow : Window
 
     private void QuickBtn_Click(object sender, RoutedEventArgs e) => Controller?.ToggleQuick();
 
-    private void DoneBtn_Click(object sender, RoutedEventArgs e) => Controller?.ToggleDone();
 
     private void DoneSort_Click(object sender, RoutedEventArgs e) => Controller?.ToggleDoneSort();
 

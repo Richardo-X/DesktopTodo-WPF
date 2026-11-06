@@ -637,7 +637,7 @@
                   HorizontalAlignment="Right" VerticalAlignment="Bottom"
                   RenderTransformOrigin="1,1" Cursor="SizeNWSE" Background="Transparent">
                 <Grid.RenderTransform>
-                    <ScaleTransform x:Name="GripScale" ScaleX="1" ScaleY="1"/>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
                 </Grid.RenderTransform>
                 <Border Width="13" Height="13" HorizontalAlignment="Right" VerticalAlignment="Bottom"
                         Margin="0,0,3,3" Opacity="0.7"

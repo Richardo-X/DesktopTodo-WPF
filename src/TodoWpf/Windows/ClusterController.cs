@@ -585,7 +585,6 @@ public sealed class ClusterController : IDisposable
     }
 
     /// <summary>置 true 可在拖缩放柄时把每帧几何写盘（临时目录下的 resize-trace.log），用于定位“边缘没钉住”。</summary>
-    public static bool TraceResize;
 
     /// <summary>缩放中的布局请求：合并到下一帧统一执行（CompositionTarget.Rendering 每帧一次）。</summary>
     private void RequestResizeLayout()
@@ -619,13 +618,6 @@ public sealed class ClusterController : IDisposable
         ApplyLayout();
     }
 
-    public void ToggleDone()
-    {
-        ExitTuckBeforeLayout();
-        Mutate(d => d with { UiState = d.UiState with { DoneVisible = !d.UiState.DoneVisible } });
-        _main.SetPanelToggles(_data.UiState.QuickVisible, _data.UiState.DoneVisible);
-        ApplyLayout();
-    }
 
     /// <summary>
     /// 缩进动画用 BeginAnimation 持有窗口 Top 属性；显隐模板/已完成窗前若不清除，
@@ -1006,17 +998,6 @@ public sealed class ClusterController : IDisposable
     }
 
     /// <summary>主题切换（设置窗入口；即时生效并落盘）。</summary>
-    public void SetTheme(bool night)
-    {
-        if (App.IsNight == night)
-        {
-            return;
-        }
-
-        App.ApplyTheme(night);
-        Mutate(d => d with { UiState = d.UiState with { Theme = night ? "night" : "day" } });
-        _main.ThemeBtn.Tag = (System.Windows.Media.Geometry)_main.FindResource(night ? "Icon.Sun" : "Icon.Moon");
-    }
 
     /// <summary>恢复默认尺寸：按当前屏重算（屏高 1/3）并落盘（体验说明书 ③.3）。</summary>
     public void ResetWindowSize()

@@ -44,8 +44,6 @@ internal static class WindowPlacement
     /// </summary>
     private const uint SwpNoCopyBits = 0x0100;
 
-    /// <summary>一次提交单个窗口几何（非批量场景）。</summary>
-    public static void SetBounds(Window window, WinRect rect) => SetBoundsBatch([(window, rect, PinEdge.Left)]);
 
     /// <summary>把一批窗口的几何放到同一个批处理里一次性提交（尽量同帧落位）。</summary>
     public static void SetBoundsBatch(IReadOnlyList<(Window Window, WinRect Rect, PinEdge Pin)> targets)
@@ -81,7 +79,7 @@ internal static class WindowPlacement
             var topPx = (int)Math.Round(rect.Y * sy);
             var bottomPx = (int)Math.Round(rect.Bottom * sy);
 
-            var x = pin == PinEdge.Right ? leftPx : leftPx;
+            var x = leftPx;   // PinEdge 不参与 x（原三元两边相同，2026-11-06 清理）
             var cx = Math.Max(1, rightPx - leftPx);
             var y = topPx;
             var cy = Math.Max(1, bottomPx - topPx);
@@ -97,17 +95,6 @@ internal static class WindowPlacement
         _ = EndDeferWindowPos(batch);
     }
 
-    /// <summary>窗口右缘的物理像素（TraceResize 诊断用）。拿不到句柄时返回 int.MinValue。</summary>
-    public static int PhysicalRight(Window window)
-    {
-        var hwnd = new WindowInteropHelper(window).Handle;
-        if (hwnd == IntPtr.Zero || !GetWindowRect(hwnd, out var rect))
-        {
-            return int.MinValue;
-        }
-
-        return rect.Right;
-    }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct Rect
