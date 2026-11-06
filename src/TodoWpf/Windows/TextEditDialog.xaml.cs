@@ -203,6 +203,13 @@ public partial class TextEditDialog : Window
             return this;
         }
 
+        /// <summary>返回/ Esc 关闭前拦截：返回 false 则窗口不关（有未保存输入时先问）。</summary>
+        public Builder OnCloseRequested(Func<TextEditDialog, bool> handler)
+        {
+            _dialog.SetOnCloseRequested(handler);
+            return this;
+        }
+
         public TextEditDialog Build(ClusterController? controller = null)
         {
             _dialog._controller = controller;
@@ -216,6 +223,10 @@ public partial class TextEditDialog : Window
 
     private int _counterTotal = 300;
     private Action<TextEditDialog>? _onTextChanged;
+
+    private Func<TextEditDialog, bool>? _onCloseRequested;
+
+    internal void SetOnCloseRequested(Func<TextEditDialog, bool> handler) => _onCloseRequested = handler;
     private ClusterController? _controller;
 
     /// <summary>二级窗等比缩放（编辑组 420×560；右下手柄，按组存档）。</summary>
@@ -293,6 +304,13 @@ public partial class TextEditDialog : Window
 
     private void Back_Click(object sender, RoutedEventArgs e)
     {
+        // 关闭前拦截：调用方可在"有未保存输入"时先弹确认（弹在编辑窗之上、编辑窗不先消失）。
+        // 返回 false = 不关闭（调用方已处理，例如保存失败）。
+        if (_onCloseRequested?.Invoke(this) == false)
+        {
+            return;
+        }
+
         _result = null;
         Close();
     }

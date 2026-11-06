@@ -1237,24 +1237,35 @@ public sealed class ClusterController : IDisposable
                  latestText = d.Editor.Text;
                  var ok = ContentRules.Validate(d.Editor.Text).Ok;
                  ((System.Windows.Controls.Button)((System.Windows.Controls.Panel)d.ActionsPanel).Children[0]).IsEnabled = ok;
-             });
+             })
+             .OnCloseRequested(d =>
+             {
+                 if (saved || d.Editor.Text.Trim().Length == 0)
+                 {
+                     return true;   // 已保存 或 空输入 → 直接关
+                 }
+
+                // 有输入未保存 → 弹在编辑窗**之上**（模态），编辑窗不先消失；
+                // 「确认」= 确认放弃退出，「保存」= 保存后退出（用户 2026-11-06 裁定）
+                if (ConfirmDialog.Confirm("未保存的输入", "输入的内容还没保存，确认退出吗？",
+                                          "保存", anchor: d, cancelText: "确认"))
+                {
+                    var r = TodoOpsService.AddTemplate(_data, latestText, DateTimeOffset.Now);
+                    if (!r.Ok)
+                    {
+                        ShowOpsError(r.Reason);   // 保存失败（上限/查重/超长）→ 不关闭
+                        return false;
+                    }
+
+                    saved = true;
+                    ApplyOps(r);
+                    ShowToast("模板已新建");
+                }
+
+                return true;
+            });
         }, this);
         EndModal();
-
-        if (!saved && latestText.Trim().Length > 0
-            && ConfirmDialog.Confirm("未保存的输入", "输入的内容还没保存，保存吗？", "保存", anchor: _main))
-        {
-            var r = TodoOpsService.AddTemplate(_data, latestText, DateTimeOffset.Now);
-            if (r.Ok)
-            {
-                ApplyOps(r);
-                ShowToast("模板已新建");
-            }
-            else
-            {
-                ShowOpsError(r.Reason);
-            }
-        }
     }
 
     /// <summary>编辑模板（双击模板行；返回时已改询问）。</summary>
@@ -1302,19 +1313,35 @@ public sealed class ClusterController : IDisposable
              {
                  latestText = d.Editor.Text;
                  dirty = latestText.Trim() != item.Content;
-             });
+             })
+             .OnCloseRequested(d =>
+             {
+                 if (saved || !dirty)
+                 {
+                     return true;   // 未改过 → 直接关
+                 }
+
+                // 有未保存输入 → 弹在编辑窗**之上**（模态），编辑窗不先消失；
+                // 「确认」= 确认放弃修改退出，「保存」= 保存后退出（用户 2026-11-06 裁定）
+                if (ConfirmDialog.Confirm("未保存的修改", "输入的内容还没保存，确认退出吗？",
+                                          "保存", anchor: d, cancelText: "确认"))
+                {
+                    var r = TodoOpsService.EditTemplate(_data, id, latestText);
+                    if (!r.Ok)
+                    {
+                        ShowOpsError(r.Reason);   // 保存失败 → 不关闭（与"保存失败不关窗"一致）
+                        return false;
+                    }
+
+                    saved = true;
+                    ApplyOps(r);
+                    ShowToast("模板已保存");
+                }
+
+                return true;
+            });
         }, this);
         EndModal();
-
-        if (!saved && dirty && ConfirmDialog.Confirm("未保存的修改", "内容已修改，保存吗？", "保存", anchor: _main))
-        {
-            var r = TodoOpsService.EditTemplate(_data, id, latestText);
-            if (r.Ok)
-            {
-                ApplyOps(r);
-                ShowToast("模板已保存");
-            }
-        }
     }
 
     // ---------- 批次04：批量删除（主窗待办；跨窗冻结由缩进门槛+模态承担） ----------
@@ -1559,25 +1586,35 @@ public sealed class ClusterController : IDisposable
                  latestText = d.Editor.Text;
                  var ok = ContentRules.Validate(d.Editor.Text).Ok;
                  ((System.Windows.Controls.Button)((System.Windows.Controls.Panel)d.ActionsPanel).Children[0]).IsEnabled = ok;
-             });
+             })
+             .OnCloseRequested(d =>
+             {
+                 if (saved || d.Editor.Text.Trim().Length == 0)
+                 {
+                     return true;   // 已保存 或 空输入 → 直接关（需求：无输入直接退）
+                 }
+
+                // 有输入未保存 → 弹在编辑窗**之上**（模态），编辑窗不先消失；
+                // 「确认」= 确认放弃退出，「保存」= 保存后退出（用户 2026-11-06 裁定）
+                if (ConfirmDialog.Confirm("未保存的输入", "输入的内容还没保存，确认退出吗？",
+                                          "保存", anchor: d, cancelText: "确认"))
+                {
+                    var r = TodoOpsService.AddTodo(_data, latestText, DateTimeOffset.Now);
+                    if (!r.Ok)
+                    {
+                        ShowOpsError(r.Reason);   // 保存失败（上限/查重/超长）→ 不关闭
+                        return false;
+                    }
+
+                    saved = true;
+                    ApplyOps(r);
+                    ShowToast("已新建");
+                }
+
+                return true;
+            });
         }, this);
         EndModal();
-
-        // 有输入但没保存就退出 → 询问（空输入直接退，不问）
-        if (!saved && latestText.Trim().Length > 0
-            && ConfirmDialog.Confirm("未保存的输入", "输入的内容还没保存，保存吗？", "保存", anchor: _main))
-        {
-            var r = TodoOpsService.AddTodo(_data, latestText, DateTimeOffset.Now);
-            if (r.Ok)
-            {
-                ApplyOps(r);
-                ShowToast("已新建");
-            }
-            else
-            {
-                ShowOpsError(r.Reason);
-            }
-        }
     }
 
     /// <summary>编辑待办（双击行；返回时已改询问；删除有确认框）。</summary>
@@ -1630,19 +1667,35 @@ public sealed class ClusterController : IDisposable
              {
                  latestText = d.Editor.Text;
                  dirty = latestText.Trim() != item.Content;
-             });
+             })
+             .OnCloseRequested(d =>
+             {
+                 if (saved || !dirty)
+                 {
+                     return true;   // 未改过 → 直接关
+                 }
+
+                // 有未保存输入 → 弹在编辑窗**之上**（模态），编辑窗不先消失；
+                // 「确认」= 确认放弃修改退出，「保存」= 保存后退出（用户 2026-11-06 裁定）
+                if (ConfirmDialog.Confirm("未保存的修改", "输入的内容还没保存，确认退出吗？",
+                                          "保存", anchor: d, cancelText: "确认"))
+                {
+                    var r = TodoOpsService.EditTodo(_data, id, latestText);
+                    if (!r.Ok)
+                    {
+                        ShowOpsError(r.Reason);   // 保存失败 → 不关闭（与"保存失败不关窗"一致）
+                        return false;
+                    }
+
+                    saved = true;
+                    ApplyOps(r);
+                    ShowToast("已保存");
+                }
+
+                return true;
+            });
         }, this);
         EndModal();
-
-        if (!saved && dirty && ConfirmDialog.Confirm("未保存的修改", "内容已修改，保存吗？", "保存", anchor: _main))
-        {
-            var r = TodoOpsService.EditTodo(_data, id, latestText);
-            if (r.Ok)
-            {
-                ApplyOps(r);
-                ShowToast("已保存");
-            }
-        }
     }
 
     /// <summary>编辑待办「添加到模板」（原型 dToTpl：空内容/上限/查重提示 + 确认框）。</summary>
