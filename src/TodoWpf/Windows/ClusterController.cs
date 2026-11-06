@@ -1490,8 +1490,10 @@ public sealed class ClusterController : IDisposable
     private void ShowOpsError(string? reason) =>
         _main.ShowToast(reason switch
         {
-            TodoOpsService.ReasonLimitReached => $"待办数量已达上限（{TemplateLimit.Max} 条），无法添加",
-            TodoOpsService.ReasonTemplateLimitReached => "模板数量已达上限（10 个）",
+            // 待办上限是**用户可设**的（设置页 1~10），必须用当前设置值；
+            // 此前写死 TemplateLimit.Max(=10)，用户把上限调成 5 时提示会骗人（2026-11-06 查漏发现）
+            TodoOpsService.ReasonLimitReached => $"待办数量已达上限（{_data.Settings.MaxItems} 条），无法添加",
+            TodoOpsService.ReasonTemplateLimitReached => $"模板数量已达上限（{TemplateLimit.Max} 个）",
             TodoOpsService.ReasonDuplicateTemplate => "已存在相同内容的模板",
             TodoOpsService.ReasonEmptyContent => "内容不能为空",
             TodoOpsService.ReasonTooLong => "内容超过 300 字",
