@@ -1822,15 +1822,42 @@ public sealed class ClusterController : IDisposable
             PushBatchBar();
         }
 
+        // 有未保存的新建/编辑内容 → 先提醒（与托盘退出同一套口径）；点取消则不隐藏
+        // （用户 2026-11-06：隐藏指令也要做这个判别）
+        var editor = TextEditDialog.Current;
+        if (editor?.HasUnsavedInput == true
+            && !ConfirmDialog.Confirm("隐藏到托盘", "有未保存的输入，隐藏后会丢失。确定要隐藏吗？",
+                                      "隐藏", anchor: editor))
+        {
+            return;
+        }
+
         _clusterHidden = true;
-        _main.Hide();
-        _quick.Hide();
-        _tuckBar.Hide();
+        // 隐藏**全部**应用窗口（含二级窗）。此前只隐藏 _main/_quick/_tuckBar，
+        // 二级窗会留在屏幕上（用户 2026-11-06 反馈：打开二级窗双击托盘，主窗没了、其它窗还在）。
+        foreach (var window in System.Windows.Application.Current.Windows
+                     .OfType<System.Windows.Window>()
+                     .ToList())
+        {
+            window.Hide();
+        }
     }
 
     public void ShowClusterFromTray()
     {
         _clusterHidden = false;
+
+        // 用户 2026-11-06 裁定：恢复时"一级窗之外的其他窗口直接关闭"——二级窗不再跟着回来。
+        // 模板窗是一级窗（有自己的开关状态），仍按 ui.QuickVisible 恢复；这里只关对话框。
+        foreach (var dialog in System.Windows.Application.Current.Windows
+                     .OfType<System.Windows.Window>()
+                     .Where(w => w is not MainTodoWindow and not QuickWindow
+                                 and not TuckBarWindow and not BubbleWindow)
+                     .ToList())
+        {
+            dialog.Close();
+        }
+
         ApplyLayout();
         _main.Show();
         var ui = _data.UiState;
