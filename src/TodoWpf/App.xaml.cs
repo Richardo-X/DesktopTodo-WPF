@@ -137,6 +137,11 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        // 托盘图标要显式释放：否则进程退出后图标可能残留在通知区（App.Tray 此前只写不读、
+        // TrayIcon.Dispose 从未被调用，2026-11-06 查漏清理）
+        Tray?.Dispose();
+        Tray = null;
+
         _wakeEvent?.Dispose();
         if (_instanceMutex is not null)
         {
