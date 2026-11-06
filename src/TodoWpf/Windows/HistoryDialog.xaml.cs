@@ -126,7 +126,7 @@ public partial class HistoryDialog : Window
             var completed = IsoTime.ParseLocal(item.CompletedAt!);
             Rows.Add(new HistRowView(
                 item.Id,
-                item.Content,
+                MainViewService.RowText(item.Content),   // 行只显示一行（与待办/已完成/模板同一规则）
                 OverdueService.IsCompletedOverdue(item),
                 completed.ToString("HH:mm"),
                 Selected: _batching && _selected.Contains(item.Id),

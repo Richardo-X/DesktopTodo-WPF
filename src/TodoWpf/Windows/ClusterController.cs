@@ -1290,7 +1290,7 @@ public sealed class ClusterController : IDisposable
         TextEditDialog.Open(b =>
         {
             b.Title("编辑模板").Text(item.Content).Placeholder("模板内容（≤300 字）")
-             .LeftAction("delete", "删除", danger: true, onClick: d =>
+             .LeftAction("delete", "删除", danger: true, autoClose: false, onClick: d =>
              {
                  if (ConfirmDialog.Confirm("删除模板", "确定删除这个模板吗？", "删除", danger: true, anchor: d))
                  {
@@ -1653,7 +1653,7 @@ public sealed class ClusterController : IDisposable
                          $"创建于 {CreatedTimeText(item.CreatedAt)}", item.Overdue)
              .RestoreButton()
              .Text(item.Content).Placeholder("写点什么（≤300 字）")
-             .LeftAction("delete", "删除", danger: true, onClick: d =>
+             .LeftAction("delete", "删除", danger: true, autoClose: false, onClick: d =>
              {
                  if (ConfirmDialog.Confirm("删除待办", "确定删除这条待办吗？删除后无法恢复。", "删除", danger: true, anchor: d))
                  {

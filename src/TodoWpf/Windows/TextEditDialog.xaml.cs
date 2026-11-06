@@ -32,6 +32,11 @@ public partial class TextEditDialog : Window
         InitializeComponent();
         // 2026-11-05 裁定：二级窗弃 WPF 投影，改 DWM 系统圆角（与主窗同壳）
         WindowShell.ApplyFixed(this);
+
+        // 硬性截断到 300 字（用户 2026-11-06：此前只在保存时校验，能一直打进去、超了才报错）。
+        // 与计数器/校验同源（ContentRules.MaxLength），避免两处数字漂移。
+        InputBox.MaxLength = TodoWpf.Core.Models.ContentRules.MaxLength;
+
         UpdatePlaceholder();
     }
 
@@ -181,11 +186,15 @@ public partial class TextEditDialog : Window
 
         public Builder CounterTotal(int total) { _dialog.SetCounterTotal(total); return this; }
 
+        /// <param name="autoClose">
+        /// 点完是否自动关窗（默认 true）。**删除要传 false**：删除走确认框，点取消应退回编辑窗
+        /// 而不是把编辑窗一起关掉（用户 2026-11-06 反馈）；成功删除由回调自己 Close()。
+        /// </param>
         public Builder LeftAction(string key, string text, bool danger = false, bool enabled = true,
-                                  Action<TextEditDialog>? onClick = null)
+                                  Action<TextEditDialog>? onClick = null, bool autoClose = true)
         {
             _dialog.AddLeftAction(new ActionDef(
-                key, text, danger ? ActionTone.Danger : ActionTone.Normal, enabled, true, onClick));
+                key, text, danger ? ActionTone.Danger : ActionTone.Normal, enabled, autoClose, onClick));
             return this;
         }
 
