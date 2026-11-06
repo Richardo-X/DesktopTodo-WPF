@@ -12,7 +12,7 @@
     <Color x:Key="Color.Faint">#9099A3</Color>
     <Color x:Key="Color.Danger">#C42B1C</Color>
     <Color x:Key="Color.Overdue">#E08A83</Color>
-    <Color x:Key="Color.CardSolid">#2C2C2E</Color>
+    <Color x:Key="Color.CardSolid">#1D2127</Color>
     <Color x:Key="Color.BubbleBg">#3A3A3C</Color>
     <Color x:Key="Color.BubbleFg">#F0F0F0</Color>
     <Color x:Key="Color.CbBorder">#9A9A9A</Color>
@@ -32,8 +32,8 @@
     <!-- 卡面底：逐值取自基准（#1e1e21 α.96 → #F51E1E21） -->
     <SolidColorBrush x:Key="Brush.WinBg" Color="#F51E1E21"/>
     <SolidColorBrush x:Key="Brush.WinBgSolid" Color="#1E1E21"/>
-    <SolidColorBrush x:Key="Brush.Card" Color="#0EFFFFFF"/>
-    <SolidColorBrush x:Key="Brush.CardBorder" Color="#1CFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Card" Color="#1D2127"/>
+    <SolidColorBrush x:Key="Brush.CardBorder" Color="#1AFFFFFF"/>
     <SolidColorBrush x:Key="Brush.Field" Color="#12FFFFFF"/>
     <SolidColorBrush x:Key="Brush.Hover" Color="#0FFFFFFF"/>
     <SolidColorBrush x:Key="Brush.Active" Color="#1FFFFFFF"/>

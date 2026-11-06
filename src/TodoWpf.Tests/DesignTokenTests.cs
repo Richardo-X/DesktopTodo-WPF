@@ -26,7 +26,7 @@ public class DesignTokenTests
         Assert.Equal("#676D76", Hex(tokens["Color.Faint"]));
         Assert.Equal("#C42B1C", Hex(tokens["Color.Danger"]));
         Assert.Equal("#A83A34", Hex(tokens["Color.Overdue"]));
-        Assert.Equal("#F9FAFC", Hex(tokens["Color.CardSolid"]));
+        Assert.Equal("#F7F8F9", Hex(tokens["Color.CardSolid"]));   // 对齐 1C 原型 --card
         Assert.Equal("#222222", Hex(tokens["Color.BubbleFg"]));
     }
 
@@ -42,7 +42,7 @@ public class DesignTokenTests
         Assert.Equal("#DDE2E8", Hex(tokens["Color.Text"]));
         Assert.Equal("#A8B0BA", Hex(tokens["Color.Muted"]));
         Assert.Equal("#9099A3", Hex(tokens["Color.Faint"]));
-        Assert.Equal("#2C2C2E", Hex(tokens["Color.CardSolid"]));
+        Assert.Equal("#1D2127", Hex(tokens["Color.CardSolid"]));   // 对齐 1C 原型 --card
         Assert.Equal("#3A3A3C", Hex(tokens["Color.BubbleBg"]));
     }
 
@@ -64,17 +64,17 @@ public class DesignTokenTests
         var day = XamlTokenReader.LoadKeyed("src", "TodoWpf", "Themes", "Tokens.Day.xaml");
         var night = XamlTokenReader.LoadKeyed("src", "TodoWpf", "Themes", "Tokens.Night.xaml");
 
-        // #AARRGGBB（WPF 顺序）；α 换算：0.94→F0、0.7→B3、0.055→0E、0.09→17、0.05→0D、0.75→BF、0.13→21
+        // #AARRGGBB（WPF 顺序）；α 换算：0.94→F0、0.12→1F、0.10→1A、0.05→0D、0.75→BF、0.13→21
         Assert.Equal("#F0F3F6FB", Argb(day["Brush.WinBg"])); // 基准 α.94
-        Assert.Equal("#B3FFFFFF", Argb(day["Brush.Card"]));
-        Assert.Equal("#17000000", Argb(day["Brush.CardBorder"]));
-        Assert.Equal("#0D000000", Argb(day["Brush.Hover"]));
+        Assert.Equal("#F7F8F9", Argb(day["Brush.Card"]));   // 对齐 1C 原型 --card（2026-11-06 修偏差）
+        Assert.Equal("#1F1E232A", Argb(day["Brush.CardBorder"]));   // rgba(30,35,42,.12)
+        Assert.Equal("#0D1E232A", Argb(day["Brush.Hover"]));   // rgba(30,35,42,.05)
         Assert.Equal("#BFFFFFFF", Argb(day["Brush.Btn"]));
         Assert.Equal("#21000000", Argb(day["Brush.BtnBorder"]));
 
         Assert.Equal("#F51E1E21", Argb(night["Brush.WinBg"])); // 基准 α.96
-        Assert.Equal("#0EFFFFFF", Argb(night["Brush.Card"]));
-        Assert.Equal("#1CFFFFFF", Argb(night["Brush.CardBorder"]));
+        Assert.Equal("#1D2127", Argb(night["Brush.Card"]));   // 对齐 1C 原型 --card
+        Assert.Equal("#1AFFFFFF", Argb(night["Brush.CardBorder"]));   // rgba(255,255,255,.10)
         Assert.Equal("#0FFFFFFF", Argb(night["Brush.Hover"]));
         Assert.Equal("#14FFFFFF", Argb(night["Brush.Btn"]));
         Assert.Equal("#26FFFFFF", Argb(night["Brush.BtnBorder"]));
