@@ -344,6 +344,32 @@ public class MainViewServiceTests
         Assert.Equal("第一行\n第二行全文", row.FullContent);  // 全文留给气泡
     }
 
+
+    // ---------- 中文日期文本（2026-11-06 查漏：此前 App 与 ClusterController 各写一份） ----------
+
+    [Fact]
+    public void 中文长日期_年月日加星期()
+    {
+        // 2026-11-06 是星期五（本地日期）
+        var local = new DateTimeOffset(2026, 11, 6, 14, 32, 0, TimeSpan.FromHours(8));
+        Assert.Equal("2026年11月6日 星期五", MainViewService.CnDateText(local));
+    }
+
+    [Fact]
+    public void 中文短日期_月日加星期()
+    {
+        var local = new DateTimeOffset(2026, 11, 6, 14, 32, 0, TimeSpan.FromHours(8));
+        Assert.Equal("11月6日 星期五", MainViewService.CnDateShortText(local));
+    }
+
+    [Fact]
+    public void 中文日期_不补零_星期按周日起()
+    {
+        var sunday = new DateTimeOffset(2026, 1, 4, 0, 0, 0, TimeSpan.FromHours(8));   // 2026-01-04 星期日
+        Assert.Equal("2026年1月4日 星期日", MainViewService.CnDateText(sunday));
+        Assert.Equal("1月4日 星期日", MainViewService.CnDateShortText(sunday));
+    }
+
     [Fact]
     public void 时钟_24h与12h()
     {
