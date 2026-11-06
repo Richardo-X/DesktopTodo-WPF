@@ -308,6 +308,42 @@ public class MainViewServiceTests
         Assert.Equal("模板甲", Assert.Single(MainViewService.TemplateRows(tplData)).Content);
     }
 
+
+    // ---------- 首行之后是否还有内容（决定是否弹悬停气泡） ----------
+    // 用户 2026-11-06：列表行只显示第一行后，"首行放得下、但换行后还有字"的内容在行里看不全，
+    // 也必须弹气泡（气泡显示全文）。判定口径：跳过开头换行后，第一个换行**之后还有非空白文字**。
+
+    [Theory]
+    [InlineData("abc", false)]
+    [InlineData("abc\ndef", true)]
+    [InlineData("abc\n", false)]              // 只有尾随换行：没有"换行后的文字"
+    [InlineData("abc\n   ", false)]            // 换行后只有空白
+    [InlineData("abc\ndef\nghi", true)]
+    [InlineData("\nabc", false)]               // 开头换行被跳过 → 实际只有一行
+    [InlineData("\nabc\ndef", true)]
+    [InlineData("\n", false)]
+    [InlineData("", false)]
+    public void 首行之后还有内容_判定(string input, bool expected)
+    {
+        Assert.Equal(expected, MainViewService.HasContentAfterFirstLine(input));
+    }
+
+    [Fact]
+    public void 首行之后还有内容_null安全()
+    {
+        Assert.False(MainViewService.HasContentAfterFirstLine(null));
+    }
+
+    [Fact]
+    public void 行投影_带全文_供气泡显示()
+    {
+        var a = Todo("第一行\n第二行全文", "2026-10-13T01:00:00.000Z");
+        var row = Assert.Single(MainViewService.TodoRows(WithTodos(a), Today));
+
+        Assert.Equal("第一行", row.Content);                  // 行内只显示一行
+        Assert.Equal("第一行\n第二行全文", row.FullContent);  // 全文留给气泡
+    }
+
     [Fact]
     public void 时钟_24h与12h()
     {
