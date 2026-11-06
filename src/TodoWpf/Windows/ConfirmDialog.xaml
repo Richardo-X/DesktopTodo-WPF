@@ -99,7 +99,8 @@
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Background="Transparent" CornerRadius="6">
-                            <Viewbox Width="11" Height="11">
+                            <!-- 图标 16（用户 2026-11-06）：与主窗标题栏 X 同规格 -->
+                            <Viewbox Width="16" Height="16">
                                 <Canvas Width="24" Height="24">
                                     <Path Data="{StaticResource Icon.X}"
                                           Stroke="{DynamicResource Brush.Muted}" StrokeThickness="1.8"
