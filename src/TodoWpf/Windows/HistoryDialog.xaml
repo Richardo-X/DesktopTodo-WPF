@@ -138,9 +138,15 @@
                             Margin="0,0,24,0" Click="BatchEnter_Click" HorizontalAlignment="Right"/>
                     <StackPanel x:Name="BatchBar" Orientation="Horizontal" Visibility="Hidden"
                                 VerticalAlignment="Center">
-                        <TextBlock x:Name="SelCountText" Text="已选 0 项" FontSize="11"
-                                   Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Center"
-                                   Typography.NumeralAlignment="Tabular"/>
+                        <!-- 计数定宽（方案A 2026-11-07）：隐形占位文本=最宽情况「已选 10 项」
+                             （单日条数 ≤ 待办上限 10）→ 数字位数变化只在预留宽度内，后面三个按钮位置恒定 -->
+                        <Grid>
+                            <TextBlock Text="已选 10 项" FontSize="11" Visibility="Hidden"
+                                       Typography.NumeralAlignment="Tabular"/>
+                            <TextBlock x:Name="SelCountText" Text="已选 0 项" FontSize="11"
+                                       Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Center"
+                                       Typography.NumeralAlignment="Tabular"/>
+                        </Grid>
                         <Button x:Name="BatchDeleteBtn" Content="删除所选" Style="{StaticResource HistSbtnDanger}"
                                 Margin="8,0,0,0" IsEnabled="False" Click="BatchDelete_Click"/>
                         <Button x:Name="BatchAllBtn" Content="全选" Style="{StaticResource HistSbtn}"

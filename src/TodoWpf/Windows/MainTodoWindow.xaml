@@ -362,9 +362,15 @@
                          布局 = 已选 n 项 · 返回 …… 全选 · 删除所选（弹性空白居中隔开） -->
                     <Grid x:Name="BatchBar" Grid.Row="1" Visibility="Hidden" Margin="14,2,14,8">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock x:Name="BatchCount" Text="已选 0 项" FontSize="11" LineHeight="18"
-                                       Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Center"
-                                       Typography.NumeralAlignment="Tabular"/>
+                            <!-- 计数定宽（方案A 2026-11-07）：隐形占位文本=最宽情况「已选 10 项」
+                                 （待办上限恒 10，无三位数）→ 数字位数变化只在预留宽度内，右侧「返回」位置恒定 -->
+                            <Grid>
+                                <TextBlock Text="已选 10 项" FontSize="11" Visibility="Hidden"
+                                           Typography.NumeralAlignment="Tabular"/>
+                                <TextBlock x:Name="BatchCount" Text="已选 0 项" FontSize="11" LineHeight="18"
+                                           Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Center"
+                                           Typography.NumeralAlignment="Tabular"/>
+                            </Grid>
                             <Button x:Name="BatchExitBtn" Content="返回" Style="{StaticResource BatchSbtn}"
                                     Margin="8,0,0,0" Click="BatchExit_Click"/>
                         </StackPanel>
