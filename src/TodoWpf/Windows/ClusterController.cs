@@ -37,6 +37,9 @@ public sealed class ClusterController : IDisposable
     private FrameworkElement? _hoverRow;
 
     private WinPoint _anchor;
+
+    /// <summary>模板窗上一帧的 DPI 横向缩放（拖动中侦测跨屏用，变了才补一次内容缩放）。</summary>
+    private double _lastQuickDpiX = 1.0;
     /// <summary>用户档位（存档值 ClusterScale）。**不是**实际用于布局的值——
     /// 布局一律走 EffectiveScale()：按当前屏工作区钳制后使用。
     /// 这样"拖到小屏被钳小、拖回大屏自动恢复用户档位"，且存档不被钳制值污染
@@ -101,6 +104,7 @@ public sealed class ClusterController : IDisposable
 
         _main.TitlebarPressed += OnTitlebarPressed;
         _quick.TitlebarPressed += OnTitlebarPressed;
+        _quick.DpiChanged += OnQuickDpiChanged;
         _main.ScaleGripHandle.MouseLeftButtonDown += ScaleGrip_MouseDown;
         _tuckBar.BarHit += (_, _) => OnPointerEnter();
         // 白条也参与"指针在内"判定：从白条直接移到遮挡窗时，应用窗从未获得悬停、
@@ -271,25 +275,37 @@ public sealed class ClusterController : IDisposable
         return physical / dpi.DpiScaleX / designWidth;
     }
 
+    /// <summary>
+    /// 模板窗内容缩放：窗口物理宽（主窗基准取整）÷ <b>模板窗自身 DPI</b> = WPF 眼里的 DIP 客户宽。
+    /// 同屏时模板窗 DPI == 主窗 DPI，结果与 NormalizedScale 一致；
+    /// 模板窗跨到另一块缩放不同的屏时，它自己的 DIP 客户区变了，内容必须按它的 DPI 折算才不裁切。
+    /// </summary>
+    private void UpdateQuickContentScale(double frameWidth)
+    {
+        var mainDpi = VisualTreeHelper.GetDpi(_main);
+        var quickDpi = VisualTreeHelper.GetDpi(_quick);
+        _lastQuickDpiX = quickDpi.DpiScaleX;
+        var physical = Math.Max(1, (int)Math.Round(frameWidth * mainDpi.DpiScaleX));
+        _quick.SetContentScale(physical / quickDpi.DpiScaleX / PanelLayout.TemplateWidth);
+    }
+
+    private void OnQuickDpiChanged(object sender, System.Windows.DpiChangedEventArgs e)
+    {
+        // 模板窗跨屏时 WPF 会按系统建议矩形改写它的位置/尺寸（×新屏缩放），把主窗空间的精确落位打掉。
+        // 拖动中不在这里重摆——下一帧 MouseMove 自会重摆（此处重摆反而跟逐帧路径打架）；
+        // 非拖动态没有后续帧，必须立即按主窗空间重摆纠正（典型：松手瞬间才完成跨屏）。
+        if (!_dragging)
+        {
+            ApplyLayout(saveState: false);
+        }
+    }
+
     /// <summary>模板窗设计高度：标题 40 + 动作行 40 + 列表上下 12 + 行 × 44（ele 行高），夹在 160 与 448 之间。</summary>
     private double TemplateWindowHeight()
     {
         var rows = _data.Templates.Count;
         return Math.Clamp(rows * 44 + 92, 100, 448);
     }
-
-    /// <summary>模板窗右边距保留量（DIP）：不越主屏右缘时贴边保留这么宽可见。</summary>
-    private const double TemplateEdgeSliver = 40;
-
-    /// <summary>
-    /// 模板窗不得越过**主窗所在屏**的右缘（2026-11-04 开发自定，最小改动）：
-    /// 两块屏缩放不同时，把窗口放到另一块屏会被按另一套缩放解释 → 表现为"两窗分离很远 + 内容错乱"。
-    /// 越界时把模板窗左缘钳到"右缘 − 保留量"，即贴边裁切、保留一条可见（而不是跑到另一块屏上）。
-    /// </summary>
-    private static WinRect KeepTemplateOnMainScreen(WinRect tpl, WinRect workArea) =>
-        tpl.X <= workArea.Right - TemplateEdgeSliver
-            ? tpl
-            : tpl with { X = Math.Max(workArea.X, workArea.Right - TemplateEdgeSliver) };
 
     /// <summary>按锚点+缩放+开关重排三窗（隐藏窗同时就位但不出场）。</summary>
     public void ApplyLayout(bool saveState = true)
@@ -300,8 +316,9 @@ public sealed class ClusterController : IDisposable
         var frame = PanelLayout.Arrange(SnappedAnchor(), scale, ui.QuickVisible);
 
         // 模板窗用固定画布（零矩形变更）；主窗逐帧摆位。
-        var tplRect = KeepTemplateOnMainScreen(
-            frame.Template.Rect with { Height = TemplateWindowHeight() * scale }, workArea);
+        // （2026-11-07 删 KeepTemplateOnMainScreen 贴边钳制：它掩盖的是"各窗按自身 DPI 换算"的错误；
+        //   换算统一到主窗基准后（SetBoundsBatch refScale），模板窗跨屏也能精确落位，钳制不再需要。）
+        var tplRect = frame.Template.Rect with { Height = TemplateWindowHeight() * scale };
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
             (tplRect, _quick, frame.Template.Visible, PinEdge.Left));
@@ -312,7 +329,7 @@ public sealed class ClusterController : IDisposable
         // 卡面右缘缩进窗内，肉眼就是"两窗缝隙在缩放中变宽/变窄"（用户视频慢放实证：缝隙 13→17→13）。
         // 反推后 内容布局尺寸 ≡ 窗口客户区尺寸，卡面边缘逐帧与窗口边缘重合。
         _main.SetContentScale(NormalizedScale(frame.Main.Rect.Width, PanelLayout.MainWidth));
-        _quick.SetContentScale(NormalizedScale(frame.Template.Rect.Width, PanelLayout.TemplateWidth));
+        UpdateQuickContentScale(frame.Template.Rect.Width);
         _quick.SetContentHeight(TemplateWindowHeight());
 
         // 窗口矩形已在本帧落位；这里把内容布局也同步推完，避免"内容晚窗口一帧"
@@ -348,12 +365,20 @@ public sealed class ClusterController : IDisposable
         var scale = LayoutScale(dragArea, SnappedAnchor());
         var frame = PanelLayout.Arrange(SnappedAnchor(), scale, ui.QuickVisible);
 
+        // 拖动跨屏瞬间：模板窗自己的 DPI 会变（WPF 按它渲染内容密度）→ 内容缩放补一帧，
+        // 否则模板窗在另一块屏上按旧密度渲染，内容裁切/错乱，直到松手才恢复。
+        var quickDpiX = VisualTreeHelper.GetDpi(_quick).DpiScaleX;
+        if (quickDpiX != _lastQuickDpiX)
+        {
+            UpdateQuickContentScale(frame.Template.Rect.Width);
+        }
+
         // 快捷窗在移动路径上也必须用**画布矩形**（与 ApplyLayout 一致）：
         // 它是个固定设计尺寸 + 渲染层缩放的窗，卡面比目标档宽（310 设计宽）。
         // 这里若用目标矩形（缩放后的实际宽度）摆它，卡片就被塞进更窄的窗口里 ⇒ 移动过程中被裁；
         // 松手走 ApplyLayout 又换回画布矩形 ⇒ 于是"移动时被裁、松手恢复"（用户 2026-10-13 实测）。
-        var tplRect = KeepTemplateOnMainScreen(
-            frame.Template.Rect with { Height = TemplateWindowHeight() * scale }, dragArea);
+        // 同 ApplyLayout：不再钳制（换算已统一主窗基准），跨屏拖动中模板窗按布局矩形精确跟随。
+        var tplRect = frame.Template.Rect with { Height = TemplateWindowHeight() * scale };
         PlaceBatch(
             (frame.Main.Rect, _main, true, PinEdge.Left),
             (tplRect, _quick, frame.Template.Visible, PinEdge.Left));
@@ -366,7 +391,7 @@ public sealed class ClusterController : IDisposable
     /// 三窗几何同批提交（DeferWindowPos）：避免逐窗提交被系统在两窗之间插入呈现，
     /// 造成"同一帧里三窗位置/尺寸不同步"；显隐状态另行处理（仅变化时切换）。
     /// </summary>
-    private static void PlaceBatch(params (WinRect Rect, Window Window, bool Visible, PinEdge Pin)[] panels)
+    private void PlaceBatch(params (WinRect Rect, Window Window, bool Visible, PinEdge Pin)[] panels)
     {
         var atomic = new List<(Window Window, WinRect Rect, PinEdge Pin)>(panels.Length);
         var toShow = new List<Window>(panels.Length);
@@ -402,7 +427,11 @@ public sealed class ClusterController : IDisposable
             }
         }
 
-        WindowPlacement.SetBoundsBatch(atomic);
+        // 换算基准 = 主窗 DPI：整簇布局数学全在主窗所在屏的 DIP 空间，簇内每扇窗
+        //（含已跨到另一块屏的模板窗）都按同一基准换算回物理像素，相对几何才恒定。
+        // 按"各窗自己的 DPI"换算，会把落在另一块屏上的窗放大/跑偏（2026-11-07 跨屏两窗分离根因之一）。
+        var refDpi = VisualTreeHelper.GetDpi(_main);
+        WindowPlacement.SetBoundsBatch(atomic, refDpi.DpiScaleX, refDpi.DpiScaleY);
 
         foreach (var window in toShow)
         {

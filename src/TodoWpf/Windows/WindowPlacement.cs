@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
-using System.Windows.Media;
 using TodoWpf.Core.Windows;
 
 namespace TodoWpf.Windows;
@@ -21,7 +20,9 @@ namespace TodoWpf.Windows;
 ///  造成"这一帧里三窗位置/尺寸不同步"。BeginDeferWindowPos/DeferWindowPos/EndDeferWindowPos
 ///  把三窗几何放进同一个批处理、一次性生效，尽量让它们同帧落位。
 ///
-/// 坐标：内部为逻辑像素（DIP），提交前按各窗口 DPI 换算为物理像素并取整（避免亚像素重采样）。
+/// 坐标：内部为逻辑像素（DIP），但**统一按调用方给的基准缩放（=主窗 DPI）**换算为物理像素并取整。
+/// 不能按各窗口自己的 DPI 换算：整簇的布局数学（锚点/工作区/Arrange）全在主窗所在屏的 DIP 空间，
+/// 模板窗跨到另一块缩放不同的屏时，按它自己的 DPI 换算会把同一坐标放大/跑偏（2026-11-07 跨屏两窗分离根因）。
 /// </summary>
 /// <summary>钉边区：该边在缩放中应保持精确不动（右缘钉出的窗口用 Right，其余用 Left）。</summary>
 internal enum PinEdge
@@ -45,8 +46,10 @@ internal static class WindowPlacement
     private const uint SwpNoCopyBits = 0x0100;
 
 
-    /// <summary>把一批窗口的几何放到同一个批处理里一次性提交（尽量同帧落位）。</summary>
-    public static void SetBoundsBatch(IReadOnlyList<(Window Window, WinRect Rect, PinEdge Pin)> targets)
+    /// <summary>把一批窗口的几何放到同一个批处理里一次性提交（尽量同帧落位）。
+    /// 基准缩放 = 主窗 DPI（见类型注释：簇内所有窗共用主窗所在屏的坐标空间）。</summary>
+    public static void SetBoundsBatch(
+        IReadOnlyList<(Window Window, WinRect Rect, PinEdge Pin)> targets, double refScaleX, double refScaleY)
     {
         if (targets.Count == 0)
         {
@@ -67,9 +70,8 @@ internal static class WindowPlacement
                 continue;
             }
 
-            var dpi = VisualTreeHelper.GetDpi(window);
-            var sx = dpi.DpiScaleX;
-            var sy = dpi.DpiScaleY;
+            var sx = refScaleX;
+            var sy = refScaleY;
 
             // 两条边的物理像素坐标各自取整后，尺寸由二者相减得出：
             // 这样"钉住的那条边"精确落在同一物理像素上（逐帧缩放时不会 ±1px 抖动），
