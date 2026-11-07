@@ -40,6 +40,11 @@ public sealed class ClusterController : IDisposable
 
     /// <summary>模板窗上一帧的 DPI 横向缩放（拖动中侦测跨屏用，变了才补一次内容缩放）。</summary>
     private double _lastQuickDpiX = 1.0;
+
+    /// <summary>白条最近一次的目标（主窗空间 DIP）：白条自身 DPI 变化时按它重摆。</summary>
+    private double _lastBarCenterDipX;
+    private double _lastBarTopDip;
+    private bool _barHasTarget;
     /// <summary>用户档位（存档值 ClusterScale）。**不是**实际用于布局的值——
     /// 布局一律走 EffectiveScale()：按当前屏工作区钳制后使用。
     /// 这样"拖到小屏被钳小、拖回大屏自动恢复用户档位"，且存档不被钳制值污染
@@ -105,6 +110,7 @@ public sealed class ClusterController : IDisposable
         _main.TitlebarPressed += OnTitlebarPressed;
         _quick.TitlebarPressed += OnTitlebarPressed;
         _quick.DpiChanged += OnQuickDpiChanged;
+        _tuckBar.DpiChanged += OnTuckBarDpiChanged;
         _main.ScaleGripHandle.MouseLeftButtonDown += ScaleGrip_MouseDown;
         _tuckBar.BarHit += (_, _) => OnPointerEnter();
         // 白条也参与"指针在内"判定：从白条直接移到遮挡窗时，应用窗从未获得悬停、
@@ -291,12 +297,43 @@ public sealed class ClusterController : IDisposable
 
     private void OnQuickDpiChanged(object sender, System.Windows.DpiChangedEventArgs e)
     {
-        // 模板窗跨屏时 WPF 会按系统建议矩形改写它的位置/尺寸（×新屏缩放），把主窗空间的精确落位打掉。
-        // 拖动中不在这里重摆——下一帧 MouseMove 自会重摆（此处重摆反而跟逐帧路径打架）；
+        // 模板窗跨屏（或松手瞬间才跨屏）时 WPF 会按系统建议矩形改写它的位置/尺寸（×新屏缩放），
+        // 把主窗空间的精确落位打掉。拖动中不在这里重摆——下一帧 MouseMove 自会重摆（此处重摆反而跟逐帧路径打架）；
         // 非拖动态没有后续帧，必须立即按主窗空间重摆纠正（典型：松手瞬间才完成跨屏）。
         if (!_dragging)
         {
             ApplyLayout(saveState: false);
+        }
+    }
+
+    /// <summary>
+    /// 白条定位（2026-11-07 修"竖屏贴顶缩进后没有白条"）：坐标来自**主窗空间**（物理 ÷ 主窗 DPI），
+    /// 但白条是独立 HWND，WPF 的 Left/Top 按**白条自己的 DPI** 解释——
+    /// 主窗在 175% 屏、白条 DPI 还停在旧屏的 1.0 时直接赋 DIP，物理位置只落到目标的约 57%
+    /// → 跑到别的屏/屏外（贴顶缩进后找不到白条；2K 屏两 DPI 相同所以从未暴露）。
+    /// 这里先把目标换算成物理像素，再按白条自身 DPI 反推它的 WPF DIP：
+    /// WPF 落位时用同一 DPI 换回，物理位置精确；白条自身 DPI 变化（跨屏）时由 DpiChanged 重摆。
+    /// </summary>
+    private void PlaceTuckBar(double mainCenterDipX, double topDipY)
+    {
+        _lastBarCenterDipX = mainCenterDipX;
+        _lastBarTopDip = topDipY;
+        _barHasTarget = true;
+        var mainDpi = VisualTreeHelper.GetDpi(_main);
+        var barDpi = VisualTreeHelper.GetDpi(_tuckBar);
+        var physX = mainCenterDipX * mainDpi.DpiScaleX - _tuckBar.Width * barDpi.DpiScaleX / 2;
+        var physY = topDipY * mainDpi.DpiScaleY;
+        _tuckBar.Left = physX / barDpi.DpiScaleX;
+        _tuckBar.Top = physY / barDpi.DpiScaleY;
+    }
+
+    private void OnTuckBarDpiChanged(object sender, System.Windows.DpiChangedEventArgs e)
+    {
+        // 白条跨屏（如缩进发生在 175% 竖屏）时 WPF 会按系统建议矩形改写它，把精确落位打掉——
+        // 用最近目标按白条新 DPI 重摆一次。
+        if (_barHasTarget)
+        {
+            PlaceTuckBar(_lastBarCenterDipX, _lastBarTopDip);
         }
     }
 
@@ -341,8 +378,7 @@ public sealed class ClusterController : IDisposable
         }
 
         // 白条定位（用户 2026-11-04 裁定 D4）：**以待办主窗水平居中**、贴屏顶（不再按整组宽度居中）
-        _tuckBar.Left = frame.Main.Rect.X + frame.Main.Rect.Width / 2 - _tuckBar.Width / 2;
-        _tuckBar.Top = workArea.Y;
+        PlaceTuckBar(frame.Main.Rect.X + frame.Main.Rect.Width / 2, workArea.Y);
 
         if (saveState)
         {
@@ -383,8 +419,10 @@ public sealed class ClusterController : IDisposable
             (frame.Main.Rect, _main, true, PinEdge.Left),
             (tplRect, _quick, frame.Template.Visible, PinEdge.Left));
 
-        var barLeft = frame.Main.Rect.X + frame.Main.Rect.Width / 2 - _tuckBar.Width / 2;
-        if (_tuckBar.IsVisible && _tuckBar.Left != barLeft) { _tuckBar.Left = barLeft; }
+        if (_tuckBar.IsVisible)
+        {
+            PlaceTuckBar(frame.Main.Rect.X + frame.Main.Rect.Width / 2, dragArea.Y);
+        }
     }
 
     /// <summary>
