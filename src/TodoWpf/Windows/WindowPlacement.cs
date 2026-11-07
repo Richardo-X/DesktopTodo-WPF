@@ -20,16 +20,25 @@ namespace TodoWpf.Windows;
 ///  造成"这一帧里三窗位置/尺寸不同步"。BeginDeferWindowPos/DeferWindowPos/EndDeferWindowPos
 ///  把三窗几何放进同一个批处理、一次性生效，尽量让它们同帧落位。
 ///
-/// 坐标：内部为逻辑像素（DIP），但**统一按调用方给的基准缩放（=主窗 DPI）**换算为物理像素并取整。
-/// 不能按各窗口自己的 DPI 换算：整簇的布局数学（锚点/工作区/Arrange）全在主窗所在屏的 DIP 空间，
-/// 模板窗跨到另一块缩放不同的屏时，按它自己的 DPI 换算会把同一坐标放大/跑偏（2026-11-07 跨屏两窗分离根因）。
+/// 坐标：内部为逻辑像素（DIP），**位置**统一按主窗 DPI 换算为物理像素并取整——
+/// 整簇的布局数学（锚点/工作区/Arrange）全在主窗所在屏的 DIP 空间，位置按各窗自己的 DPI 换算
+/// 会把同一坐标放大/跑偏（2026-11-07 跨屏两窗分离根因）。
+/// **尺寸**缺省也按主窗 DPI（同屏 = 布局比例）；模板窗跨屏时按它所在屏的 DPI（保持物理大小，ele 口径，
+/// 2026-11-07 用户裁定）——见 PlacementTarget。
 /// </summary>
-/// <summary>钉边区：该边在缩放中应保持精确不动（右缘钉出的窗口用 Right，其余用 Left）。</summary>
-internal enum PinEdge
-{
-    Left,
-    Right,
-}
+/// <summary>
+/// 单窗摆放目标：几何 (Rect) 为**主窗空间**的 DIP。
+/// 位置恒按主窗 DPI 换算（簇内相邻关系不变）；SizeScale 缺省时尺寸也按主窗 DPI（同屏 = 布局比例），
+/// 非空时按目标窗自己所在屏的 DPI——**跨屏保持物理大小**（ele 口径，2026-11-07 用户裁定）：
+/// 内容同布局、像素更密，代价是与主窗的比例短暂错位。
+/// </summary>
+internal readonly record struct PlacementTarget(
+    Window Window,
+    WinRect Rect,
+    double PosScaleX,
+    double PosScaleY,
+    double? SizeScaleX = null,
+    double? SizeScaleY = null);
 
 internal static class WindowPlacement
 {
@@ -47,9 +56,9 @@ internal static class WindowPlacement
 
 
     /// <summary>把一批窗口的几何放到同一个批处理里一次性提交（尽量同帧落位）。
-    /// 基准缩放 = 主窗 DPI（见类型注释：簇内所有窗共用主窗所在屏的坐标空间）。</summary>
-    public static void SetBoundsBatch(
-        IReadOnlyList<(Window Window, WinRect Rect, PinEdge Pin)> targets, double refScaleX, double refScaleY)
+    /// 位置恒按主窗 DPI（簇内相邻关系，见 PlacementTarget）；
+    /// SizeScale 缺省时尺寸也按主窗 DPI（同屏 = 布局比例），非空时按目标窗所在屏（跨屏保持物理大小）。</summary>
+    public static void SetBoundsBatch(IReadOnlyList<PlacementTarget> targets)
     {
         if (targets.Count == 0)
         {
@@ -62,29 +71,36 @@ internal static class WindowPlacement
             return;
         }
 
-        foreach (var (window, rect, pin) in targets)
+        foreach (var target in targets)
         {
-            var hwnd = new WindowInteropHelper(window).Handle;
+            var hwnd = new WindowInteropHelper(target.Window).Handle;
             if (hwnd == IntPtr.Zero)
             {
                 continue;
             }
 
-            var sx = refScaleX;
-            var sy = refScaleY;
-
-            // 两条边的物理像素坐标各自取整后，尺寸由二者相减得出：
+            // 位置两条边按主窗空间各自取整：
             // 这样"钉住的那条边"精确落在同一物理像素上（逐帧缩放时不会 ±1px 抖动），
             // 自由边落在其理想位置的最近像素上。上边（Top）恒为钉住边。
-            var leftPx = (int)Math.Round(rect.X * sx);
-            var rightPx = (int)Math.Round(rect.Right * sx);
-            var topPx = (int)Math.Round(rect.Y * sy);
-            var bottomPx = (int)Math.Round(rect.Bottom * sy);
-
-            var x = leftPx;   // PinEdge 不参与 x（原三元两边相同，2026-11-06 清理）
-            var cx = Math.Max(1, rightPx - leftPx);
-            var y = topPx;
-            var cy = Math.Max(1, bottomPx - topPx);
+            var x = (int)Math.Round(target.Rect.X * target.PosScaleX);
+            var y = (int)Math.Round(target.Rect.Y * target.PosScaleY);
+            int cx;
+            int cy;
+            if (target.SizeScaleX is { } sx && target.SizeScaleY is { } sy)
+            {
+                // 跨屏（ele 口径）：左缘钉主窗空间（与主窗相邻关系不变），
+                // 尺寸按目标窗所在屏的 DPI → 物理大小与在主屏时一致，内容同布局、像素更密。
+                cx = Math.Max(1, (int)Math.Round((target.Rect.Right - target.Rect.X) * sx));
+                cy = Math.Max(1, (int)Math.Round((target.Rect.Bottom - target.Rect.Y) * sy));
+            }
+            else
+            {
+                // 同屏：两条边各自取整、尺寸由二者相减得出（既有的亚像素稳定口径）。
+                var rightPx = (int)Math.Round(target.Rect.Right * target.PosScaleX);
+                var bottomPx = (int)Math.Round(target.Rect.Bottom * target.PosScaleY);
+                cx = Math.Max(1, rightPx - x);
+                cy = Math.Max(1, bottomPx - y);
+            }
 
             batch = DeferWindowPos(
                 batch, hwnd, IntPtr.Zero, x, y, cx, cy, SwpNoZOrder | SwpNoActivate | SwpNoCopyBits);
