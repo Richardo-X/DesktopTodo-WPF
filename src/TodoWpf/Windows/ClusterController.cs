@@ -111,6 +111,15 @@ public sealed class ClusterController : IDisposable
         _quick.TitlebarPressed += OnTitlebarPressed;
         _quick.DpiChanged += OnQuickDpiChanged;
         _tuckBar.DpiChanged += OnTuckBarDpiChanged;
+        // Show 落位后立即物理纠正：WPF Show 用"Show 那一刻才更新的白条 DPI"换算，
+        // 隐藏期间停滞的旧 DPI 会把白条摆到屏外（2026-11-07 竖屏实测：悬在屏上方 941px）。
+        _tuckBar.IsVisibleChanged += (_, _) =>
+        {
+            if (_tuckBar.IsVisible)
+            {
+                NormalizeTuckBarPhysical();
+            }
+        };
         _main.ScaleGripHandle.MouseLeftButtonDown += ScaleGrip_MouseDown;
         _tuckBar.BarHit += (_, _) => OnPointerEnter();
         // 白条也参与"指针在内"判定：从白条直接移到遮挡窗时，应用窗从未获得悬停、
@@ -306,13 +315,16 @@ public sealed class ClusterController : IDisposable
         }
     }
 
+    /// <summary>白条设计尺寸（与 TuckBarWindow.xaml 的 Width/Height 一致）。</summary>
+    private const double TuckBarDesignWidth = 160;
+
+    private const double TuckBarDesignHeight = 6;
+
     /// <summary>
-    /// 白条定位（2026-11-07 修"竖屏贴顶缩进后没有白条"）：坐标来自**主窗空间**（物理 ÷ 主窗 DPI），
-    /// 但白条是独立 HWND，WPF 的 Left/Top 按**白条自己的 DPI** 解释——
-    /// 主窗在 175% 屏、白条 DPI 还停在旧屏的 1.0 时直接赋 DIP，物理位置只落到目标的约 57%
-    /// → 跑到别的屏/屏外（贴顶缩进后找不到白条；2K 屏两 DPI 相同所以从未暴露）。
-    /// 这里先把目标换算成物理像素，再按白条自身 DPI 反推它的 WPF DIP：
-    /// WPF 落位时用同一 DPI 换回，物理位置精确；白条自身 DPI 变化（跨屏）时由 DpiChanged 重摆。
+    /// 白条 WPF 属性定位（辅助）：把目标换算成物理像素，再按白条**当前** DPI 反推它的 WPF DIP。
+    /// 注意这只是一级近似——白条隐藏期间自身 DPI 停在旧屏（1.0），Show 落到 175% 屏才更新，
+    /// 两级换算的分子分母会不同代 → 位置飞出屏外（2026-11-07 竖屏实测：悬在屏上方 941px）。
+    /// 因此真正的落位以 <see cref="NormalizeTuckBarPhysical"/> 的物理直设为准（IsVisibleChanged/DpiChanged 触发）。
     /// </summary>
     private void PlaceTuckBar(double mainCenterDipX, double topDipY)
     {
@@ -327,13 +339,42 @@ public sealed class ClusterController : IDisposable
         _tuckBar.Top = physY / barDpi.DpiScaleY;
     }
 
+    /// <summary>
+    /// 白条物理像素直设（最终口径）：内容是无装饰的 3px 细条，渲染密度无关紧要——
+    /// 位置与尺寸直接按物理像素 SetWindowPos（尺寸按主窗 DPI = 整簇同一视觉比例），
+    /// 完全绕开"白条自身 DPI 何时更新"的时序问题。
+    /// </summary>
+    private void NormalizeTuckBarPhysical()
+    {
+        if (!_barHasTarget)
+        {
+            return;
+        }
+
+        var hwnd = new System.Windows.Interop.WindowInteropHelper(_tuckBar).Handle;
+        if (hwnd == System.IntPtr.Zero)
+        {
+            return;
+        }
+
+        var mainDpi = VisualTreeHelper.GetDpi(_main);
+        int cx = (int)System.Math.Round(TuckBarDesignWidth * mainDpi.DpiScaleX);
+        int cy = (int)System.Math.Round(TuckBarDesignHeight * mainDpi.DpiScaleY);
+        int x = (int)System.Math.Round(_lastBarCenterDipX * mainDpi.DpiScaleX) - cx / 2;
+        int y = (int)System.Math.Round(_lastBarTopDip * mainDpi.DpiScaleY);
+        MonitorLayout.MovePhysicalSized(hwnd, x, y, cx, cy);
+    }
+
     private void OnTuckBarDpiChanged(object sender, System.Windows.DpiChangedEventArgs e)
     {
-        // 白条跨屏（如缩进发生在 175% 竖屏）时 WPF 会按系统建议矩形改写它，把精确落位打掉——
-        // 用最近目标按白条新 DPI 重摆一次。
+        // 白条跨屏时 WPF 会按系统建议矩形改写它（实测 Width 被按倍率连翻：160→280 DIP、
+        // 渲染 490 物理宽），把落位和尺寸一起打掉——先复位设计尺寸，再按物理像素直设归位。
         if (_barHasTarget)
         {
+            _tuckBar.Width = TuckBarDesignWidth;
+            _tuckBar.Height = TuckBarDesignHeight;
             PlaceTuckBar(_lastBarCenterDipX, _lastBarTopDip);
+            NormalizeTuckBarPhysical();
         }
     }
 

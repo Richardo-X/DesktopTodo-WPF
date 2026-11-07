@@ -203,4 +203,21 @@ internal static class MonitorLayout
         y = System.Math.Clamp(y, work.Top, System.Math.Max(work.Top, work.Bottom - h));
         SetWindowPos(hwnd, System.IntPtr.Zero, x, y, 0, 0, SwpNoSize | SwpNoZOrder | SwpNoActivate);
     }
+
+    /// <summary>
+    /// 把窗口放到 (x, y)、尺寸 (cx, cy)——全部**物理像素**，不钳制、不做任何 DPI 换算。
+    /// 给"自身 DPI 不可信"的小窗用（白条：隐藏期间 DPI 停在旧屏，Show 时才更新，
+    /// WPF Left/Top 两级换算的分子分母会不同代 → 位置飞出屏外，2026-11-07 实测）。
+    /// </summary>
+    public static void MovePhysicalSized(IntPtr hwnd, int x, int y, int cx, int cy)
+    {
+        if (hwnd == System.IntPtr.Zero)
+        {
+            return;
+        }
+
+        SetWindowPos(
+            hwnd, System.IntPtr.Zero, x, y, System.Math.Max(1, cx), System.Math.Max(1, cy),
+            SwpNoZOrder | SwpNoActivate);
+    }
 }
