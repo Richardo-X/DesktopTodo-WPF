@@ -12,6 +12,13 @@ public sealed record UiState
     /// </summary>
     public bool PosIsTodoAnchor { get; init; }
 
+    /// <summary>
+    /// pos 的坐标语义标记（2026-11-07 恢复跨屏错位修复）：true = pos 存的是**物理像素**，
+    /// 重启后按位置所在屏的 DPI 折算回布局空间，与存档时在哪块屏无关；
+    /// false/缺省 = 旧档，pos 是存档时所在屏的 DIP（保持旧读取语义，重新停靠一次后升级为新格式）。
+    /// </summary>
+    public bool PosIsRawPx { get; init; }
+
     /// <summary>三面板簇整体等比缩放。</summary>
     public double ClusterScale { get; init; } = 1;
 

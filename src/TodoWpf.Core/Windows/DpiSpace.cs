@@ -6,7 +6,7 @@ namespace TodoWpf.Core.Windows;
 /// </summary>
 public static class DpiSpace
 {
-    public static (double X, double Y) RawToDips(double rawX, double rawY, double scale) => (0, 0);
+    public static (double X, double Y) RawToDips(double rawX, double rawY, double scale) => (rawX / scale, rawY / scale);
 
-    public static (double X, double Y) DipsToRaw(double dipX, double dipY, double scale) => (0, 0);
+    public static (double X, double Y) DipsToRaw(double dipX, double dipY, double scale) => (dipX * scale, dipY * scale);
 }

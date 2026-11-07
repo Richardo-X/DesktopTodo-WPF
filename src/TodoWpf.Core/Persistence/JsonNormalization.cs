@@ -157,6 +157,7 @@ internal static class JsonNormalization
         {
             Pos = pos,
             PosIsTodoAnchor = AsBool(raw["posIsTodoAnchor"]) ?? defaults.PosIsTodoAnchor,
+            PosIsRawPx = AsBool(raw["posIsRawPx"]) ?? defaults.PosIsRawPx,
             ClusterScale = clusterScale is > 0 ? clusterScale.Value : defaults.ClusterScale,
             ChildScales = childScales,
             QuickVisible = AsBool(raw["quickVisible"]) ?? defaults.QuickVisible,

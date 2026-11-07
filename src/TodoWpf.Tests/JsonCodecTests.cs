@@ -204,6 +204,7 @@ public class JsonCodecTests
             "  \"uiState\": {\n" +
             "    \"pos\": null,\n" +
             "    \"posIsTodoAnchor\": false,\n" +
+            "    \"posIsRawPx\": false,\n" +
             "    \"clusterScale\": 1,\n" +
             "    \"childScales\": {},\n" +
             "    \"quickVisible\": true,\n" +
