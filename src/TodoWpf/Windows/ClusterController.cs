@@ -41,6 +41,9 @@ public sealed class ClusterController : IDisposable
     /// <summary>整簇拖动开始时主窗所在屏（跨屏白板检测基准）。</summary>
     private IntPtr _dragStartMonitor;
 
+    /// <summary>整簇拖动开始时的布局档位（被屏缘挤压的检测基准：低于它即正在被挤）。</summary>
+    private double _dragStartScale;
+
     /// <summary>本次拖动已触发跨屏白板（只开不关，恢复统走 EndDrag）。</summary>
     private bool _dragVeiled;
 
@@ -566,6 +569,7 @@ public sealed class ClusterController : IDisposable
         _dragging = true;
         _dragStartMonitor = MonitorLayout.MonitorOf(_main);
         _dragVeiled = false;
+        _dragStartScale = LayoutScale(WorkArea(), _anchor);
         _dragWorkArea = WorkArea();
         _dragStartAnchor = _anchor;
         _dragStartMouse = ToScreen(window, e);
@@ -605,16 +609,22 @@ public sealed class ClusterController : IDisposable
         _anchor = anchor;
         MoveCluster(); // 快路径：只改坐标，不重排、不落盘（抖动治理）
 
-        // 跨屏白板（2026-11-07 用户裁定）：检测到整簇拖动跨屏 → 盖住内容直到松开鼠标，
-        // 遮住换屏过渡（密度/尺寸跳变与贴边缩小）。白板只开不关，恢复统走 EndDrag。
-        if (!_dragVeiled && MonitorLayout.IsCrossingMonitor(
-                _dragStartMonitor,
-                new System.Windows.Interop.WindowInteropHelper(_main).Handle,
-                new System.Windows.Interop.WindowInteropHelper(_quick).Handle))
+        // 跨屏白板（2026-11-07 用户裁定）两类触发，白板只开不关、恢复统走 EndDrag：
+        // ① 整簇任一窗越出起点屏边界（模板窗开着时它先伸出屏外）；
+        // ② 被屏缘挤压缩小（档位低于拖动起点，内容被裁切）——只开主窗时贴边钳制把主窗
+        //    钳在屏内、永不越界，用户 2026-11-07 补报此场景白板没触发，即补此条件。
+        if (!_dragVeiled)
         {
-            _dragVeiled = true;
-            _main.SetDragVeil(true);
-            _quick.SetDragVeil(true);
+            var squeezed = LayoutScale(area, anchor) < _dragStartScale - 0.001;
+            if (squeezed || MonitorLayout.IsCrossingMonitor(
+                    _dragStartMonitor,
+                    new System.Windows.Interop.WindowInteropHelper(_main).Handle,
+                    new System.Windows.Interop.WindowInteropHelper(_quick).Handle))
+            {
+                _dragVeiled = true;
+                _main.SetDragVeil(true);
+                _quick.SetDragVeil(true);
+            }
         }
     }
 
