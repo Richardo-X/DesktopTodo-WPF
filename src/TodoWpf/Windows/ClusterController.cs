@@ -47,6 +47,12 @@ public sealed class ClusterController : IDisposable
     /// <summary>本次拖动已触发跨屏白板（只开不关，恢复统走 EndDrag）。</summary>
     private bool _dragVeiled;
 
+    /// <summary>C4 更新服务。</summary>
+    private readonly UpdateService _updates = new();
+
+    /// <summary>启动/手动检查发现的新版本（null = 无）；标题栏提示与更新窗都由它驱动。</summary>
+    private UpdateService.UpdateAvailable? _pendingUpdate;
+
     /// <summary>模板窗上一帧的 DPI 横向缩放（拖动中侦测跨屏用，变了才补一次内容缩放）。</summary>
     private double _lastQuickDpiX = 1.0;
 
@@ -220,10 +226,47 @@ public sealed class ClusterController : IDisposable
         _main.SetTopMost(_data.UiState.TopMost);
 
         ApplyTopMost(_data.UiState.TopMost);
+
+        // C4：版本标记同步写（必须在 ApplyLayout 落盘**之前**——后台异步写会与它竞态，
+        // 旧档后发先至把标记盖掉，2026-11-08 实测）；降级检测 = 当前版本低于上次运行版本。
+        var currentVersion = UpdateService.CurrentVersion();
+        var lastRunVersion = _data.UiState.LastRunVersion;
+        var isDowngraded = lastRunVersion is not null && AppVersion.Compare(currentVersion, lastRunVersion) < 0;
+        Mutate(d => d with { UiState = d.UiState with { LastRunVersion = currentVersion } });
+        if (isDowngraded)
+        {
+            ShowToast($"当前版本 {currentVersion} 低于上次运行的 {lastRunVersion}，数据可能不完全兼容，建议先到历史窗导出备份");
+        }
+
         RefreshAllViews();
         UpdateClock();
         ApplyLayout();
         _bubble.Show(); // 透明常驻：以 Opacity=0 待命，规避显示时闪现
+
+        // C4：启动检查（后台，失败静默——定稿口径）。注意：Velopack 检查要求"已安装"，
+        // 开发副本（bin 下直接跑）抛 NotInstalledException → 在这里被静默跳过，属预期。
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                if (_data.UiState.UpdateNotifyEnabled)
+                {
+                    var available = await _updates.CheckAsync();
+                    if (available is not null)
+                    {
+                        await _main.Dispatcher.InvokeAsync(() =>
+                        {
+                            _pendingUpdate = available;
+                            // 标题栏「有新版本！」在 B3 界面批接线（结果已存 _pendingUpdate）
+                        });
+                    }
+                }
+            }
+            catch
+            {
+                // 后台检查失败静默（含开发副本的 NotInstalled）；手动检查才明确报错
+            }
+        });
 
         // 显隐交给 ApplyLayout（按存档的面板开关决定）——此前三个窗口无条件 Show()，
         // 会把"已关闭"的面板以 WPF 默认尺寸（1536×844）显示出来（Viewbox 又把内容放大填满）= 启动巨窗 bug。
