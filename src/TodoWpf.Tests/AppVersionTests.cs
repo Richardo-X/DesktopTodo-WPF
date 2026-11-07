@@ -44,7 +44,7 @@ public class AppVersionTests
         Assert.Equal(1, AppVersion.Compare("1.0.0", null));
         Assert.Equal(0, AppVersion.Compare(null, null));
         Assert.Equal(-1, AppVersion.Compare("abc", "1.0.0"));
-        Assert.Equal(-1, AppVersion.Compare("1.0.0", "abc"));
+        Assert.Equal(1, AppVersion.Compare("1.0.0", "abc")); // "abc"=0.0.0
     }
 
     [Fact]
