@@ -32,6 +32,10 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // Velopack 钩子（C4）：必须最先执行——处理安装/首启/卸载/升级遗留等命令行钩子，
+        // 正常启动时立即返回。要求在 Program.Main 早期调用（vpk pack 打包前校验此项）。
+        Velopack.VelopackApp.Build().Run();
+
         base.OnStartup(e);
 
         // 单实例：已开启时再启动只调出现有窗口。
