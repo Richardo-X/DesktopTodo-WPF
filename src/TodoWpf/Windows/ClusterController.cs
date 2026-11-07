@@ -609,13 +609,23 @@ public sealed class ClusterController : IDisposable
         _anchor = anchor;
         MoveCluster(); // 快路径：只改坐标，不重排、不落盘（抖动治理）
 
-        // 跨屏白板（2026-11-07 用户裁定）两类触发，白板只开不关、恢复统走 EndDrag：
-        // ① 整簇任一窗越出起点屏边界（模板窗开着时它先伸出屏外）；
-        // ② 被屏缘挤压缩小（档位低于拖动起点，内容被裁切）——只开主窗时贴边钳制把主窗
-        //    钳在屏内、永不越界，用户 2026-11-07 补报此场景白板没触发，即补此条件。
+        // 跨屏白板（2026-11-07 用户裁定）：**只属于跨屏过交界线**，同屏边缘交互不触发。
+        // 白板只开不关，恢复统走 EndDrag。两类触发：
+        // ① 整簇任一窗越出起点屏边界（真跨屏）；
+        // ② 被屏缘挤压缩小，且**被推的方向之外确实存在另一块屏**（交界线方向判定）——
+        //    挤压本身可能发生在任何屏缘（右/下），只有推向"存在相邻屏"的方向才算跨屏过程；
+        //    单屏右缘/贴底等普通边缘交互按之前行为（不白板，用户 2026-11-07 裁定）。
         if (!_dragVeiled)
         {
-            var squeezed = LayoutScale(area, anchor) < _dragStartScale - 0.001;
+            var mainDpi = VisualTreeHelper.GetDpi(_main);
+            var byWidth = (area.Right - anchor.X - PanelLayout.ViewportMargin) / PanelLayout.MainWidth;
+            var byHeight = PanelLayout.MaxMainHeight(area.Height, anchor.Y) / PanelLayout.MainBaseHeight;
+            var squeezed = (byWidth < _dragStartScale - 0.001
+                                && MonitorLayout.HasMonitorBeyondRight(
+                                    _dragStartMonitor, (int)(anchor.Y * mainDpi.DpiScaleY)))
+                           || (byHeight < _dragStartScale - 0.001
+                                && MonitorLayout.HasMonitorBeyondBottom(
+                                    _dragStartMonitor, (int)(anchor.X * mainDpi.DpiScaleX)));
             if (squeezed || MonitorLayout.IsCrossingMonitor(
                     _dragStartMonitor,
                     new System.Windows.Interop.WindowInteropHelper(_main).Handle,

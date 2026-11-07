@@ -187,6 +187,46 @@ internal static class MonitorLayout
     }
 
     /// <summary>
+    /// 起点屏**右缘之外**是否还有别的屏（跨屏白板方向判定，2026-11-07 用户裁定：
+    /// 白板只属于"跨屏过交界线"，同屏边缘交互不触发）。
+    /// 做法：在右缘外 64px 处取探针点，最近屏若不是起点屏 = 该方向存在交界线。
+    /// </summary>
+    public static bool HasMonitorBeyondRight(IntPtr startMonitor, int probePhysicalY)
+    {
+        if (startMonitor == System.IntPtr.Zero)
+        {
+            return false;
+        }
+
+        var info = new MonitorInfoNative { Size = Marshal.SizeOf<MonitorInfoNative>() };
+        if (!GetMonitorInfoNative(startMonitor, ref info))
+        {
+            return false;
+        }
+
+        var probe = new NativePoint { X = info.Monitor.Right + 64, Y = probePhysicalY };
+        return MonitorFromPoint(probe, MonitorDefaultToNearest) != startMonitor;
+    }
+
+    /// <summary>起点屏**底缘之外**是否还有别的屏（口径同 HasMonitorBeyondRight）。</summary>
+    public static bool HasMonitorBeyondBottom(IntPtr startMonitor, int probePhysicalX)
+    {
+        if (startMonitor == System.IntPtr.Zero)
+        {
+            return false;
+        }
+
+        var info = new MonitorInfoNative { Size = Marshal.SizeOf<MonitorInfoNative>() };
+        if (!GetMonitorInfoNative(startMonitor, ref info))
+        {
+            return false;
+        }
+
+        var probe = new NativePoint { X = probePhysicalX, Y = info.Monitor.Bottom + 64 };
+        return MonitorFromPoint(probe, MonitorDefaultToNearest) != startMonitor;
+    }
+
+    /// <summary>
     /// 拖动跨屏检测（2026-11-07 白板遮挡用）：主窗/模板窗的物理矩形并集
     /// 是否越出拖动开始时那块屏的**整屏边界**（任一像素出了起点屏即算跨屏行为）。
     /// </summary>
