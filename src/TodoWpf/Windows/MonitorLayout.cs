@@ -177,6 +177,28 @@ internal static class MonitorLayout
     }
 
     /// <summary>
+    /// 把物理像素点折算成"它所在屏"的 DIP 坐标（存档恢复用，2026-11-07）。
+    /// 混合 DPI 下 DIP 空间按屏不连续，必须用**该点所在屏**的 DPI 折算，
+    /// 不能用主窗当次的 DPI——否则 2K 存档会被按 4K 的 1.75 解释（恢复跨屏错位的根因）。
+    /// </summary>
+    public static WinPoint RawPointToDips(double rawX, double rawY)
+    {
+        var monitor = MonitorFromPoint(
+            new NativePoint { X = (int)Math.Round(rawX), Y = (int)Math.Round(rawY) },
+            MonitorDefaultToNearest);
+        var scale = 1.0;
+        if (monitor != IntPtr.Zero
+            && GetDpiForMonitor(monitor, 0 /* MDT_EFFECTIVE_DPI */, out var dpiX, out var _) == 0
+            && dpiX != 0)
+        {
+            scale = dpiX / 96.0;
+        }
+
+        var (x, y) = DpiSpace.RawToDips(rawX, rawY, scale);
+        return new WinPoint(x, y);
+    }
+
+    /// <summary>
     /// 把窗口移到 (x, y)（物理像素），并**钳进它当前所在屏的工作区**（整窗可见）。
     /// 拖动中每帧调用：窗口跟着鼠标走、但永远留在屏内（需求 §一「可单独拖动（限屏内）」）。
     /// 用物理像素算：混合 DPI 下 DIP 空间按屏不连续，DIP 数学会算到别的屏去（2026-11-06 实测）。

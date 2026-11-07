@@ -249,7 +249,11 @@ public sealed class ClusterController : IDisposable
         var ui = _data.UiState;
         if (ui.Pos is { } pos)
         {
-            return new WinPoint(pos.X, pos.Y);
+            // 新格式：物理像素，按"位置所在屏"的 DPI 折算回布局空间（与存档时在哪块屏无关）。
+            // 旧格式（posIsRawPx=false）：存档时所在屏的 DIP，保持旧语义——重新停靠一次后升级为新格式。
+            return ui.PosIsRawPx
+                ? MonitorLayout.RawPointToDips(pos.X, pos.Y)
+                : new WinPoint(pos.X, pos.Y);
         }
 
         var workArea = WorkArea();
@@ -423,11 +427,16 @@ public sealed class ClusterController : IDisposable
 
         if (saveState)
         {
+            // 锚点改存**物理像素**（2026-11-07 恢复跨屏错位修复）：DIP 坐标绑定"存档时所在的屏"，
+            // 重启后被按当次主窗 DPI 解释 → 2K 存档被 ×1.75 摆到 4K 屏。
+            // 物理像素与屏无关；加载时按位置所在屏折算回布局空间（见 ResolveAnchor）。
+            var dpi = VisualTreeHelper.GetDpi(_main);
             Mutate(d => d with
             {
                 UiState = d.UiState with
                 {
-                    Pos = new Position { X = _anchor.X, Y = _anchor.Y },
+                    Pos = new Position { X = _anchor.X * dpi.DpiScaleX, Y = _anchor.Y * dpi.DpiScaleY },
+                    PosIsRawPx = true,
                     ClusterScale = _storedScale,
                 },
             });
