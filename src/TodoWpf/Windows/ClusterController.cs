@@ -183,6 +183,9 @@ public sealed class ClusterController : IDisposable
 
     public QuickWindow Quick => _quick;
 
+    /// <summary>C4 更新服务（设置页「检查更新」用）。</summary>
+    public UpdateService Updates => _updates;
+
     /// <summary>初始化：应用记忆、接互锁、显示窗口。</summary>
     public void Start()
     {
@@ -257,7 +260,7 @@ public sealed class ClusterController : IDisposable
                         await _main.Dispatcher.InvokeAsync(() =>
                         {
                             _pendingUpdate = available;
-                            // 标题栏「有新版本！」在 B3 界面批接线（结果已存 _pendingUpdate）
+                            RefreshUpdateBadge();
                         });
                     }
                 }
@@ -1117,6 +1120,104 @@ public sealed class ClusterController : IDisposable
         _hoverRow = row;
         _hoverTimer.Stop();
         _hoverTimer.Start();
+    }
+
+    /// <summary>手动检查发现的版本也走这里登记（标题栏提示与设置页弹窗共用）。</summary>
+    public void SetPendingUpdate(UpdateService.UpdateAvailable available)
+    {
+        _pendingUpdate = available;
+        RefreshUpdateBadge();
+    }
+
+    /// <summary>
+    /// 标题栏「有新版本！」刷新（C4 定稿）：有发现的新版本**且**提示开关开才显示；
+    /// 开关关 → 立即隐藏（哪怕有新版本）。
+    /// </summary>
+    public void RefreshUpdateBadge()
+    {
+        var show = _pendingUpdate is not null && _data.UiState.UpdateNotifyEnabled;
+        _main.SetUpdateBadge(show);
+    }
+
+    /// <summary>「新版本提示」开关切换（设置页）：落盘并即时刷新标题栏；开 → 立刻补一次检查。</summary>
+    public void SetUpdateNotify(bool enabled)
+    {
+        Mutate(d => d with { UiState = d.UiState with { UpdateNotifyEnabled = enabled } });
+        if (!enabled)
+        {
+            RefreshUpdateBadge();
+            return;
+        }
+
+        // 从关切到开：立刻补一次检查（方案A 体验说明书口径），有新版本马上亮标。
+        if (_pendingUpdate is not null)
+        {
+            RefreshUpdateBadge();
+            return;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var available = await _updates.CheckAsync();
+                if (available is not null)
+                {
+                    await _main.Dispatcher.InvokeAsync(() =>
+                    {
+                        _pendingUpdate = available;
+                        RefreshUpdateBadge();
+                    });
+                }
+            }
+            catch
+            {
+                // 同启动检查：静默
+            }
+        });
+    }
+
+    /// <summary>
+    /// 标题栏「有新版本！」点击 → 更新提示窗（C4 定稿：新版本号+更新内容+两按钮；
+    /// 「重启完成更新」=下载并应用更新后由 Velopack 重启；「暂不更新」=关窗）。
+    /// </summary>
+    public void ShowUpdateBadgePrompt()
+    {
+        if (_pendingUpdate is not { } update)
+        {
+            return;
+        }
+
+        ShowUpdatePrompt(update, AppWindows.Main());
+    }
+
+    /// <summary>更新提示窗（anchor=触发它的窗口：标题栏→主窗、设置页→设置窗）。</summary>
+    public void ShowUpdatePrompt(UpdateService.UpdateAvailable update, Window? anchor)
+    {
+        var body = string.IsNullOrWhiteSpace(update.Notes)
+            ? $"新版本 {update.Version} 已就绪。"
+            : $"新版本 {update.Version} 已就绪。\n\n更新内容：\n{update.Notes}";
+        var outcome = ConfirmDialog.Ask(
+            $"发现新版本 {update.Version}", body, "重启完成更新",
+            anchor: anchor, cancelText: "暂不更新", showCloseButton: true);
+        if (outcome == ConfirmDialog.Outcome.Ok)
+        {
+            _ = UpdateAndRestartAsync();
+        }
+    }
+
+    /// <summary>下载并应用更新后由 Velopack 重启；失败（含开发副本未安装）明确提示。</summary>
+    private async Task UpdateAndRestartAsync()
+    {
+        try
+        {
+            ShowToast("正在更新，应用将自动重启…");
+            await _updates.UpdateAndRestartAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowToast("更新失败：" + ex.Message);
+        }
     }
 
     /// <summary>悬停结束（移出/滚动/拖动/刷新/隐藏窗）。瞬时隐藏，不淡出（原型口径）。</summary>

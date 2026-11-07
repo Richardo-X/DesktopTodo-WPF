@@ -352,6 +352,13 @@ public partial class MainTodoWindow : Window
     public void SetDragVeil(bool on) =>
         DragVeil.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
 
+    /// <summary>标题栏「有新版本！」提示开关（C4）。</summary>
+    public void SetUpdateBadge(bool on) =>
+        UpdateBadge.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+
+    private void UpdateBadge_Click(object sender, RoutedEventArgs e) =>
+        Controller?.ShowUpdateBadgePrompt();
+
     /// <summary>协调器（创建后注入）。</summary>
     public ClusterController? Controller { get; set; }
 }

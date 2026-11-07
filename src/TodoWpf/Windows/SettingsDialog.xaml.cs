@@ -54,6 +54,10 @@ public partial class SettingsDialog : Window
         Seg12.IsChecked = settings.Hour12;
         // 主题分段已移除（用户 2026-11-05：标题栏切换即可）
         AutoStartSwitch.IsChecked = settings.AutoStart;
+
+        // C4：当前版本 + 新版本提示开关状态
+        CurrentVersionText.Text = "当前版本 " + UpdateService.CurrentVersion();
+        UpdateNotifySwitch.IsChecked = _controller.Data.UiState.UpdateNotifyEnabled;
     }
 
     // ---------- 各设置项 ----------
@@ -138,6 +142,39 @@ public partial class SettingsDialog : Window
     }
 
     private void Back_Click(object sender, RoutedEventArgs e) => Close();
+
+    // ---------- 检查更新 / 新版本提示（C4 定稿） ----------
+
+    private async void CheckUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        CheckUpdateBtn.IsEnabled = false;
+        CheckUpdateBtn.Content = "检查中…";
+        try
+        {
+            var available = await _controller.Updates.CheckAsync();
+            if (available is null)
+            {
+                ConfirmDialog.Ask("检查更新", "当前已是最新版本", "知道了", anchor: this);
+                return;
+            }
+
+            _controller.SetPendingUpdate(available);
+            _controller.ShowUpdatePrompt(available, anchor: this); // 弹窗锚定设置页上方（定稿）
+        }
+        catch (Exception ex)
+        {
+            // 手动检查失败明确报错（定稿口径）；典型：开发副本 Velopack 未安装
+            ConfirmDialog.Ask("检查更新", "检查失败：" + ex.Message, "知道了", anchor: this);
+        }
+        finally
+        {
+            CheckUpdateBtn.IsEnabled = true;
+            CheckUpdateBtn.Content = "检查更新";
+        }
+    }
+
+    private void UpdateNotify_Click(object sender, RoutedEventArgs e) =>
+        _controller.SetUpdateNotify(UpdateNotifySwitch.IsChecked == true);
 
     /// <summary>标题栏拖动：走 WindowShell 的物理像素实现（拖动中持续钳屏，需求「限屏内」）。
     /// 不能用 WPF 的 DragMove()——它没有范围限制，窗口能被拖出屏幕抓不回来（2026-11-06 查漏）。</summary>

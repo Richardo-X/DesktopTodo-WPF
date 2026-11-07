@@ -219,6 +219,18 @@
                         <TextBlock Text="桌面待办" FontSize="13" FontWeight="SemiBold"
                                    Foreground="{DynamicResource Brush.Text}" Margin="8,0,0,0"
                                    VerticalAlignment="Center"/>
+                        <!-- 「有新版本！」（C4 定稿）：普通文字观感（模板无按钮框），字号=标题×2/3，
+                             accent 醒目，可点击弹更新窗；Visibility 由控制器按「有新版本&&提示开关」驱动 -->
+                        <Button x:Name="UpdateBadge" Content="有新版本！" FontSize="9" FontWeight="SemiBold"
+                                Foreground="{DynamicResource Brush.Accent}" Margin="6,0,0,0"
+                                VerticalAlignment="Center" Cursor="Hand" Visibility="Collapsed"
+                                Click="UpdateBadge_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <ContentPresenter/>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                                 VerticalAlignment="Center">
