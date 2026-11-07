@@ -650,6 +650,11 @@
                         BorderBrush="{DynamicResource Brush.Muted}" BorderThickness="0,0,2,2"
                         CornerRadius="0,0,9,0"/>
             </Grid>
+
+            <!-- 跨屏拖动白板（2026-11-07 用户裁定）：整簇拖动检测到跨屏时盖住内容、松开鼠标恢复——
+                 遮住换屏过渡（密度/尺寸跳变与贴边缩小）。底色随主题（日近白/夜深色）。 -->
+            <Border x:Name="DragVeil" Background="{DynamicResource Brush.CardSolid}"
+                    Visibility="Collapsed" IsHitTestVisible="False"/>
         </Grid>
     </Border>
 </Window>

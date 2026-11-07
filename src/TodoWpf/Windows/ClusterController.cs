@@ -38,6 +38,12 @@ public sealed class ClusterController : IDisposable
 
     private WinPoint _anchor;
 
+    /// <summary>整簇拖动开始时主窗所在屏（跨屏白板检测基准）。</summary>
+    private IntPtr _dragStartMonitor;
+
+    /// <summary>本次拖动已触发跨屏白板（只开不关，恢复统走 EndDrag）。</summary>
+    private bool _dragVeiled;
+
     /// <summary>模板窗上一帧的 DPI 横向缩放（拖动中侦测跨屏用，变了才补一次内容缩放）。</summary>
     private double _lastQuickDpiX = 1.0;
 
@@ -558,6 +564,8 @@ public sealed class ClusterController : IDisposable
 
         EndHover(); // 整组拖动时气泡悬空已失锚
         _dragging = true;
+        _dragStartMonitor = MonitorLayout.MonitorOf(_main);
+        _dragVeiled = false;
         _dragWorkArea = WorkArea();
         _dragStartAnchor = _anchor;
         _dragStartMouse = ToScreen(window, e);
@@ -596,6 +604,18 @@ public sealed class ClusterController : IDisposable
 
         _anchor = anchor;
         MoveCluster(); // 快路径：只改坐标，不重排、不落盘（抖动治理）
+
+        // 跨屏白板（2026-11-07 用户裁定）：检测到整簇拖动跨屏 → 盖住内容直到松开鼠标，
+        // 遮住换屏过渡（密度/尺寸跳变与贴边缩小）。白板只开不关，恢复统走 EndDrag。
+        if (!_dragVeiled && MonitorLayout.IsCrossingMonitor(
+                _dragStartMonitor,
+                new System.Windows.Interop.WindowInteropHelper(_main).Handle,
+                new System.Windows.Interop.WindowInteropHelper(_quick).Handle))
+        {
+            _dragVeiled = true;
+            _main.SetDragVeil(true);
+            _quick.SetDragVeil(true);
+        }
     }
 
     private void DragEnd_MouseUp(object sender, MouseButtonEventArgs e) => EndDrag(sender);
@@ -610,6 +630,12 @@ public sealed class ClusterController : IDisposable
         }
 
         _dragging = false;
+        if (_dragVeiled)
+        {
+            _dragVeiled = false;
+            _main.SetDragVeil(false);
+            _quick.SetDragVeil(false);
+        }
         window.MouseMove -= DragMove_MouseMove;
         window.MouseUp -= DragEnd_MouseUp;
         window.LostMouseCapture -= DragLostCapture;

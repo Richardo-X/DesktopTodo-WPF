@@ -177,6 +177,49 @@ internal static class MonitorLayout
     }
 
     /// <summary>
+    /// <summary>窗口所在显示器句柄（hwnd 未建返回 Zero）。</summary>
+    public static IntPtr MonitorOf(Window window)
+    {
+        var hwnd = new WindowInteropHelper(window).Handle;
+        return hwnd == System.IntPtr.Zero
+            ? System.IntPtr.Zero
+            : MonitorFromWindow(hwnd, MonitorDefaultToNearest);
+    }
+
+    /// <summary>
+    /// 拖动跨屏检测（2026-11-07 白板遮挡用）：主窗/模板窗的物理矩形并集
+    /// 是否越出拖动开始时那块屏的**整屏边界**（任一像素出了起点屏即算跨屏行为）。
+    /// </summary>
+    public static bool IsCrossingMonitor(IntPtr startMonitor, IntPtr mainHwnd, IntPtr quickHwnd)
+    {
+        if (startMonitor == System.IntPtr.Zero)
+        {
+            return false;
+        }
+
+        var info = new MonitorInfoNative { Size = Marshal.SizeOf<MonitorInfoNative>() };
+        if (!GetMonitorInfoNative(startMonitor, ref info))
+        {
+            return false;
+        }
+
+        foreach (var hwnd in new[] { mainHwnd, quickHwnd })
+        {
+            if (hwnd == System.IntPtr.Zero || !GetWindowRect(hwnd, out var r))
+            {
+                continue;
+            }
+
+            if (r.Left < info.Monitor.Left || r.Top < info.Monitor.Top
+                || r.Right > info.Monitor.Right || r.Bottom > info.Monitor.Bottom)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /// 把物理像素点折算成"它所在屏"的 DIP 坐标（存档恢复用，2026-11-07）。
     /// 混合 DPI 下 DIP 空间按屏不连续，必须用**该点所在屏**的 DPI 折算，
     /// 不能用主窗当次的 DPI——否则 2K 存档会被按 4K 的 1.75 解释（恢复跨屏错位的根因）。

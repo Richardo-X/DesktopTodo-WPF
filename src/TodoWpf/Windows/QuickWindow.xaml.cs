@@ -257,5 +257,9 @@ public partial class QuickWindow : Window
         CardRoot.Opacity = frozen ? 0.7 : 1.0;
     }
 
+    /// <summary>跨屏拖动白板（2026-11-07 用户裁定）：整簇拖动跨屏时盖住内容，松开鼠标恢复。</summary>
+    public void SetDragVeil(bool on) =>
+        DragVeil.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+
     public ClusterController? Controller { get; set; }
 }

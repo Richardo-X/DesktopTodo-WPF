@@ -349,6 +349,11 @@
                     </StackPanel>
                 </Grid>
             </Grid>
+
+            <!-- 跨屏拖动白板（2026-11-07 用户裁定）：整簇拖动检测到跨屏时盖住内容、松开鼠标恢复。
+                 底色随主题（日近白/夜深色）。 -->
+            <Border x:Name="DragVeil" Background="{DynamicResource Brush.CardSolid}"
+                    Visibility="Collapsed" IsHitTestVisible="False"/>
         </Grid>
     </Border>
 </Window>
