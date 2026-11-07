@@ -19,6 +19,12 @@ public sealed record UiState
     /// </summary>
     public bool PosIsRawPx { get; init; }
 
+    /// <summary>「新版本提示」开关（C4，默认开）：开 = 每次启动自动检查更新并显示标题栏提示；关 = 不检查。</summary>
+    public bool UpdateNotifyEnabled { get; init; } = true;
+
+    /// <summary>上次运行本应用的应用版本（C4 降级检测：当前版本 &lt; 它 → 数据可能不完全兼容，提醒备份）。</summary>
+    public string? LastRunVersion { get; init; }
+
     /// <summary>三面板簇整体等比缩放。</summary>
     public double ClusterScale { get; init; } = 1;
 

@@ -205,6 +205,8 @@ public class JsonCodecTests
             "    \"pos\": null,\n" +
             "    \"posIsTodoAnchor\": false,\n" +
             "    \"posIsRawPx\": false,\n" +
+            "    \"updateNotifyEnabled\": true,\n" +
+            "    \"lastRunVersion\": null,\n" +
             "    \"clusterScale\": 1,\n" +
             "    \"childScales\": {},\n" +
             "    \"quickVisible\": true,\n" +
