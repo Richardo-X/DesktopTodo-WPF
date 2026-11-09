@@ -8,7 +8,8 @@
         Background="#FFEEF1F6" UseLayoutRounding="True"
         FontFamily="Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI">
     <!-- 安装器（C4 交付形态）：观感对齐应用日间主题（Shell #FFEEF1F6 / Text #33383F / Accent #4F7391）。
-         圆角由 DWM 提供（见 Chrome.ApplyRoundCorners），本 Border 只画 1px 描边。 -->
+         圆角由 DWM 提供（见 Chrome.ApplyRoundCorners），本 Border 只画 1px 描边。
+         两态：未安装 → 选安装位置；已安装 → 只问是否覆盖安装（用户 2026-11-09 裁定）。 -->
     <Window.Resources>
         <Style x:Key="Ghost" TargetType="Button">
             <Setter Property="Height" Value="32"/>
@@ -91,23 +92,32 @@
     <Border BorderBrush="#1F1E232A" BorderThickness="1" Background="#FFEEF1F6">
         <StackPanel Margin="22,18,22,20">
             <!-- 标题（可拖动窗口） -->
-            <TextBlock Text="安装 桌面待办WPF" FontSize="14" FontWeight="SemiBold"
+            <TextBlock x:Name="TitleText" Text="安装 桌面待办WPF" FontSize="14" FontWeight="SemiBold"
                        Foreground="#33383F" MouseLeftButtonDown="Title_Drag"/>
 
-            <TextBlock Text="安装位置" FontSize="12" Foreground="#5C636C" Margin="0,16,0,0"/>
-            <Grid Margin="0,6,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBox x:Name="PathBox" Style="{StaticResource Field}"/>
-                <Button x:Name="BrowseBtn" Content="浏览…" Style="{StaticResource Ghost}"
-                        Grid.Column="1" Margin="6,0,0,0" Click="Browse_Click"/>
-            </Grid>
+            <!-- 未安装：选择安装位置 -->
+            <StackPanel x:Name="InstallPanel">
+                <TextBlock Text="安装位置" FontSize="12" Foreground="#5C636C" Margin="0,16,0,0"/>
+                <Grid Margin="0,6,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="PathBox" Style="{StaticResource Field}"/>
+                    <Button x:Name="BrowseBtn" Content="浏览…" Style="{StaticResource Ghost}"
+                            Grid.Column="1" Margin="6,0,0,0" Click="Browse_Click"/>
+                </Grid>
+                <TextBlock Text="安装到用户目录无需管理员权限；也可选择其他位置（安装到 Program Files 需要管理员权限）。"
+                           FontSize="11" Foreground="#676D76" Margin="0,10,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
 
-            <TextBlock x:Name="HintText"
-                       Text="安装到用户目录无需管理员权限；也可选择其他位置（安装到 Program Files 需要管理员权限）。"
-                       FontSize="11" Foreground="#676D76" Margin="0,10,0,0" TextWrapping="Wrap"/>
+            <!-- 已安装：只问是否覆盖安装（不提供位置选择） -->
+            <StackPanel x:Name="OverwritePanel" Visibility="Collapsed">
+                <TextBlock x:Name="ExistingText" FontSize="12" Foreground="#33383F"
+                           Margin="0,16,0,0" TextWrapping="Wrap"/>
+                <TextBlock Text="是否覆盖安装？原有程序文件会被更新到本版本；你的待办、模板与历史记录不受影响。"
+                           FontSize="11" Foreground="#676D76" Margin="0,10,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
 
             <TextBlock x:Name="StatusText" Text="" FontSize="12" Foreground="#4F7391"
                        Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>

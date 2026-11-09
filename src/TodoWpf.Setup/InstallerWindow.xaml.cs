@@ -21,23 +21,31 @@ public partial class InstallerWindow : Window
 
     private bool _installing;
 
-    /// <summary>已安装位置（null = 未安装）。已安装时**不提供位置选择**，直接就地更新（用户 2026-11-09 裁定）。</summary>
+    /// <summary>已安装位置（null = 未安装）。已安装时**不提供位置选择**，只问是否覆盖安装（用户 2026-11-09 裁定）。</summary>
     private string? _existingDir;
+
+    /// <summary>已安装版本（仅用于提示文案）。</summary>
+    private string? _existingVersion;
 
     public InstallerWindow()
     {
         InitializeComponent();
         Chrome.Apply(this);
-        _existingDir = ExistingInstallDir();
-        if (_existingDir is { } existing)
+
+        var existing = ExistingInstall();
+        _existingDir = existing?.Dir;
+        _existingVersion = existing?.Version;
+
+        if (_existingDir is { } dir)
         {
-            // 已安装：位置锁定为既有安装目录，选择控件隐藏（成熟安装器的做法：升级/修复不重选位置）
-            PathBox.Text = existing;
-            PathBox.IsReadOnly = true;
-            PathBox.IsEnabled = false;
-            BrowseBtn.Visibility = Visibility.Collapsed;
-            HintText.Text = "检测到已安装，将更新到原安装位置（如需更换位置，请先在「设置 → 应用」里卸载后重新安装）。";
-            InstallBtn.Content = "更新";
+            // 已安装：隐藏位置选择，改为「是否覆盖安装」（成熟安装器的升级/修复流程）
+            InstallPanel.Visibility = Visibility.Collapsed;
+            OverwritePanel.Visibility = Visibility.Visible;
+            ExistingText.Text = string.IsNullOrEmpty(_existingVersion)
+                ? $"检测到已安装 桌面待办WPF：\n{dir}"
+                : $"检测到已安装 桌面待办WPF {_existingVersion}：\n{dir}";
+            InstallBtn.Content = "覆盖安装";
+            CancelBtn.Content = "退出";
         }
         else
         {
@@ -81,7 +89,8 @@ public partial class InstallerWindow : Window
             return;
         }
 
-        var target = (PathBox.Text ?? "").Trim().Trim('"');
+        // 已安装 → 用检测到的原位置（_existingDir），忽略界面上没有的路径输入
+        var target = _existingDir ?? (PathBox.Text ?? "").Trim().Trim('"');
         if (target.Length == 0)
         {
             Warn("请先选择安装位置。");
@@ -174,8 +183,15 @@ public partial class InstallerWindow : Window
     private void Warn(string message) =>
         MessageBox.Show(this, message, "安装 桌面待办WPF", MessageBoxButton.OK, MessageBoxImage.Warning);
 
-    /// <summary>已安装位置（读卸载注册表项的 UninstallString 反推安装目录）；未安装返回 null。</summary>
-    private static string? ExistingInstallDir()
+    /// <summary>
+    /// 检测已安装的 桌面待办WPF（位置 + 版本）；未安装返回 null。
+    ///
+    /// 注意（2026-11-09 修的 bug）：**不要**拿 UninstallString 直接喂 <c>Path.GetDirectoryName</c>——
+    /// 它是 <c>"C:\...\Update.exe" --uninstall</c> 这种"带引号 + 参数"的命令行，
+    /// GetDirectoryName 解析出坏路径（抛异常被吞 → 恒判为未安装，安装器就错误地显示了位置选择）。
+    /// 注册表项里有现成的 <c>InstallLocation</c>，优先用它；缺失时才从命令行里**取引号内**的 exe 再取目录。
+    /// </summary>
+    private static (string Dir, string? Version)? ExistingInstall()
     {
         try
         {
@@ -191,16 +207,35 @@ public partial class InstallerWindow : Window
                 foreach (var name in root.GetSubKeyNames())
                 {
                     using var entry = root.OpenSubKey(name);
-                    if (entry?.GetValue("UninstallString") is not string uninstall
-                        || !uninstall.Contains(PackId, StringComparison.OrdinalIgnoreCase))
+                    if (entry is null)
                     {
                         continue;
                     }
 
-                    var dir = Path.GetDirectoryName(uninstall.Trim().Trim('"'));
+                    var location = entry.GetValue("InstallLocation") as string;
+                    var uninstall = entry.GetValue("UninstallString") as string;
+                    var display = entry.GetValue("DisplayName") as string;
+                    var version = entry.GetValue("DisplayVersion") as string;
+
+                    // 认自己的条目：安装位置/卸载命令里带 packId（回退看显示名）
+                    var ours = (location?.Contains(PackId, StringComparison.OrdinalIgnoreCase) ?? false)
+                               || (uninstall?.Contains(PackId, StringComparison.OrdinalIgnoreCase) ?? false)
+                               || (display?.Contains("待办WPF", StringComparison.Ordinal) ?? false);
+                    if (!ours)
+                    {
+                        continue;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(location) && Directory.Exists(location))
+                    {
+                        return (location.TrimEnd('\\'), version);
+                    }
+
+                    var exe = ExtractExePath(uninstall);
+                    var dir = exe is null ? null : Path.GetDirectoryName(exe);
                     if (!string.IsNullOrEmpty(dir))
                     {
-                        return dir;
+                        return (dir, version);
                     }
                 }
             }
@@ -211,6 +246,25 @@ public partial class InstallerWindow : Window
         }
 
         return null;
+    }
+
+    /// <summary>从命令行里取出可执行文件路径：带引号取引号内，否则取到第一个空格。</summary>
+    private static string? ExtractExePath(string? commandLine)
+    {
+        if (string.IsNullOrWhiteSpace(commandLine))
+        {
+            return null;
+        }
+
+        var text = commandLine.Trim();
+        if (text.StartsWith('"'))
+        {
+            var end = text.IndexOf('"', 1);
+            return end > 1 ? text[1..end] : null;
+        }
+
+        var space = text.IndexOf(' ');
+        return space > 0 ? text[..space] : text;
     }
 
     /// <summary>取出内嵌的 Velopack Setup 到临时文件（单文件交付）；开发期回退为查找同目录。</summary>

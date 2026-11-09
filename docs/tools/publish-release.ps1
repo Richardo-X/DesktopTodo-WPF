@@ -1,4 +1,4 @@
-# C4 release script: dotnet publish (self-contained) -> vpk pack -> releases dir
+﻿# C4 release script: dotnet publish (self-contained) -> vpk pack -> releases dir
 # Produces Setup.exe + full/delta packages + RELEASE-NOTES.txt. ASCII only (PS 5.1 no-BOM safe).
 param(
   [Parameter(Mandatory = $true)][string]$Version,
@@ -38,8 +38,18 @@ if ($LASTEXITCODE -ne 0) { throw 'installer publish failed' }
 
 # 安装器文件名：桌面待办WPF-安装程序.exe（字符码拼接，保持本脚本 ASCII）
 $instName = ((-join ([char]0x684C, [char]0x9762, [char]0x5F85, [char]0x529E, [char]0x57, [char]0x50, [char]0x46, [char]0x2D, [char]0x5B89, [char]0x88C5, [char]0x7A0B, [char]0x5E8F)) + '.exe')
-Copy-Item (Join-Path $instOut 'TodoWpf.Setup.exe') (Join-Path $repo "releases\$instName") -Force
+# 防呆（2026-11-09）：本脚本曾因 UTF-8 无 BOM 被 PS 5.1 误解码、中文注释吞掉下一行，
+# 导致 $instName 为空 → 拷贝落进 releases 目录（保留原名），静默产出错误文件名。
+# 断言把这种静默失败变成显式报错，并校验拷贝后尺寸一致。
+if ([string]::IsNullOrEmpty($instName) -or -not $instName.EndsWith('.exe')) {
+    throw "installer name build failed (instName='$instName')"
+}
+$instSrc = Join-Path $instOut 'TodoWpf.Setup.exe'
+$instDst = Join-Path $repo "releases\$instName"
+Copy-Item $instSrc $instDst -Force -ErrorAction Stop
+if ((Get-Item $instDst -ErrorAction Stop).Length -ne (Get-Item $instSrc -ErrorAction Stop).Length) {
+    throw 'installer copy size mismatch'
+}
 Remove-Item $instOut -Recurse -Force
-
 Write-Output "DONE: releases ready ($Version)"
 Get-ChildItem (Join-Path $repo 'releases') | ForEach-Object { Write-Output ("  {0}  {1:N0} bytes" -f $_.Name, $_.Length) }
