@@ -2,7 +2,8 @@
 # Produces Setup.exe + full/delta packages + RELEASE-NOTES.txt. ASCII only (PS 5.1 no-BOM safe).
 param(
   [Parameter(Mandatory = $true)][string]$Version,
-  [string]$Notes = ""
+  [string]$Notes = "",
+  [switch]$SkipUpload   # 只本地出包、不上传（调试用）。正式发布必须上传，否则其他用户收不到更新
 )
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)   # docs/tools -> repo root
@@ -51,5 +52,23 @@ if ((Get-Item $instDst -ErrorAction Stop).Length -ne (Get-Item $instSrc -ErrorAc
     throw 'installer copy size mismatch'
 }
 Remove-Item $instOut -Recurse -Force
+
+# 上传到 GitHub Releases（其他用户从这里检查/下载更新；私有仓库拉不到，故必须公开）
+$repoUrl = 'https://github.com/Richardo-X/DesktopTodo-WPF'
+if ($SkipUpload) {
+    Write-Output "SKIP upload (-SkipUpload): 未上传到 GitHub，其他用户不会收到本版本"
+} else {
+    Write-Output "uploading to GitHub Releases ..."
+    $token = (& gh auth token 2>$null | Select-Object -First 1)
+    if ([string]::IsNullOrWhiteSpace($token)) { throw 'gh 未登录，无法上传（先 gh auth login）' }
+    & $vpk upload github --repoUrl $repoUrl --token $token --outputDir (Join-Path $repo 'releases') `
+        --publish --releaseName "$title $Version" --tag "v$Version"
+    if ($LASTEXITCODE -ne 0) { throw 'vpk upload github failed' }
+
+    # 附带我们自建的安装器（用户从 Release 页面手动安装时用）
+    & gh release upload "v$Version" $instDst --repo $repoUrl --clobber
+    if ($LASTEXITCODE -ne 0) { throw 'gh release upload (installer) failed' }
+}
+
 Write-Output "DONE: releases ready ($Version)"
 Get-ChildItem (Join-Path $repo 'releases') | ForEach-Object { Write-Output ("  {0}  {1:N0} bytes" -f $_.Name, $_.Length) }
