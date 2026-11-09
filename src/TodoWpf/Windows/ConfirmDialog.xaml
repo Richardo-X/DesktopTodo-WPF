@@ -123,6 +123,10 @@
             <TextBlock x:Name="BodyText" Text="" FontSize="12" LineHeight="20"
                        Foreground="{DynamicResource Brush.Muted}" TextWrapping="Wrap"
                        Margin="0,8,0,0"/>
+            <!-- 倒计时（可选，C4 卸载询问用）：无操作到期自动执行取消键动作（安全默认） -->
+            <TextBlock x:Name="CountdownText" Text="" FontSize="11"
+                       Foreground="{DynamicResource Brush.Faint}"
+                       Margin="0,8,0,0" Visibility="Collapsed"/>
             <StackPanel x:Name="ActionsPanel" Orientation="Horizontal" HorizontalAlignment="Right"
                         Margin="0,20,0,0">
                 <Button x:Name="CancelBtn" Content="取消" Style="{StaticResource GhostBtn}"

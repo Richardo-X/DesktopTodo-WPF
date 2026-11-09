@@ -47,6 +47,9 @@ public sealed class ClusterController : IDisposable
     /// <summary>本次拖动已触发跨屏白板（只开不关，恢复统走 EndDrag）。</summary>
     private bool _dragVeiled;
 
+    /// <summary>启动时读到的 data.json 原始格式版本（在任何落盘之前抓取，供兼容检测）。</summary>
+    private int? _fileSchemaVersion;
+
     /// <summary>C4 更新服务。</summary>
     private readonly UpdateService _updates = new();
 
@@ -189,6 +192,11 @@ public sealed class ClusterController : IDisposable
     /// <summary>初始化：应用记忆、接互锁、显示窗口。</summary>
     public void Start()
     {
+        // C4 兼容检测：**必须在任何落盘之前**读文件里的原始格式版本——
+        // 启动流程本身会立刻把 data.json 覆写成当前版本（v=当前），
+        // 晚读就只能读到刚写下的 v，永远检测不出"数据来自更高版本"（2026-11-09 实测发现）。
+        _fileSchemaVersion = ReadFileSchemaVersionOnce();
+
         // 批次04：旧侧窗不再显示。决议（2026-11-03）：重启回到关闭前的尺寸与位置——
         // 倍数取存档 ClusterScale（每次布局落盘），按当前屏钳制到 1/4~2/3；位置由 Pos 恢复。
         _data = _data with
@@ -245,6 +253,9 @@ public sealed class ClusterController : IDisposable
         UpdateClock();
         ApplyLayout();
         _bubble.Show(); // 透明常驻：以 Opacity=0 待命，规避显示时闪现
+
+        // C4：数据格式兼容检测（不兼容 → 提示 + 打开数据目录，用户 2026-11-09 裁定）
+        CheckDataCompatibilityOnce();
 
         // C4：启动检查（后台，失败静默——定稿口径）。注意：Velopack 检查要求"已安装"，
         // 开发副本（bin 下直接跑）抛 NotInstalledException → 在这里被静默跳过，属预期。
@@ -1120,6 +1131,74 @@ public sealed class ClusterController : IDisposable
         _hoverRow = row;
         _hoverTimer.Stop();
         _hoverTimer.Start();
+    }
+
+    /// <summary>
+    /// 数据格式兼容检测（C4，用户 2026-11-09 裁定「提示 + 打开数据目录」）：
+    /// 读 data.json 里的格式版本 `v`，与 <see cref="TodoWpf.Core.Persistence.DataCompatibility"/> 判定比对；
+    /// 不兼容（过旧/过新）时提示用户并可直接打开数据目录备份。同一应用版本只提示一次（避免每次启动打扰）。
+    /// 判定为纯逻辑（Core 已 TDD）；此处只做文件读取与提示。
+    /// </summary>
+    private void CheckDataCompatibilityOnce()
+    {
+        try
+        {
+            var verdict = TodoWpf.Core.Persistence.DataCompatibility.Check(_fileSchemaVersion);
+            if (verdict == TodoWpf.Core.Persistence.DataCompatibilityResult.Compatible)
+            {
+                return;
+            }
+
+            var path = TodoWpf.Core.Persistence.DataPaths.NewDataFile();
+            var current = UpdateService.CurrentVersion();
+            if (_data.UiState.LastCompatWarnVersion == current)
+            {
+                return; // 本版本已提示过
+            }
+
+            var shown = _fileSchemaVersion is null ? "无版本标记" : $"v{_fileSchemaVersion}";
+            var reason = verdict == TodoWpf.Core.Persistence.DataCompatibilityResult.TooNew
+                ? $"已有数据的格式（{shown}）比本版本（支持 v{TodoWpf.Core.Models.AppData.CurrentSchemaVersion}）新——" +
+                  "通常是安装回了较旧的版本。本版本会尽量读取，但新版本新增的内容可能读不到；继续使用会覆盖这些内容。"
+                : $"已有数据的格式（{shown}）低于本版本可读下限（v{TodoWpf.Core.Models.AppData.MinReadableSchemaVersion}）。";
+            var outcome = ConfirmDialog.Ask(
+                "数据格式不兼容",
+                reason + "\n\n建议先备份本地数据目录，再决定是否继续。",
+                okText: "打开数据目录",
+                cancelText: "继续使用",
+                showCloseButton: false);
+            if (outcome == ConfirmDialog.Outcome.Ok)
+            {
+                var dir = System.IO.Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(dir))
+                {
+                    System.Diagnostics.Process.Start(
+                        new System.Diagnostics.ProcessStartInfo("explorer.exe", dir) { UseShellExecute = true });
+                }
+            }
+
+            Mutate(d => d with { UiState = d.UiState with { LastCompatWarnVersion = current } });
+        }
+        catch
+        {
+            // 兼容检测属提示性功能：任何异常都不得影响正常启动
+        }
+    }
+
+    /// <summary>读 data.json 里的原始格式版本（失败/不存在 → null）。</summary>
+    private static int? ReadFileSchemaVersionOnce()
+    {
+        try
+        {
+            var path = TodoWpf.Core.Persistence.DataPaths.NewDataFile();
+            return System.IO.File.Exists(path)
+                ? TodoWpf.Core.Persistence.JsonCodec.ReadSchemaVersion(System.IO.File.ReadAllText(path))
+                : null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>手动检查发现的版本也走这里登记（标题栏提示与设置页弹窗共用）。</summary>

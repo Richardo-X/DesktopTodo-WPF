@@ -160,6 +160,7 @@ internal static class JsonNormalization
             PosIsRawPx = AsBool(raw["posIsRawPx"]) ?? defaults.PosIsRawPx,
             UpdateNotifyEnabled = AsBool(raw["updateNotifyEnabled"]) ?? defaults.UpdateNotifyEnabled,
             LastRunVersion = AsString(raw["lastRunVersion"]),
+            LastCompatWarnVersion = AsString(raw["lastCompatWarnVersion"]),
             ClusterScale = clusterScale is > 0 ? clusterScale.Value : defaults.ClusterScale,
             ChildScales = childScales,
             QuickVisible = AsBool(raw["quickVisible"]) ?? defaults.QuickVisible,

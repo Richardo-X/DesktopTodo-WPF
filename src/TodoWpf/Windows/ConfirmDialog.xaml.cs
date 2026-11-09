@@ -25,8 +25,13 @@ public partial class ConfirmDialog : Window
 
     private Outcome _outcome = Outcome.Cancel;
 
+    /// <summary>倒计时到期自动执行取消键动作（安全默认）；0 = 不倒计时。</summary>
+    private readonly int _autoCancelSeconds;
+
+    private System.Windows.Threading.DispatcherTimer? _countdown;
+
     private ConfirmDialog(string title, string body, string okText, bool danger, string cancelText,
-                          bool showCloseButton)
+                          bool showCloseButton, int autoCancelSeconds)
     {
         InitializeComponent();
         // 2026-11-05 裁定：二级窗弃 WPF 投影（投影会从圆角缺口透出显脏），改 DWM 系统圆角（与主窗同壳）
@@ -41,8 +46,46 @@ public partial class ConfirmDialog : Window
         {
             OkBtn.Style = (Style)FindResource("DangerSmBtn");
         }
+
+        _autoCancelSeconds = autoCancelSeconds;
     }
 
+    /// <summary>
+    /// 倒计时（C4 卸载询问）：到期自动执行**取消键**动作（=安全默认，如「保留数据」）。
+    /// 用于无人值守/静默场景——实测 Velopack 静默卸载与交互卸载传给应用的参数完全相同，
+    /// 无法区分，故用倒计时兜底：真人来得及点，脚本卸载最多多等这些秒且不会误删数据。
+    /// </summary>
+    private void StartCountdown(string cancelText)
+    {
+        var remaining = _autoCancelSeconds;
+        CountdownText.Visibility = Visibility.Visible;
+        CountdownText.Text = $"{remaining} 秒后自动执行「{cancelText}」";
+        _countdown = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(1),
+        };
+        _countdown.Tick += (_, _) =>
+        {
+            remaining--;
+            if (remaining <= 0)
+            {
+                _countdown?.Stop();
+                Cancel_Click(this, new RoutedEventArgs());
+                return;
+            }
+
+            CountdownText.Text = $"{remaining} 秒后自动执行「{cancelText}」";
+        };
+        _countdown.Start();
+    }
+
+    /// <summary>关闭时停表（任何关闭路径都要停，避免定时器引用已关窗）。</summary>
+    protected override void OnClosed(EventArgs e)
+    {
+        _countdown?.Stop();
+        _countdown = null;
+        base.OnClosed(e);
+    }
     /// <summary>显示确认框；返回 true=用户点了确定。anchor=打开确认框的窗口（缺省主窗）。</summary>
     /// <param name="cancelText">取消键文案（默认「取消」；未保存询问里用「确认」= 确认放弃修改退出）。</param>
     public static bool Confirm(string title, string body, string okText = "确定",
@@ -52,12 +95,13 @@ public partial class ConfirmDialog : Window
     /// <summary>
     /// 同 <see cref="Confirm"/>，但返回三态结果；<paramref name="showCloseButton"/> 为真时右上角显示 X，
     /// 点它 = 关闭弹窗但**未做选择**（调用方应回到打开它的窗口，例如留在编辑窗继续编辑）。
+    /// <paramref name="autoCancelSeconds"/> &gt; 0 时显示倒计时，到期自动按取消键（安全默认）。
     /// </summary>
     public static Outcome Ask(string title, string body, string okText = "确定",
                               bool danger = false, Window? anchor = null, string cancelText = "取消",
-                              bool showCloseButton = false)
+                              bool showCloseButton = false, int autoCancelSeconds = 0)
     {
-        var dialog = new ConfirmDialog(title, body, okText, danger, cancelText, showCloseButton);
+        var dialog = new ConfirmDialog(title, body, okText, danger, cancelText, showCloseButton, autoCancelSeconds);
 
         // **必须在 ShowDialog 前设 Owner**：没有 Owner 时 WPF 用主屏的 DPI 解释 Left/Top，
         // 在混合 DPI（2K@100% + 4K@175%）下会把确认框放到主屏去 —— 用户 2026-11-05 实测：
@@ -68,8 +112,19 @@ public partial class ConfirmDialog : Window
         {
             dialog.Owner = anchor;
         }
+        else
+        {
+            // 无锚窗（卸载钩子等应用尚未建主窗的场景）：按屏居中；
+            // 此时 CenterOn(null) 内部直接返回，不参与定位。
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
 
         dialog.CenterOn(anchor);
+        if (autoCancelSeconds > 0)
+        {
+            dialog.StartCountdown(cancelText);
+        }
+
         dialog.ShowDialog();
         return dialog._outcome;
     }

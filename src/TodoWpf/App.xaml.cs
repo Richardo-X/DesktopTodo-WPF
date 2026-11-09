@@ -21,6 +21,9 @@ public partial class App : Application
     private static ResourceDictionary? _dayTokens;
     private static ResourceDictionary? _nightTokens;
 
+    /// <summary>令牌字典是否已合并（幂等保护：卸载钩子路径会提前合并一次）。</summary>
+    private static bool _themeMerged;
+
     /// <summary>时钟显示（设置页 12/24 制，默认 24 小时制；批次 04 接设置）。</summary>
     public static string TimeFormat => "HH:mm";
 
@@ -32,9 +35,40 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        // Velopack 钩子（C4）：必须最先执行——处理安装/首启/卸载/升级遗留等命令行钩子，
-        // 正常启动时立即返回。要求在 Program.Main 早期调用（vpk pack 打包前校验此项）。
-        Velopack.VelopackApp.Build().Run();
+        // 令牌字典必须**最先**合并（幂等）：卸载钩子路径要在 Velopack 的快速回调里弹询问窗，
+        // 而弹窗用 DynamicResource 取主题令牌——若字典还没合并，窗体会没有底色（不可见）。
+        MergeThemeDictionaries();
+
+        // Velopack 钩子（C4）：处理安装/首启/卸载/升级遗留等命令行钩子，正常启动时立即返回。
+        // 卸载询问（用户 2026-11-09 裁定）：问「是否一并删除本地数据」；实测 Velopack 静默卸载
+        // 与交互卸载传给应用的参数完全相同、无法区分 → 用 20 秒倒计时兜底（到期=保留数据）。
+        Velopack.VelopackApp.Build()
+            .OnBeforeUninstallFastCallback(_ =>
+            {
+                try
+                {
+                    var delete = ConfirmDialog.Ask(
+                        "卸载 桌面待办WPF",
+                        "是否同时删除本地数据？\n\n待办、模板、设置与历史记录都保存在本地数据目录。\n选择「保留数据」，以后重新安装可继续使用。",
+                        okText: "一并删除",
+                        danger: true,
+                        cancelText: "保留数据",
+                        autoCancelSeconds: 20) == ConfirmDialog.Outcome.Ok;
+                    if (delete)
+                    {
+                        var dir = System.IO.Path.GetDirectoryName(DataPaths.NewDataFile());
+                        if (!string.IsNullOrEmpty(dir) && System.IO.Directory.Exists(dir))
+                        {
+                            System.IO.Directory.Delete(dir, recursive: true);
+                        }
+                    }
+                }
+                catch
+                {
+                    // 卸载流程不能因询问窗或删除失败而中断；异常时默认保留数据
+                }
+            })
+            .Run();
 
         base.OnStartup(e);
 
@@ -71,8 +105,6 @@ public partial class App : Application
             IsBackground = true,
         };
         wakeThread.Start();
-
-        MergeThemeDictionaries();
 
         _ = StartClusterAsync();
     }
@@ -118,6 +150,12 @@ public partial class App : Application
 
     private static void MergeThemeDictionaries()
     {
+        if (_themeMerged)
+        {
+            return;
+        }
+
+        _themeMerged = true;
         var merged = Current.Resources.MergedDictionaries;
         merged.Add(Load("Themes/Tokens.Common.xaml"));
         _nightTokens = Load("Themes/Tokens.Night.xaml");

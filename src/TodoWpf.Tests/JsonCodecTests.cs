@@ -207,6 +207,7 @@ public class JsonCodecTests
             "    \"posIsRawPx\": false,\n" +
             "    \"updateNotifyEnabled\": true,\n" +
             "    \"lastRunVersion\": null,\n" +
+            "    \"lastCompatWarnVersion\": null,\n" +
             "    \"clusterScale\": 1,\n" +
             "    \"childScales\": {},\n" +
             "    \"quickVisible\": true,\n" +

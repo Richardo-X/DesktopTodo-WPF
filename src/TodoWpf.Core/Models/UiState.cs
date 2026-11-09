@@ -25,6 +25,11 @@ public sealed record UiState
     /// <summary>上次运行本应用的应用版本（C4 降级检测：当前版本 &lt; 它 → 数据可能不完全兼容，提醒备份）。</summary>
     public string? LastRunVersion { get; init; }
 
+    /// <summary>
+    /// 上次因「数据格式不兼容」提示过用户的应用版本（C4）：同一版本只提示一次，避免每次启动打扰。
+    /// </summary>
+    public string? LastCompatWarnVersion { get; init; }
+
     /// <summary>三面板簇整体等比缩放。</summary>
     public double ClusterScale { get; init; } = 1;
 
