@@ -49,4 +49,10 @@ public static class JsonCodec
 
         return Encoding.UTF8.GetString(buffer.ToArray());
     }
+
+    /// <summary>
+    /// 只取文件里的数据格式版本 `v`（C4 兼容检测用）：不做归一化、不构造对象。
+    /// 无 v 字段 / 非整数 / JSON 非法 → null（调用方按历史档处理）。
+    /// </summary>
+    public static int? ReadSchemaVersion(string json) => null;
 }
