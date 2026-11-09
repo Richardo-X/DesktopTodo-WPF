@@ -20,6 +20,13 @@ if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed' }
 # its shortcuts (2026-11-08 incident, restored manually).
 $title = -join ([char]0x684C, [char]0x9762, [char]0x5F85, [char]0x529E, [char]0x57, [char]0x50, [char]0x46)
 
+# 幂等：若本地 releases/ 已含本版本（上次发布中途失败会留下），先剔除再打包——
+# vpk pack 拒绝"已存在同版本或更高版本"（2026-11-09 踩坑：上传失败后重试必须升版本号）。
+$prune = Join-Path $repo 'docs\tools\prune-releases.py'
+if (Test-Path $prune) {
+    & python $prune --dir (Join-Path $repo 'releases') --drop-version $Version | Out-Null
+}
+
 Write-Output "vpk pack ..."
 # --noPortable：便携版不做（C4 定稿）。注意不能用"打包后删 zip"代替——
 # vpk upload 仍会按清单去找 Portable.zip，缺失即上传失败（2026-11-09 实测踩坑）。
@@ -68,7 +75,17 @@ if ($SkipUpload) {
     # 否则 vpk 会报 "already an existing release tagged" 且 merge 不支持覆盖同名资产。
     # 用 release list 而非 release view：后者在"不存在"时会往 stderr 写错误，
     # 在 $ErrorActionPreference='Stop' 下会被当成异常中断（2026-11-09 实测踩坑）。
-    $all = (& gh release list --repo $repoUrl --limit 100 --json tagName,isDraft 2>$null)
+    # 再包一层容错：GitHub 偶发 5xx/网络抖动不该让整条发布流程失败——
+    # 读不到列表就跳过清理，真有同名 release 时下一步上传会明确报错（2026-11-09 实测踩坑）。
+    $all = $null
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { $all = (& gh release list --repo $repoUrl --limit 100 --json tagName,isDraft 2>$null) } catch { }
+    $ErrorActionPreference = $prevEap
+    if ($LASTEXITCODE -ne 0) {
+        Write-Output "WARN: 读不到 release 列表（GitHub 服务端/网络问题），跳过草稿清理继续上传"
+        $all = $null
+    }
     if ($all) {
         $match = ($all | ConvertFrom-Json) | Where-Object { $_.tagName -eq "v$Version" }
         if ($match -and $match.isDraft) {
