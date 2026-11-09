@@ -9,6 +9,8 @@
     <AssemblyName>TodoWpf.Setup</AssemblyName>
     <RootNamespace>TodoWpf.Setup</RootNamespace>
     <Version>1.0.0</Version>
+    <!-- 与应用同一图标（用户双击安装器时看到的就是应用图标） -->
+    <ApplicationIcon>..\app.ico</ApplicationIcon>
 
     <!-- 安装器在应用安装前运行，必须自带运行时：自包含 + 单文件（体积大，用户 2026-11-09 已确认接受） -->
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>

@@ -8,6 +8,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
+    <!-- 应用图标（快捷方式/资源管理器/应用和功能/更新包都取它）：
+         与应用标题栏品牌标记同一套视觉，由 docs/tools/make-icon.py 生成 -->
+    <ApplicationIcon>..\app.ico</ApplicationIcon>
     <!-- 应用版本：设置页「当前版本」与更新检查的基准；发布时由发布脚本 -p:Version 覆盖 -->
     <Version>1.0.0</Version>
   </PropertyGroup>
