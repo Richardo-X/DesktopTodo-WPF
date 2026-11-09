@@ -95,7 +95,13 @@ public sealed class ClusterController : IDisposable
     /// 这样拖动全程不改快捷窗的窗口矩形 ⇒ 合成器没有"新矩形+旧表面"的机会 ⇒ 缝隙/残影不再出现。
     /// </summary>
     private WinPoint _dragStartAnchor;
-    private Point _dragStartMouse;
+
+    /// <summary>拖动起点：锚点与鼠标都用**物理像素**记录（跨屏时主窗 DPI 会变，
+    /// DIP 记录的起点在换屏后含义就变了 → 窗口跳变/跟不上鼠标，2026-11-09 修）。</summary>
+    private WinPoint _dragStartAnchorPhysical;
+
+    private Point _dragStartMousePhysical;
+
     private WinRect _dragWorkArea;
 
     public ClusterController(AppData data, JsonFileRepository repository)
@@ -629,7 +635,10 @@ public sealed class ClusterController : IDisposable
         _dragStartScale = LayoutScale(WorkArea(), _anchor);
         _dragWorkArea = WorkArea();
         _dragStartAnchor = _anchor;
-        _dragStartMouse = ToScreen(window, e);
+        var startDpi = VisualTreeHelper.GetDpi(_main);
+        _dragStartAnchorPhysical = new WinPoint(
+            _anchor.X * startDpi.DpiScaleX, _anchor.Y * startDpi.DpiScaleY);
+        _dragStartMousePhysical = window.PointToScreen(e.GetPosition(window));
         _tuck.SetDragging(true);
         _ = window.CaptureMouse();
         window.MouseMove += DragMove_MouseMove;
@@ -644,10 +653,15 @@ public sealed class ClusterController : IDisposable
             return;
         }
 
-        var mouse = ToScreen(window, e);
-        var anchor = new WinPoint(
-            _dragStartAnchor.X + mouse.X - _dragStartMouse.X,
-            _dragStartAnchor.Y + mouse.Y - _dragStartMouse.Y);
+        // 拖动位移在**物理像素**里累加，再按主窗**当前** DPI 折算回 DIP：
+        // 跨屏瞬间主窗 DPI 会变（125% ↔ 175%），若用 DIP 记录的起点，换屏后同一数值代表的位置就变了
+        // → 窗口跳变或跟不上鼠标（2026-11-09 修）。物理像素与屏无关，天然跨屏连续。
+        var mousePhys = window.PointToScreen(e.GetPosition(window));
+        var dpi = VisualTreeHelper.GetDpi(window);
+        var anchorPhys = new WinPoint(
+            _dragStartAnchorPhysical.X + mousePhys.X - _dragStartMousePhysical.X,
+            _dragStartAnchorPhysical.Y + mousePhys.Y - _dragStartMousePhysical.Y);
+        var anchor = new WinPoint(anchorPhys.X / dpi.DpiScaleX, anchorPhys.Y / dpi.DpiScaleY);
 
         // 拖动钳制（用户 2026-11-04 裁定 D2，照 ele clampAnchorForEdges）：
         // 主窗至少 90 DIP 可见（左右各留 90）、顶边不越工作区顶（可贴顶）、底部至少 50 DIP 可见。
@@ -659,8 +673,21 @@ public sealed class ClusterController : IDisposable
         // （2026-11-04 曾改为"按鼠标所在屏 + 整簇不跨屏"，结果主窗永远跨不过边界、完全无法跨屏，已回退。）
         var area = WorkArea();
         var dragScale = LayoutScale(area, anchor);
-        anchor = PanelLayout.ClampAnchorForDrag(
-            anchor, PanelLayout.MainWidth * dragScale, area);
+        var mainWidth = PanelLayout.MainWidth * dragScale;
+
+        // 拖动钳制（用户 2026-11-04 裁定 D2）：默认保持"主窗 ≥90 DIP 可见、顶不越工作区顶、底部 ≥50 DIP 可见"。
+        // **但该侧存在相邻屏时不钳制**（2026-11-09 修）：否则窗口最多只露 90 DIP，
+        // 而换屏要求窗口大部分落到另一块屏——主屏 125% 时最小档宽 162、一半仅 81 < 90，
+        // 中心永远差一点过不去，表现为"缩到最小也跨不了屏"（100% 时 101.25 > 90 才侥幸能过）。
+        // 放宽后窗口跟随鼠标越过交界，切屏后按新屏工作区重新钳制。
+        // 顶边仍钳制：贴顶吸附语义依赖"锚点不高于工作区顶"。
+        var nb = MonitorLayout.NeighborEdges(_main);
+        var minX = nb.Left ? double.NegativeInfinity : area.X + PanelLayout.DragVisibleWidth - mainWidth;
+        var maxX = nb.Right ? double.PositiveInfinity : area.X + area.Width - PanelLayout.DragVisibleWidth;
+        var maxY = nb.Bottom ? double.PositiveInfinity : area.Y + area.Height - PanelLayout.DragVisibleHeight;
+        anchor = new WinPoint(
+            Math.Min(Math.Max(anchor.X, minX), Math.Max(minX, maxX)),
+            Math.Min(Math.Max(anchor.Y, area.Y), Math.Max(area.Y, maxY)));
         _dragWorkArea = area;
 
         _anchor = anchor;

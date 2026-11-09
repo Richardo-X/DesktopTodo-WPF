@@ -176,7 +176,6 @@ internal static class MonitorLayout
         return false;
     }
 
-    /// <summary>
     /// <summary>窗口所在显示器句柄（hwnd 未建返回 Zero）。</summary>
     public static IntPtr MonitorOf(Window window)
     {
@@ -184,6 +183,41 @@ internal static class MonitorLayout
         return hwnd == System.IntPtr.Zero
             ? System.IntPtr.Zero
             : MonitorFromWindow(hwnd, MonitorDefaultToNearest);
+    }
+
+    /// <summary>
+    /// 主窗所在屏的**左/右/下**三侧是否各有相邻屏（跨屏拖动钳制放宽用，2026-11-09）。
+    ///
+    /// 为什么需要：拖动钳制按"当前屏 90 DIP 可见"封顶，窗口最多只露出 90 DIP；
+    /// 而换屏判定要求窗口**大部分**落到另一块屏。当"主窗最小宽度的一半 &lt; 90"时
+    /// （主屏 125% 时最小档宽 162 DIP、一半只有 81），中心永远差一点过不去
+    /// → 卡在边缘、缩到最小也跨不了屏（用户 2026-11-09 实测）。
+    /// 100% 缩放下最小宽 202.5、一半 101.25 刚好大于 90 才侥幸能过——属巧合，不是设计。
+    /// 修法：该侧存在相邻屏时**不钳制**，让窗口越过交界；切屏后按新屏工作区重新钳制。
+    /// 顶边不参与放宽（保留贴顶吸附语义）。
+    /// </summary>
+    public static (bool Left, bool Right, bool Bottom) NeighborEdges(Window window)
+    {
+        var hwnd = new WindowInteropHelper(window).Handle;
+        if (hwnd == System.IntPtr.Zero)
+        {
+            return (false, false, false);
+        }
+
+        var monitor = MonitorFromWindow(hwnd, MonitorDefaultToNearest);
+        var info = new MonitorInfoNative { Size = Marshal.SizeOf<MonitorInfoNative>() };
+        if (monitor == System.IntPtr.Zero || !GetMonitorInfoNative(monitor, ref info))
+        {
+            return (false, false, false);
+        }
+
+        var m = info.Monitor;
+        var cx = (m.Left + m.Right) / 2;
+        var cy = (m.Top + m.Bottom) / 2;
+        bool Beyond(int x, int y) =>
+            MonitorFromPoint(new NativePoint { X = x, Y = y }, MonitorDefaultToNearest) != monitor;
+
+        return (Beyond(m.Left - 64, cy), Beyond(m.Right + 64, cy), Beyond(cx, m.Bottom + 64));
     }
 
     /// <summary>

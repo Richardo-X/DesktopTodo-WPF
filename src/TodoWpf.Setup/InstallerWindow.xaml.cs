@@ -21,11 +21,28 @@ public partial class InstallerWindow : Window
 
     private bool _installing;
 
+    /// <summary>已安装位置（null = 未安装）。已安装时**不提供位置选择**，直接就地更新（用户 2026-11-09 裁定）。</summary>
+    private string? _existingDir;
+
     public InstallerWindow()
     {
         InitializeComponent();
         Chrome.Apply(this);
-        PathBox.Text = DefaultInstallDir();
+        _existingDir = ExistingInstallDir();
+        if (_existingDir is { } existing)
+        {
+            // 已安装：位置锁定为既有安装目录，选择控件隐藏（成熟安装器的做法：升级/修复不重选位置）
+            PathBox.Text = existing;
+            PathBox.IsReadOnly = true;
+            PathBox.IsEnabled = false;
+            BrowseBtn.Visibility = Visibility.Collapsed;
+            HintText.Text = "检测到已安装，将更新到原安装位置（如需更换位置，请先在「设置 → 应用」里卸载后重新安装）。";
+            InstallBtn.Content = "更新";
+        }
+        else
+        {
+            PathBox.Text = DefaultInstallDir();
+        }
     }
 
     /// <summary>默认安装位置：用户目录（免管理员，用户 2026-11-09 裁定）。</summary>
@@ -81,23 +98,7 @@ public partial class InstallerWindow : Window
             return;
         }
 
-        // 已安装提示（Velopack 不能"搬家"：改位置需先卸载）
-        if (ExistingInstallDir() is { } existing
-            && !string.Equals(existing, target, StringComparison.OrdinalIgnoreCase))
-        {
-            var go = MessageBox.Show(
-                this,
-                $"检测到已安装在：\n{existing}\n\n本次将安装到：\n{target}\n\n" +
-                "（Velopack 不支持直接更改已安装程序的位置；若要换位置，请先在" +
-                "「设置 → 应用」里卸载旧安装，再运行本安装器。）\n\n仍要继续吗？",
-                "已安装其他位置",
-                MessageBoxButton.OKCancel,
-                MessageBoxImage.Warning);
-            if (go != MessageBoxResult.OK)
-            {
-                return;
-            }
-        }
+        // 已安装时位置在上面的构造函数里已锁定为原位置（PathBox 只读），此处无需再询问
 
         _installing = true;
         InstallBtn.IsEnabled = false;
