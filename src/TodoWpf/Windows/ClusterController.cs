@@ -681,13 +681,10 @@ public sealed class ClusterController : IDisposable
         // 中心永远差一点过不去，表现为"缩到最小也跨不了屏"（100% 时 101.25 > 90 才侥幸能过）。
         // 放宽后窗口跟随鼠标越过交界，切屏后按新屏工作区重新钳制。
         // 顶边仍钳制：贴顶吸附语义依赖"锚点不高于工作区顶"。
+        // 判定在 Core 的 PanelLayout.ClampAnchorForDrag（纯函数、有单测）；此处只提供"哪侧有相邻屏"。
         var nb = MonitorLayout.NeighborEdges(_main);
-        var minX = nb.Left ? double.NegativeInfinity : area.X + PanelLayout.DragVisibleWidth - mainWidth;
-        var maxX = nb.Right ? double.PositiveInfinity : area.X + area.Width - PanelLayout.DragVisibleWidth;
-        var maxY = nb.Bottom ? double.PositiveInfinity : area.Y + area.Height - PanelLayout.DragVisibleHeight;
-        anchor = new WinPoint(
-            Math.Min(Math.Max(anchor.X, minX), Math.Max(minX, maxX)),
-            Math.Min(Math.Max(anchor.Y, area.Y), Math.Max(area.Y, maxY)));
+        anchor = PanelLayout.ClampAnchorForDrag(
+            anchor, mainWidth, area, nb.Left, nb.Right, nb.Bottom);
         _dragWorkArea = area;
 
         _anchor = anchor;
