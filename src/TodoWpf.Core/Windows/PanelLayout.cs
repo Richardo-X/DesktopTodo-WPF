@@ -74,12 +74,21 @@ public static class PanelLayout
     /// 拖动钳制（用户 2026-11-04 裁定 D2，照 ele `clampAnchorForEdges`）：
     /// 水平不阻挡移动，但保证主窗至少 90 DIP 可见（左右各留 90）；顶边不越过工作区顶（可贴顶）；
     /// 底部保证至少 50 DIP 可见。按主窗**所在屏**的工作区计算（副屏传带偏移的工作区）。
+    ///
+    /// <paramref name="freeLeft"/> / <paramref name="freeRight"/> / <paramref name="freeBottom"/>：
+    /// 该侧**存在相邻屏**时不钳制，让窗口越过交界（2026-11-09 跨屏修复）——
+    /// 否则窗口最多只露 90 DIP，而换屏要求窗口大部分落到另一块屏；当"最小档窗宽的一半 &lt; 90"时
+    /// （主屏 125% 时最小档宽 162、一半仅 81）中心永远过不去，表现为"缩到最小也跨不了屏"。
+    /// **顶边始终钳制**（贴顶吸附语义依赖"锚点不高于工作区顶"），故没有 freeTop。
     /// </summary>
-    public static WinPoint ClampAnchorForDrag(WinPoint anchor, double mainVisualWidth, WinRect workArea)
+    public static WinPoint ClampAnchorForDrag(
+        WinPoint anchor, double mainVisualWidth, WinRect workArea,
+        bool freeLeft = false, bool freeRight = false, bool freeBottom = false)
     {
-        var minX = workArea.X + DragVisibleWidth - mainVisualWidth;
-        var maxX = workArea.X + workArea.Width - DragVisibleWidth;
-        var maxY = workArea.Y + workArea.Height - DragVisibleHeight;
+        // 有相邻屏的那一侧放开（用 ±∞ 表达"不设限"，末段的 Min/Max 组合自然退化）
+        var minX = freeLeft ? double.NegativeInfinity : workArea.X + DragVisibleWidth - mainVisualWidth;
+        var maxX = freeRight ? double.PositiveInfinity : workArea.X + workArea.Width - DragVisibleWidth;
+        var maxY = freeBottom ? double.PositiveInfinity : workArea.Y + workArea.Height - DragVisibleHeight;
         return new WinPoint(
             Math.Min(Math.Max(anchor.X, minX), Math.Max(minX, maxX)),
             Math.Min(Math.Max(anchor.Y, workArea.Y), Math.Max(workArea.Y, maxY)));

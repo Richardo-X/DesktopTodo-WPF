@@ -177,6 +177,49 @@ public class PanelLayoutTests
     }
 
     [Fact]
+    public void DragClamp_FreeRight_AllowsCrossingRightEdge()
+    {
+        // 右侧有相邻屏 → 不钳制，锚点可越过工作区右缘（跨屏修复核心）
+        var wa = new WinRect(0, 0, 1920, 1040);
+        var p = PanelLayout.ClampAnchorForDrag(new WinPoint(5000, 300), 360, wa, freeRight: true);
+        Assert.Equal(5000, p.X, 6);
+    }
+
+    [Fact]
+    public void DragClamp_FreeLeft_AllowsCrossingLeftEdge()
+    {
+        var wa = new WinRect(0, 0, 1920, 1040);
+        var p = PanelLayout.ClampAnchorForDrag(new WinPoint(-5000, 300), 360, wa, freeLeft: true);
+        Assert.Equal(-5000, p.X, 6);
+    }
+
+    [Fact]
+    public void DragClamp_FreeBottom_AllowsCrossingBottomEdge()
+    {
+        var wa = new WinRect(0, 0, 1920, 1040);
+        var p = PanelLayout.ClampAnchorForDrag(new WinPoint(800, 5000), 360, wa, freeBottom: true);
+        Assert.Equal(5000, p.Y, 6);
+    }
+
+    [Fact]
+    public void DragClamp_FreeBottom_StillClampsTop()
+    {
+        // 顶边**始终**钳制：贴顶吸附语义依赖"锚点不高于工作区顶"，不随相邻屏放宽
+        var wa = new WinRect(0, 0, 1920, 1040);
+        var p = PanelLayout.ClampAnchorForDrag(new WinPoint(800, -300), 360, wa, freeBottom: true);
+        Assert.Equal(0, p.Y, 6);
+    }
+
+    [Fact]
+    public void DragClamp_FreeRight_DoesNotAffectLeftClamp()
+    {
+        // 只放宽有相邻屏的那一侧：右放宽不影响左侧仍钳制
+        var wa = new WinRect(0, 0, 1920, 1040);
+        var p = PanelLayout.ClampAnchorForDrag(new WinPoint(-500, 300), 360, wa, freeRight: true);
+        Assert.Equal(90 - 360, p.X, 6);
+    }
+
+    [Fact]
     public void DragClamp_UsesGivenWorkAreaOffset()
     {
         // 副屏（工作区有偏移）：钳制相对该屏计算
