@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/TodoWpf.Core/TodoWpf.Core.csproj" />
     <Project Path="src/TodoWpf.DataCheck/TodoWpf.DataCheck.csproj" />
+    <Project Path="src/TodoWpf.Setup/TodoWpf.Setup.csproj" />
     <Project Path="src/TodoWpf.Tests/TodoWpf.Tests.csproj" />
     <Project Path="src/TodoWpf/TodoWpf.csproj" />
   </Folder>
