@@ -21,7 +21,9 @@ if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed' }
 $title = -join ([char]0x684C, [char]0x9762, [char]0x5F85, [char]0x529E, [char]0x57, [char]0x50, [char]0x46)
 
 Write-Output "vpk pack ..."
-& $vpk pack --packId TodoWpf --packTitle $title --packVersion $Version --packDir (Join-Path $repo 'publish') --mainExe TodoWpf.exe --outputDir (Join-Path $repo 'releases')
+# --noPortable：便携版不做（C4 定稿）。注意不能用"打包后删 zip"代替——
+# vpk upload 仍会按清单去找 Portable.zip，缺失即上传失败（2026-11-09 实测踩坑）。
+& $vpk pack --packId TodoWpf --packTitle $title --packVersion $Version --packDir (Join-Path $repo 'publish') --mainExe TodoWpf.exe --noPortable --outputDir (Join-Path $repo 'releases')
 if ($LASTEXITCODE -ne 0) { throw 'vpk pack failed' }
 
 Set-Content -Path (Join-Path $repo 'releases\RELEASE-NOTES.txt') -Value $Notes -Encoding UTF8
@@ -61,12 +63,31 @@ if ($SkipUpload) {
     Write-Output "uploading to GitHub Releases ..."
     $token = (& gh auth token 2>$null | Select-Object -First 1)
     if ([string]::IsNullOrWhiteSpace($token)) { throw 'gh 未登录，无法上传（先 gh auth login）' }
+
+    # 幂等：同名 release 若还停在草稿（上次上传中途失败会留下），先删掉再重建，
+    # 否则 vpk 会报 "already an existing release tagged" 且 merge 不支持覆盖同名资产。
+    # 用 release list 而非 release view：后者在"不存在"时会往 stderr 写错误，
+    # 在 $ErrorActionPreference='Stop' 下会被当成异常中断（2026-11-09 实测踩坑）。
+    $all = (& gh release list --repo $repoUrl --limit 100 --json tagName,isDraft 2>$null)
+    if ($all) {
+        $match = ($all | ConvertFrom-Json) | Where-Object { $_.tagName -eq "v$Version" }
+        if ($match -and $match.isDraft) {
+            Write-Output "removing leftover draft release v$Version ..."
+            & gh release delete "v$Version" --repo $repoUrl --yes --cleanup-tag 2>$null
+        } elseif ($match) {
+            throw "v$Version 已正式发布，不能覆盖（请提升版本号）"
+        }
+    }
+
     & $vpk upload github --repoUrl $repoUrl --token $token --outputDir (Join-Path $repo 'releases') `
         --publish --releaseName "$title $Version" --tag "v$Version"
     if ($LASTEXITCODE -ne 0) { throw 'vpk upload github failed' }
 
-    # 附带我们自建的安装器（用户从 Release 页面手动安装时用）
-    & gh release upload "v$Version" $instDst --repo $repoUrl --clobber
+    # 附带自建安装器（用户从 Release 页面手动安装时用）。
+    # 资产名用 **ASCII**：中文名经 shell 传参会乱码（实测上传成 'WPF-.exe'），且下载页 ASCII 更稳。
+    $instUpload = Join-Path $env:TEMP "DesktopTodoWPF-Setup-$Version.exe"
+    Copy-Item $instDst $instUpload -Force
+    & gh release upload "v$Version" $instUpload --repo $repoUrl --clobber
     if ($LASTEXITCODE -ne 0) { throw 'gh release upload (installer) failed' }
 }
 
