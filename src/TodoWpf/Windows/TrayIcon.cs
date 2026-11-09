@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using TodoWpf.Core.Persistence;
 
 namespace TodoWpf.Windows;
@@ -16,7 +16,7 @@ public sealed class TrayIcon : IDisposable
         _notifyIcon = new System.Windows.Forms.NotifyIcon
         {
             Icon = BuildIcon(),
-            Text = "桌面待办",
+            Text = AppInfo.DisplayName,
             Visible = true,
         };
 

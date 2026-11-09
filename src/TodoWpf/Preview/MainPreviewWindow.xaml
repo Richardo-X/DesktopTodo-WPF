@@ -1,6 +1,7 @@
-<Window x:Class="TodoWpf.Preview.MainPreviewWindow"
+﻿<Window x:Class="TodoWpf.Preview.MainPreviewWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="clr-namespace:TodoWpf"
         Title="外观预览 · 待办主窗（静态）"
         Width="600"
         Height="780"
@@ -30,7 +31,7 @@
                               Width="10" Height="10" Stretch="Uniform"
                               StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
                     </Border>
-                    <TextBlock Text="桌面待办" FontSize="{StaticResource Size.BodyFont}"
+                    <TextBlock Text="{x:Static app:AppInfo.DisplayName}" FontSize="{StaticResource Size.BodyFont}"
                                FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"
                                Margin="7,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>

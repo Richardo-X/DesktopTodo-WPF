@@ -1,7 +1,8 @@
-<Window x:Class="TodoWpf.Windows.MainTodoWindow"
+﻿<Window x:Class="TodoWpf.Windows.MainTodoWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="桌面待办"
+        xmlns:app="clr-namespace:TodoWpf"
+        Title="{x:Static app:AppInfo.DisplayName}"
         WindowStyle="None" AllowsTransparency="False"
         Background="{DynamicResource Brush.Shell}"
         ResizeMode="CanResize" ShowInTaskbar="False"
@@ -216,7 +217,7 @@
                                 </Canvas>
                             </Viewbox>
                         </Border>
-                        <TextBlock Text="桌面待办" FontSize="13" FontWeight="SemiBold"
+                        <TextBlock Text="{x:Static app:AppInfo.DisplayName}" FontSize="13" FontWeight="SemiBold"
                                    Foreground="{DynamicResource Brush.Text}" Margin="8,0,0,0"
                                    VerticalAlignment="Center"/>
                         <!-- 「有新版本！」（C4 定稿）：普通文字观感（模板无按钮框），字号=标题×2/3，
